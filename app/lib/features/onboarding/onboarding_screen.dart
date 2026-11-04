@@ -12,6 +12,7 @@ import '../../design/sigils.dart';
 import '../../design/tokens.dart';
 import '../../l10n/content.dart';
 import '../quests/complete_flow.dart';
+import '../settings/theme_picker.dart';
 
 /// First-run flow (ux-spec §4): language → name and sigil → areas →
 /// first quest (complete now or later) → how growth works. The first
@@ -132,6 +133,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                           ),
                         const Spacer(),
                         Text(l10n.appName, style: text.labelSmall),
+                        const SizedBox(width: AppSpace.xs),
+                        const ThemeMenuButton(),
                       ],
                     ),
                   ),

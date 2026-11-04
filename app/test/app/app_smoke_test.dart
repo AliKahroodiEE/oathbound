@@ -95,6 +95,25 @@ void main() {
     }
   });
 
+  testWidgets('the quick theme menu switches the theme from the character sheet', (tester) async {
+    final db = await tester.runAsync(() => _seeded(const Locale('en'), theme: ThemePreference.dark));
+    await _pump(tester, db!);
+    Brightness brightness() => Theme.of(tester.element(find.byType(Scaffold).first)).brightness;
+    expect(brightness(), Brightness.dark);
+    await tester.tap(find.byTooltip('Theme'));
+    // One frame to start the menu's entrance, then let it finish.
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.tap(find.text('Light').last);
+    for (var i = 0; i < 8; i++) {
+      await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 20)));
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    expect(brightness(), Brightness.light);
+    await tester.pumpWidget(const SizedBox());
+    await tester.runAsync(db.close);
+  });
+
   testWidgets('expanded width shows the sidebar', (tester) async {
     final db = await tester.runAsync(() => _seeded(const Locale('en')));
     await _pump(tester, db!, size: const Size(1440, 900));

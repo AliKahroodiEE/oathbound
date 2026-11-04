@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../design/components/background.dart';
 import '../design/components/game.dart';
 import '../design/tokens.dart';
+import '../features/settings/theme_picker.dart';
 import 'providers.dart';
 
 class _Destination {
@@ -78,10 +79,16 @@ class AdaptiveShell extends ConsumerWidget {
                     alignment: AlignmentDirectional.bottomCenter,
                     child: Padding(
                       padding: const EdgeInsetsDirectional.only(bottom: AppSpace.lg),
-                      child: IconButton(
-                        tooltip: l10n.navSettings,
-                        icon: const Icon(Icons.settings_outlined),
-                        onPressed: () => context.push('/settings'),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const ThemeMenuButton(iconSize: 22),
+                          IconButton(
+                            tooltip: l10n.navSettings,
+                            icon: const Icon(Icons.settings_outlined),
+                            onPressed: () => context.push('/settings'),
+                          ),
+                        ],
                       ),
                     ),
                   ),
@@ -223,6 +230,10 @@ class _Sidebar extends StatelessWidget {
             for (var i = 0; i < destinations.length; i++)
               _SidebarItem(destination: destinations[i], selected: i == selected, onTap: () => onSelect(i)),
             const Spacer(),
+            const Padding(
+              padding: EdgeInsetsDirectional.fromSTEB(AppSpace.lg, 0, AppSpace.lg, AppSpace.md),
+              child: ThemeSegments(),
+            ),
             const Divider(),
             _SidebarItem(
               destination: _Destination(Icons.settings_outlined, Icons.settings, l10n.navSettings),

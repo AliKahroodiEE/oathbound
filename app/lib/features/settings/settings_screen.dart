@@ -16,6 +16,7 @@ import '../../data/repositories/settings_repository.dart';
 import '../../design/components/panel.dart';
 import '../../design/tokens.dart';
 import 'ai_provider_screen.dart';
+import 'theme_picker.dart';
 
 /// Settings (requirements §4.10).
 class SettingsScreen extends ConsumerWidget {
@@ -135,21 +136,12 @@ class SettingsScreen extends ConsumerWidget {
                     SegmentedButton<ThemePreference>(
                       showSelectedIcon: false,
                       segments: [
-                        ButtonSegment(
-                          value: ThemePreference.system,
-                          icon: const Icon(Icons.brightness_auto_outlined, size: 18),
-                          label: Text(l10n.themeAuto),
-                        ),
-                        ButtonSegment(
-                          value: ThemePreference.light,
-                          icon: const Icon(Icons.light_mode_outlined, size: 18),
-                          label: Text(l10n.themeLight),
-                        ),
-                        ButtonSegment(
-                          value: ThemePreference.dark,
-                          icon: const Icon(Icons.dark_mode_outlined, size: 18),
-                          label: Text(l10n.themeDark),
-                        ),
+                        for (final t in ThemePreference.values)
+                          ButtonSegment(
+                            value: t,
+                            icon: Icon(themePreferenceIcon(t), size: 18),
+                            label: Text(themePreferenceLabel(l10n, t)),
+                          ),
                       ],
                       selected: {profile.theme},
                       onSelectionChanged: (s) => setProfile((p) => p.copyWith(theme: s.first)),
