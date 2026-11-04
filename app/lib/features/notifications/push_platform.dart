@@ -139,10 +139,12 @@ class SupabasePushRegistry implements PushRegistry {
   Future<void> register(String token, String platform) =>
       _client.rpc<void>('register_push_token', params: {'token': token, 'platform': platform});
 
-  /// There is no unregister RPC, so this deletes the row directly; the
-  /// `push_tokens_delete_own` policy limits it to this account's rows.
+  /// `public.unregister_push_token(token text)`: deletes the token if it
+  /// belongs to this account, and does nothing otherwise. Device tokens are
+  /// push credentials, so the app cannot read or delete `push_tokens` rows
+  /// itself.
   @override
-  Future<void> unregister(String token) => _client.from('push_tokens').delete().eq('token', token);
+  Future<void> unregister(String token) => _client.rpc<void>('unregister_push_token', params: {'token': token});
 }
 
 /// [PushPromptLog] in this device's preferences.

@@ -239,7 +239,7 @@ and committed separately.
 | `20261104000900_data_api_grants.sql` | the complete Data API surface: exactly what the app and the functions use |
 | `20261104000910_cron_secret_key.sql` | internal Edge Function calls with a secret key from Vault, `set_function_credentials` |
 | `20261104000920_notify_triggers.sql` | pg_net triggers on reactions, comments and milestones → `notify` |
-| `20261104001000_push_token_unregister.sql` | users may delete their own device's push token (sign-out) |
+| `20261104001000_push_token_unregister.sql` | `unregister_push_token`: sign-out removes this device's token from the account |
 | `20261104001010_notification_prefs_rpc.sql` | `set_notification_prefs`: the app's notification switches and quiet hours |
 | `20261104001020_reaction_signals.sql` | reactions leave the Realtime publication; each change touches its feed event |
 
@@ -255,11 +255,14 @@ until the grants match the code.
 | Role | Gets |
 | --- | --- |
 | `anon` | nothing: guests never reach the server (ADR-003) |
-| `authenticated` (the app) | SELECT on `guilds`, `feed_events`, `reactions`, `comments`, `challenges` (guild hall and its Realtime feed); SELECT(id) and UPDATE of the settings columns on `profiles`; SELECT(token) and DELETE on its own `push_tokens` rows; EXECUTE on the user RPCs below |
+| `authenticated` (the app) | SELECT on `guilds`, `feed_events`, `reactions`, `comments`, `challenges` (guild hall and its Realtime feed); SELECT(id) and UPDATE of the settings columns on `profiles`; EXECUTE on the user RPCs below |
 | `service_role` (secret keys, the functions) | SELECT on the tables the functions read; INSERT on `notification_deliveries`; INSERT/UPDATE on `chronicles`; DELETE on `push_tokens`; EXECUTE on the service RPCs |
 
 * Personal data reaches the app only through `sync_pull`; every client write
   goes through a SECURITY DEFINER RPC that checks the caller.
+* Device tokens are credentials for the push service: clients never read
+  `push_tokens` and change it only through `register_push_token` and
+  `unregister_push_token`; `export_my_data` lists devices without tokens.
 * RLS still guards the rows: guild data is visible to members, public guild
   metadata to signed-in users. Feed events, reactions and comments from users
   the viewer blocked are filtered out (FR-7); the blocked party cannot see
@@ -320,6 +323,7 @@ chronicles, notification_prefs } }`. Loop while `has_more`.
 | `block_user(user_id)` / `unblock_user(user_id)` | |
 | `report_content(target_type, target_id, reason, details?)` | public guilds auto-hide at 3 reporters |
 | `register_push_token(token, platform)` | moves a device token to the current user |
+| `unregister_push_token(token)` | deletes the token if it is the caller's (sign-out); silent otherwise |
 | `export_my_data()` | all user-owned rows as JSON |
 | `delete_my_account()` | anonymises authored guild content ("Former member"), then deletes the user |
 

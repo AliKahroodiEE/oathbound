@@ -23,7 +23,8 @@
  * 4. Runs smoke checks as the real roles: RLS isolation, sync_push LWW and
  *    idempotency, sync_pull cursors, apply_progression driven by the real
  *    TypeScript engine (idempotency, stale-day protection, privacy
- *    projection, challenges), undo, social RPCs, export/deletion, cron jobs.
+ *    projection, challenges), undo, social RPCs, device tokens,
+ *    export/deletion, cron jobs.
  * 5. Exercises the internal Edge Function calls (pg_cron's chronicle dispatch,
  *    the notification triggers) against stand-ins for pg_net and Vault: no-op
  *    without them, then request URL, headers and payload, idempotent Vault
@@ -524,6 +525,27 @@ async function smoke(db, { profileFields }) {
   await expectError('notification settings change only through set_notification_prefs',
     as(db, 'authenticated', A, (tx) => tx.query('update public.notification_prefs set daily_cap = 50 where user_id = $1', [A])),
     /permission denied/);
+
+  // Device tokens (push_platform.dart) are push credentials: clients reach
+  // them only through register_push_token and unregister_push_token, and
+  // unregistering removes the caller's own token, never another account's.
+  const tokenA = 'fcm-token-of-device-a';
+  const tokenB = 'fcm-token-of-device-b';
+  await one(db, 'authenticated', A, `select public.register_push_token($1, 'android')`, [tokenA]);
+  await one(db, 'authenticated', B, `select public.register_push_token($1, 'web')`, [tokenB]);
+  await expectError('clients cannot read device tokens',
+    rows(db, 'authenticated', A, 'select token from public.push_tokens'), /permission denied/);
+  await expectError('clients cannot delete device tokens directly',
+    as(db, 'authenticated', A, (tx) => tx.query('delete from public.push_tokens')), /permission denied/);
+  await one(db, 'authenticated', A, 'select public.unregister_push_token($1)', [tokenB]);
+  const afterForeign = await rows(db, 'postgres', null, 'select token from public.push_tokens order by token');
+  await one(db, 'authenticated', A, 'select public.unregister_push_token($1)', [tokenA]);
+  const afterOwn = await rows(db, 'postgres', null, 'select token from public.push_tokens order by token');
+  check('unregister_push_token removes the caller\'s own token but not another user\'s',
+    afterForeign.map((t) => t.token).join(',') === `${tokenA},${tokenB}`
+      && afterOwn.map((t) => t.token).join(',') === tokenB,
+    `after A unregisters B's token: ${afterForeign.map((t) => t.token).join(',')}; `
+      + `after its own: ${afterOwn.map((t) => t.token).join(',')}`);
 
   // --- curves ---------------------------------------------------------------
   const curveRows = await rows(db, 'postgres', null, `
