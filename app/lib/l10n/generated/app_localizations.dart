@@ -2756,6 +2756,12 @@ abstract class AppLocalizations {
   /// **'Continue with email'**
   String get authContinueEmail;
 
+  /// No description provided for @authContinueGoogle.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue with Google'**
+  String get authContinueGoogle;
+
   /// No description provided for @authContinueGithub.
   ///
   /// In en, this message translates to:

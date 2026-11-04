@@ -3,9 +3,10 @@ import 'package:flutter/material.dart';
 import '../../app/providers.dart';
 import '../../design/components/game.dart';
 import '../../design/tokens.dart';
+import 'auth_gateway.dart';
 import 'auth_widgets.dart';
 
-/// Start: email for a code, a way to passwords, and GitHub.
+/// Start: email for a code, a way to passwords, and Google or GitHub.
 class EmailStep extends StatelessWidget {
   const EmailStep({
     super.key,
@@ -13,7 +14,8 @@ class EmailStep extends StatelessWidget {
     required this.busy,
     required this.onContinue,
     required this.onUsePassword,
-    this.onGitHub,
+    this.providers = const [],
+    this.onProvider,
   });
 
   final TextEditingController email;
@@ -21,8 +23,9 @@ class EmailStep extends StatelessWidget {
   final VoidCallback onContinue;
   final VoidCallback onUsePassword;
 
-  /// Null hides the button (GitHub not enabled for this build).
-  final VoidCallback? onGitHub;
+  /// The "Continue with …" buttons to show; none when empty.
+  final List<SocialProvider> providers;
+  final ValueChanged<SocialProvider>? onProvider;
 
   @override
   Widget build(BuildContext context) {
@@ -41,15 +44,20 @@ class EmailStep extends StatelessWidget {
         ),
         const SizedBox(height: AppSpace.xs),
         TextButton(onPressed: busy ? null : onUsePassword, child: Text(l10n.authUsePassword)),
-        if (onGitHub != null) ...[
+        if (providers.isNotEmpty && onProvider != null) ...[
           const SizedBox(height: AppSpace.sm),
           const OrDivider(),
-          const SizedBox(height: AppSpace.md),
-          ProviderButton(
-            label: l10n.authContinueGithub,
-            mark: const ProviderMark(Icons.code_rounded),
-            onPressed: busy ? null : onGitHub,
-          ),
+          for (final provider in providers) ...[
+            const SizedBox(height: AppSpace.md),
+            ProviderButton(
+              label: switch (provider) {
+                SocialProvider.google => l10n.authContinueGoogle,
+                SocialProvider.github => l10n.authContinueGithub,
+              },
+              mark: ProviderLogo(provider),
+              onPressed: busy ? null : () => onProvider!(provider),
+            ),
+          ],
         ],
       ],
     );

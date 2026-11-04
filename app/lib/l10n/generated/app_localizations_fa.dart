@@ -1462,6 +1462,9 @@ class AppLocalizationsFa extends AppLocalizations {
   String get authContinueEmail => 'ادامه با ایمیل';
 
   @override
+  String get authContinueGoogle => 'ادامه با گوگل';
+
+  @override
   String get authContinueGithub => 'ادامه با گیت‌هاب';
 
   @override

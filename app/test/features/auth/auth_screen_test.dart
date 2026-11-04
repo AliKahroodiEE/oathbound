@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show AuthException;
 import 'package:wyrd/design/tokens.dart';
+import 'package:wyrd/features/auth/auth_gateway.dart';
+import 'package:wyrd/features/auth/auth_widgets.dart';
 
 import 'fake_auth_gateway.dart';
 
@@ -172,7 +174,7 @@ void main() {
     expect(find.text('character page'), findsOneWidget);
   });
 
-  testWidgets('GitHub: hidden unless the build enables it', (tester) async {
+  testWidgets('Google and GitHub: hidden unless the build enables them', (tester) async {
     await pumpAuthScreen(tester, gateway: FakeAuthGateway());
     expect(find.text('Continue with email'), findsOneWidget);
     expect(find.text('Continue with GitHub'), findsNothing);
@@ -180,8 +182,22 @@ void main() {
     expect(find.textContaining('Google'), findsNothing);
   });
 
+  testWidgets('Google: shown first, with its own mark, and opens Google', (tester) async {
+    final fake = FakeAuthGateway(socialProviders: SocialProvider.values);
+    await pumpAuthScreen(tester, gateway: fake);
+    final google = tester.getTopLeft(find.text('Continue with Google'));
+    final github = tester.getTopLeft(find.text('Continue with GitHub'));
+    expect(google.dy, lessThan(github.dy));
+    expect(find.byType(ProviderLogo), findsNWidgets(2));
+
+    await tester.tap(find.text('Continue with Google'));
+    await settle(tester);
+    expect(fake.calls, ['google']);
+    expect(find.text('character page'), findsNothing);
+  });
+
   testWidgets('GitHub: opens the provider and waits on this screen for the redirect', (tester) async {
-    final fake = FakeAuthGateway(githubAvailable: true);
+    final fake = FakeAuthGateway(socialProviders: const [SocialProvider.github]);
     await pumpAuthScreen(tester, gateway: fake);
     expect(find.text('or'), findsOneWidget);
 
@@ -214,7 +230,11 @@ void main() {
   });
 
   testWidgets('light theme: the flow takes its colours from the Vellum palette', (tester) async {
-    await pumpAuthScreen(tester, gateway: FakeAuthGateway(githubAvailable: true), palette: Palette.light);
+    await pumpAuthScreen(
+      tester,
+      gateway: FakeAuthGateway(socialProviders: SocialProvider.values),
+      palette: Palette.light,
+    );
     expect(Theme.of(tester.element(find.text('Continue with email'))).brightness, Brightness.light);
     final emblem = tester.widget<Icon>(find.byIcon(Icons.local_fire_department_rounded));
     expect(emblem.color, Palette.light.accent);
@@ -222,8 +242,13 @@ void main() {
   });
 
   testWidgets('Persian: the flow reads right to left', (tester) async {
-    await pumpAuthScreen(tester, gateway: FakeAuthGateway(githubAvailable: true), locale: const Locale('fa'));
+    await pumpAuthScreen(
+      tester,
+      gateway: FakeAuthGateway(socialProviders: SocialProvider.values),
+      locale: const Locale('fa'),
+    );
     expect(find.text('ادامه با ایمیل'), findsOneWidget);
+    expect(find.text('ادامه با گوگل'), findsOneWidget);
     expect(find.text('ادامه با گیت‌هاب'), findsOneWidget);
     expect(Directionality.of(tester.element(find.text('ادامه با ایمیل'))), TextDirection.rtl);
     expect(tester.takeException(), isNull);

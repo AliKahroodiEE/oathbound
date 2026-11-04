@@ -9,11 +9,21 @@ import 'auth_errors.dart';
 /// Why a 6-digit code is sent; decides which Supabase OTP type checks it.
 enum CodePurpose { signIn, signUp, recovery }
 
+/// Sign-in with another account, in the order the buttons appear.
+enum SocialProvider {
+  google(OAuthProvider.google),
+  github(OAuthProvider.github);
+
+  const SocialProvider(this.oauth);
+
+  final OAuthProvider oauth;
+}
+
 /// Everything the sign-in flow asks of the server. An interface so widget
 /// tests run without a network.
 abstract interface class AuthGateway {
-  /// Whether "Continue with GitHub" works in this build on this platform.
-  bool get githubAvailable;
+  /// The "Continue with …" sign-ins this build offers on this platform.
+  List<SocialProvider> get socialProviders;
 
   /// Emails a 6-digit code for [purpose]; also used to resend one.
   Future<void> sendCode(CodePurpose purpose, String email);
@@ -30,8 +40,9 @@ abstract interface class AuthGateway {
   /// Sets a new password for the signed-in user (after a recovery code).
   Future<void> updatePassword(String password);
 
-  /// Opens GitHub; the session arrives with the redirect back.
-  Future<void> signInWithGitHub();
+  /// Opens [provider]'s sign-in page; the session arrives with the redirect
+  /// back.
+  Future<void> signInWith(SocialProvider provider);
 
   Future<void> signOut();
 
@@ -62,7 +73,12 @@ class SupabaseAuthGateway implements AuthGateway {
       !kIsWeb && (defaultTargetPlatform == TargetPlatform.android || defaultTargetPlatform == TargetPlatform.iOS);
 
   @override
-  bool get githubAvailable => AuthConfig.githubEnabled && (kIsWeb || _isPhone);
+  List<SocialProvider> get socialProviders => [
+    if (kIsWeb || _isPhone) ...[
+      if (AuthConfig.googleEnabled) SocialProvider.google,
+      if (AuthConfig.githubEnabled) SocialProvider.github,
+    ],
+  ];
 
   @override
   Future<void> sendCode(CodePurpose purpose, String email) => switch (purpose) {
@@ -103,13 +119,16 @@ class SupabaseAuthGateway implements AuthGateway {
   Future<void> updatePassword(String password) => _auth.updateUser(UserAttributes(password: password));
 
   @override
-  Future<void> signInWithGitHub() async {
+  Future<void> signInWith(SocialProvider provider) async {
     final launched = await _auth.signInWithOAuth(
-      OAuthProvider.github,
+      provider.oauth,
       redirectTo: kIsWeb ? webRedirectUrl() : AuthConfig.mobileRedirectUrl,
-      // Phones open the real browser, where GitHub may already be signed in;
-      // the web app leaves and comes back in the same tab.
+      // Phones open the real browser, where the account may already be
+      // signed in (and Google refuses embedded web views); the web app
+      // leaves and comes back in the same tab.
       authScreenLaunchMode: kIsWeb ? LaunchMode.platformDefault : LaunchMode.externalApplication,
+      // Google: always let people pick which account to use.
+      queryParams: provider == SocialProvider.google ? const {'prompt': 'select_account'} : null,
     );
     if (!launched) throw const AuthException('Could not open the sign-in page', code: 'provider_disabled');
   }

@@ -502,6 +502,7 @@
   "authHeadline": "Keep your legend safe",
   "authIntro": "Sign in to sync your character across devices and join guilds. Everything you made as a guest comes with you.",
   "authContinueEmail": "Continue with email",
+  "authContinueGoogle": "Continue with Google",
   "authContinueGithub": "Continue with GitHub",
   "authOr": "or",
   "authUsePassword": "Use a password instead",

@@ -13,10 +13,10 @@ import 'package:wyrd/l10n/generated/app_localizations.dart';
 
 /// Records calls instead of talking to Supabase.
 class FakeAuthGateway implements AuthGateway {
-  FakeAuthGateway({this.githubAvailable = false});
+  FakeAuthGateway({this.socialProviders = const []});
 
   @override
-  final bool githubAvailable;
+  final List<SocialProvider> socialProviders;
 
   final calls = <String>[];
 
@@ -53,7 +53,7 @@ class FakeAuthGateway implements AuthGateway {
   Future<void> updatePassword(String password) => _record('updatePassword');
 
   @override
-  Future<void> signInWithGitHub() => _record('github');
+  Future<void> signInWith(SocialProvider provider) => _record(provider.name);
 
   @override
   Future<void> signOut() => _record('signOut');

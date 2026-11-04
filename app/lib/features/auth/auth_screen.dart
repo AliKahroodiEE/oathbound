@@ -21,7 +21,7 @@ import 'auth_widgets.dart';
 enum AuthStep { email, code, password, forgot, newPassword }
 
 /// Sign-in: an emailed 6-digit code first, passwords (confirmed and reset by
-/// code) second, GitHub when this build enables it. Upgrading from guest
+/// code) second, Google and GitHub when this build enables them. Upgrading from guest
 /// keeps all local data; the sync engine uploads it to the account (A2).
 class AuthScreen extends ConsumerStatefulWidget {
   const AuthScreen({super.key});
@@ -211,8 +211,8 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     });
   }
 
-  Future<void> _github() => _run((g) async {
-    await g.signInWithGitHub();
+  Future<void> _social(SocialProvider provider) => _run((g) async {
+    await g.signInWith(provider);
     _awaitingRedirect = true;
   });
 
@@ -240,7 +240,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     final l10n = context.l10n;
     final gateway = ref.watch(authGatewayProvider);
     final user = ref.watch(currentUserProvider).value;
-    // Phones come back from GitHub in the browser through the app.wyrd://
+    // Phones come back from Google or GitHub in the browser through the app.wyrd://
     // link; leave as soon as that session lands.
     ref.listen(currentUserProvider, (prev, next) {
       if (_awaitingRedirect && prev?.value == null && next.value != null) _leave();
@@ -317,7 +317,8 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
       busy: _busy,
       onContinue: () => _sendCode(CodePurpose.signIn),
       onUsePassword: () => _go(AuthStep.password),
-      onGitHub: gateway.githubAvailable ? _github : null,
+      providers: gateway.socialProviders,
+      onProvider: _social,
     ),
     AuthStep.code => CodeStep(
       email: _address,

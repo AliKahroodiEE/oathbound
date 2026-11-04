@@ -1474,6 +1474,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authContinueEmail => 'Continue with email';
 
   @override
+  String get authContinueGoogle => 'Continue with Google';
+
+  @override
   String get authContinueGithub => 'Continue with GitHub';
 
   @override
