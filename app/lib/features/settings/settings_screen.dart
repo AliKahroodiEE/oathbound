@@ -11,6 +11,7 @@ import '../../core/config.dart';
 import '../../core/locale/locale_registry.dart';
 import '../../core/locale/regional_settings.dart';
 import '../../data/models.dart';
+import '../../data/remote/backend.dart';
 import '../../data/repositories/settings_repository.dart';
 import '../../design/components/panel.dart';
 import '../../design/tokens.dart';
@@ -346,14 +347,31 @@ class SettingsScreen extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Text(
-                      BackendConfig.isConfigured ? l10n.guestMode : '${l10n.guestMode} ${l10n.authBackendMissing}',
-                      style: text.bodyMedium,
+                    Builder(
+                      builder: (context) {
+                        final user = ref.watch(currentUserProvider).value;
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Text(
+                              user != null
+                                  ? l10n.signedInAs(user.email ?? '')
+                                  : BackendConfig.isConfigured
+                                  ? l10n.guestMode
+                                  : '${l10n.guestMode} ${l10n.authBackendMissing}',
+                              style: text.bodyMedium,
+                            ),
+                            if (BackendConfig.isConfigured) ...[
+                              const SizedBox(height: AppSpace.md),
+                              OutlinedButton(
+                                onPressed: () => context.push('/auth'),
+                                child: Text(user != null ? l10n.signOut : l10n.signIn),
+                              ),
+                            ],
+                          ],
+                        );
+                      },
                     ),
-                    if (BackendConfig.isConfigured) ...[
-                      const SizedBox(height: AppSpace.md),
-                      OutlinedButton(onPressed: () => context.push('/auth'), child: Text(l10n.signIn)),
-                    ],
                     const SizedBox(height: AppSpace.lg),
                     OutlinedButton.icon(
                       icon: const Icon(Icons.download_outlined, size: 18),
