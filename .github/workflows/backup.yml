@@ -65,9 +65,12 @@ jobs:
             echo "::error title=Invalid SUPABASE_PROJECT_ID::It must be the 20-letter project ref."
             exit 1
           fi
+          position=0
           for recipient in ${BACKUP_AGE_RECIPIENT//,/ }; do
+            position=$((position + 1))
             if ! [[ "$recipient" =~ ^age1[02-9ac-hj-np-z]{58}$ ]]; then
-              echo "::error title=Invalid BACKUP_AGE_RECIPIENT::'$recipient' is not an age public key (age1...). Never put the private key (AGE-SECRET-KEY-...) in GitHub."
+              # Never print the value: it may be a private key pasted by mistake.
+              echo "::error title=Invalid BACKUP_AGE_RECIPIENT::Entry $position is not an age public key (age1 followed by 58 characters). If it is a private key (AGE-SECRET-KEY-...), delete the variable now, create a new key pair and store only the public key."
               exit 1
             fi
           done
