@@ -6,6 +6,7 @@ import 'app/app.dart';
 import 'app/providers.dart';
 import 'app/router.dart';
 import 'data/db/database.dart';
+import 'data/demo/demo_seed.dart';
 import 'data/remote/backend.dart';
 import 'data/repositories/settings_repository.dart';
 
@@ -14,6 +15,10 @@ Future<void> main() async {
   await initializeDateFormatting();
   final backendReady = await initBackend();
   final db = AppDatabase();
+  // Demo builds (`--dart-define=WYRD_DEMO=true`) start with sample data.
+  if (const bool.fromEnvironment('WYRD_DEMO') && !(await SettingsRepository(db).profile()).onboardingComplete) {
+    await seedDemo(db, locale: const Locale(String.fromEnvironment('WYRD_DEMO_LOCALE', defaultValue: 'en')));
+  }
   final profile = await SettingsRepository(db).profile();
   runApp(
     ProviderScope(
