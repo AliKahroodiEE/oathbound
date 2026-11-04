@@ -105,6 +105,65 @@ void main() {
     expect(p.similarityKey, 'study.electronics');
   });
 
+  test('Gemini: generateContent URL, key header, JSON mode, thoughts skipped', () async {
+    late http.Request seen;
+    final client = MockClient((req) async {
+      seen = req;
+      return http.Response.bytes(
+        utf8.encode(
+          jsonEncode({
+            'candidates': [
+              {
+                'finishReason': 'STOP',
+                'content': {
+                  'parts': [
+                    {'text': 'thinking…', 'thought': true},
+                    {'text': jsonEncode(_proposal)},
+                  ],
+                },
+              },
+            ],
+          }),
+        ),
+        200,
+      );
+    });
+    final ai = AiClient(
+      const AiProviderConfig(kind: AiProviderKind.gemini, model: 'models/gemini-pro'),
+      'g-key',
+      httpClient: client,
+    );
+    final p = await AiEvaluator(ai).evaluate(_input);
+    expect(seen.url.toString(), 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent');
+    expect(seen.headers['x-goog-api-key'], 'g-key');
+    expect(seen.url.queryParameters, isEmpty, reason: 'the key never goes in the URL');
+    final body = jsonDecode(seen.body) as Map<String, Object?>;
+    expect((body['generationConfig']! as Map)['responseMimeType'], 'application/json');
+    expect(((body['systemInstruction']! as Map)['parts'] as List).first.toString(), contains('JSON object'));
+    expect(p.estimatedMinutes, 90);
+  });
+
+  test('Gemini safety blocks are reported as refusals', () async {
+    final ai = AiClient(
+      const AiProviderConfig(kind: AiProviderKind.gemini, model: 'gemini-pro'),
+      'k',
+      httpClient: MockClient(
+        (_) async => http.Response(
+          jsonEncode({
+            'candidates': [
+              {'finishReason': 'SAFETY'},
+            ],
+          }),
+          200,
+        ),
+      ),
+    );
+    expect(
+      () => ai.complete(system: 's', user: 'u'),
+      throwsA(isA<AiException>().having((e) => e.kind, 'kind', AiErrorKind.refused)),
+    );
+  });
+
   test('errors map to clear kinds', () async {
     Future<AiErrorKind> kindFor(http.Response r) async {
       final ai = AiClient(

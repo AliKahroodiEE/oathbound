@@ -8,15 +8,18 @@ import 'package:http/http.dart' as http;
 enum AiProviderKind {
   anthropic,
   openai,
+  gemini,
   anthropicCompatible,
   openaiCompatible;
 
   bool get anthropicProtocol => this == anthropic || this == anthropicCompatible;
+  bool get geminiProtocol => this == gemini;
   bool get customEndpoint => this == anthropicCompatible || this == openaiCompatible;
 
   String get defaultBaseUrl => switch (this) {
     anthropic => 'https://api.anthropic.com',
     openai => 'https://api.openai.com/v1',
+    gemini => 'https://generativelanguage.googleapis.com/v1beta',
     _ => '',
   };
 
@@ -63,10 +66,10 @@ class AiException implements Exception {
   String toString() => 'AiException(${kind.name}${status == null ? '' : ', $status'})';
 }
 
-/// Minimal client for the Anthropic Messages API and the OpenAI Chat
-/// Completions API, including services that implement either protocol
-/// (OpenRouter, Groq, DeepSeek, Together, Ollama, LM Studio, …).
-/// Dart has no official Anthropic SDK, so requests are raw HTTP.
+/// Minimal client for the Anthropic Messages API, the OpenAI Chat
+/// Completions API and Google's Gemini API, including services that
+/// implement the first two protocols (OpenRouter, Groq, DeepSeek, Together,
+/// Ollama, LM Studio, …). Requests are raw HTTP.
 class AiClient {
   AiClient(this.config, this._apiKey, {http.Client? httpClient, bool? isWeb})
     : _http = httpClient ?? http.Client(),
@@ -111,6 +114,8 @@ class AiClient {
     required bool structured,
   }) => config.kind.anthropicProtocol
       ? _anthropic(system, user, schema, maxTokens, structured: structured)
+      : config.kind.geminiProtocol
+      ? _gemini(system, user, structured: structured)
       : _openai(system, user, maxTokens, structured: structured);
 
   Future<String> _anthropic(
@@ -177,6 +182,51 @@ class AiClient {
     }
     final text = message is Map ? message['content'] : null;
     if (text is! String || text.trim().isEmpty) throw const AiException(AiErrorKind.badResponse);
+    return text;
+  }
+
+  /// Google Gemini `generateContent`. JSON mode via `responseMimeType`;
+  /// no output-token cap, because thinking models count their reasoning
+  /// against it and could cut the answer short.
+  Future<String> _gemini(String system, String user, {required bool structured}) async {
+    final model = config.model.trim().replaceFirst(RegExp(r'^models/'), '');
+    final url = Uri.parse('${config.effectiveBaseUrl}/models/${Uri.encodeComponent(model)}:generateContent');
+    final body = <String, Object?>{
+      'systemInstruction': {
+        'parts': [
+          {'text': system},
+        ],
+      },
+      'contents': [
+        {
+          'role': 'user',
+          'parts': [
+            {'text': user},
+          ],
+        },
+      ],
+      if (structured) 'generationConfig': {'responseMimeType': 'application/json'},
+    };
+    final json = await _post(url, {'x-goog-api-key': _apiKey}, body);
+    final feedback = json['promptFeedback'];
+    if (feedback is Map && feedback['blockReason'] != null) throw const AiException(AiErrorKind.refused);
+    final candidates = json['candidates'];
+    if (candidates is! List || candidates.isEmpty || candidates.first is! Map) {
+      throw const AiException(AiErrorKind.badResponse);
+    }
+    final candidate = candidates.first as Map;
+    const blocked = {'SAFETY', 'PROHIBITED_CONTENT', 'BLOCKLIST', 'SPII', 'RECITATION'};
+    if (blocked.contains(candidate['finishReason'])) throw const AiException(AiErrorKind.refused);
+    final content = candidate['content'];
+    final parts = content is Map ? content['parts'] : null;
+    if (parts is! List) throw const AiException(AiErrorKind.badResponse);
+    final text = parts
+        .whereType<Map<Object?, Object?>>()
+        .where((p) => p['thought'] != true)
+        .map((p) => p['text'])
+        .whereType<String>()
+        .join();
+    if (text.trim().isEmpty) throw const AiException(AiErrorKind.badResponse);
     return text;
   }
 
