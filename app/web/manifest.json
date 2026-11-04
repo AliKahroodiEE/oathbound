@@ -1,12 +1,12 @@
 {
-    "name": "oathbound",
-    "short_name": "oathbound",
+    "name": "Oathbound",
+    "short_name": "Oathbound",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
+    "background_color": "#0B0B10",
+    "theme_color": "#0B0B10",
     "description": "Oathbound — your character is who you become.",
-    "orientation": "portrait-primary",
+    "orientation": "any",
     "prefer_related_applications": false,
     "icons": [
         {
