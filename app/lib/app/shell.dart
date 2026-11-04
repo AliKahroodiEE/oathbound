@@ -142,7 +142,7 @@ class Wordmark extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => ShaderMask(
-    shaderCallback: (r) => AppGradients.emberDiagonal.createShader(r),
+    shaderCallback: (r) => AppGradients.emberDiagonal.createShader(r, textDirection: Directionality.of(context)),
     child: Text(
       context.l10n.appName,
       style: Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: size, color: Colors.white),

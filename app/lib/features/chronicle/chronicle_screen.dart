@@ -190,10 +190,34 @@ class _SummaryPanel extends ConsumerWidget {
     }
 
     final tiles = [
-      (l10n.statCompletions, f.number(stats.completions), change(stats.completions, previous?.completions)),
-      (l10n.statMinutes, f.duration(stats.minutes), change(stats.minutes, previous?.minutes)),
-      (l10n.statXp, f.number(stats.totalXp), change(stats.totalXp, previous?.totalXp)),
-      (l10n.statActiveDays, f.number(stats.activeDays.length), null),
+      (
+        l10n.statCompletions,
+        f.number(stats.completions),
+        change(stats.completions, previous?.completions),
+        Icons.task_alt_rounded,
+        AppColors.ember,
+      ),
+      (
+        l10n.statMinutes,
+        f.duration(stats.minutes),
+        change(stats.minutes, previous?.minutes),
+        Icons.hourglass_bottom_rounded,
+        AppColors.attrIntelligence,
+      ),
+      (
+        l10n.statXp,
+        f.number(stats.totalXp),
+        change(stats.totalXp, previous?.totalXp),
+        Icons.bolt_rounded,
+        AppColors.gold,
+      ),
+      (
+        l10n.statActiveDays,
+        f.number(stats.activeDays.length),
+        null,
+        Icons.calendar_month_rounded,
+        AppColors.attrVitality,
+      ),
     ];
     final periodName = switch (period) {
       ChroniclePeriod.week => l10n.periodWeekNoun,
@@ -203,6 +227,8 @@ class _SummaryPanel extends ConsumerWidget {
     final strongest = stats.strongest;
     return Panel(
       title: l10n.writtenChronicle,
+      icon: Icons.auto_stories_rounded,
+      accent: AppColors.arcane,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -230,19 +256,7 @@ class _SummaryPanel extends ConsumerWidget {
                   for (final t in tiles)
                     SizedBox(
                       width: w,
-                      child: Container(
-                        padding: const EdgeInsetsDirectional.all(AppSpace.md),
-                        decoration: const BoxDecoration(color: AppColors.abyss, borderRadius: AppRadius.softAll),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(t.$1, style: text.bodySmall),
-                            const SizedBox(height: AppSpace.xs),
-                            Text(t.$2, style: text.titleMedium),
-                            if (t.$3 != null) Text(t.$3!, style: text.bodySmall),
-                          ],
-                        ),
-                      ),
+                      child: StatTile(icon: t.$4, color: t.$5, value: t.$2, label: t.$1, caption: t.$3),
                     ),
                 ],
               );
@@ -343,6 +357,7 @@ class _XpChartPanel extends ConsumerWidget {
 
     return Panel(
       title: l10n.chartXpByAttribute,
+      icon: Icons.bar_chart_rounded,
       child: SizedBox(
         height: 220,
         child: maxY == 0
@@ -407,8 +422,8 @@ class _XpChartPanel extends ConsumerWidget {
     return BarChartRodData(
       toY: from,
       rodStackItems: items,
-      width: count > 16 ? 6 : 14,
-      borderRadius: const BorderRadius.vertical(top: Radius.circular(2)),
+      width: count > 16 ? 7 : 18,
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(6)),
       color: AppColors.slateHigh,
     );
   }
@@ -427,6 +442,7 @@ class _DistributionPanel extends ConsumerWidget {
     final total = stats.totalXp;
     return Panel(
       title: l10n.chartDistribution,
+      icon: Icons.donut_large_rounded,
       child: Column(
         children: [
           for (final a in Attribute.values)
@@ -503,6 +519,7 @@ class _RhythmPanel extends ConsumerWidget {
 
     return Panel(
       title: l10n.chartConsistency,
+      icon: Icons.grid_view_rounded,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -518,7 +535,7 @@ class _RhythmPanel extends ConsumerWidget {
                     height: period == ChroniclePeriod.year ? 9 : 18,
                     decoration: BoxDecoration(
                       color: colorFor(d),
-                      borderRadius: AppRadius.sharpAll,
+                      borderRadius: BorderRadius.circular(4),
                       border: Border.all(color: AppColors.hairline, width: 0.5),
                     ),
                   ),
