@@ -838,6 +838,149 @@ async function smoke(db, { profileFields }) {
   check('RLS enabled on every public table', unprotected.length === 0, unprotected.map((r) => r.relname).join(', '));
 }
 
+// ---------------------------------------------------------------------------
+// Internal Edge Function calls (…_cron_secret_key.sql, …_notify_triggers.sql)
+// ---------------------------------------------------------------------------
+
+// Stand-ins with the signatures of pg_net's net.http_post and Supabase Vault;
+// requests are recorded instead of sent.
+const NET_AND_VAULT_STANDINS = /* sql */ `
+  create schema net;
+  create table net.requests (
+    id bigserial primary key, url text, body jsonb, headers jsonb, timeout_milliseconds integer
+  );
+  create function net.http_post(
+    url text, body jsonb default '{}'::jsonb, params jsonb default '{}'::jsonb,
+    headers jsonb default '{}'::jsonb, timeout_milliseconds integer default 5000
+  ) returns bigint language sql as $$
+    insert into net.requests (url, body, headers, timeout_milliseconds)
+    values (url, body, headers, timeout_milliseconds) returning id
+  $$;
+
+  create schema vault;
+  create table vault.secrets (
+    id uuid primary key default gen_random_uuid(), name text unique, secret text not null,
+    description text not null default '', created_at timestamptz not null default now()
+  );
+  create view vault.decrypted_secrets as
+    select id, name, secret as decrypted_secret, description, created_at from vault.secrets;
+  create function vault.create_secret(
+    new_secret text, new_name text default null, new_description text default '', new_key_id uuid default null
+  ) returns uuid language sql as $$
+    insert into vault.secrets (secret, name, description)
+    values (new_secret, new_name, coalesce(new_description, '')) returning id
+  $$;
+  create function vault.update_secret(
+    secret_id uuid, new_secret text default null, new_name text default null,
+    new_description text default null, new_key_id uuid default null
+  ) returns void language sql as $$
+    update vault.secrets set secret = coalesce(new_secret, secret), name = coalesce(new_name, name),
+      description = coalesce(new_description, description)
+    where id = secret_id
+  $$;
+`;
+
+const D = '00000000-0000-4000-8000-00000000000d';
+const E = '00000000-0000-4000-8000-00000000000e';
+const PROJECT_URL = 'https://abcdefghijklmnopqrst.supabase.co';
+const SECRET_KEY = 'sb_secret_validation_0123456789';
+const LEGACY_KEY = 'eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoic2VydmljZV9yb2xlIn0.c2lnbmF0dXJl';
+
+async function internalCalls(db) {
+  const requests = async () => (await db.query('select * from net.requests order by id')).rows;
+
+  const triggers = await rows(db, 'postgres', null, `select tgrelid::regclass::text as t from pg_trigger
+    where tgname in ('reactions_notify', 'comments_notify', 'feed_events_notify') order by 1`);
+  check('notification triggers on reactions, comments and feed_events',
+    triggers.map((r) => r.t).join(',') === 'comments,feed_events,reactions', triggers.map((r) => r.t).join(','));
+  const offline = await one(db, 'postgres', null, `select private.call_edge_function('notify', '{}') as id`);
+  check('internal calls are a no-op without pg_net and Vault', offline.id === null);
+
+  await db.exec(NET_AND_VAULT_STANDINS);
+  const unconfigured = await one(db, 'postgres', null, `select private.call_edge_function('notify', '{}') as id`);
+  check('no request while the Vault secrets are missing', unconfigured.id === null && (await requests()).length === 0);
+
+  await one(db, 'postgres', null, 'select private.set_function_credentials($1, $2)', [`${PROJECT_URL}/`, SECRET_KEY]);
+  await one(db, 'postgres', null, 'select private.set_function_credentials($1, $2)', [`${PROJECT_URL}/`, SECRET_KEY]);
+  const secrets = await rows(db, 'postgres', null, 'select name, decrypted_secret from vault.decrypted_secrets order by name');
+  check('set_function_credentials stores the URL and secret key once (re-runnable)',
+    secrets.length === 2 && secrets[0].name === 'wyrd_project_url' && secrets[0].decrypted_secret === PROJECT_URL
+      && secrets[1].name === 'wyrd_secret_key' && secrets[1].decrypted_secret === SECRET_KEY,
+    JSON.stringify(secrets.map((s) => s.name)));
+  await expectError('set_function_credentials refuses a publishable key',
+    one(db, 'postgres', null, 'select private.set_function_credentials($1, $2)', [PROJECT_URL, 'sb_publishable_x']),
+    /secret key/);
+  await expectError('set_function_credentials refuses a URL without a scheme',
+    one(db, 'postgres', null, 'select private.set_function_credentials($1, $2)', ['abcdefghijklmnopqrst.supabase.co', SECRET_KEY]),
+    /project URL/);
+  await expectError('clients cannot reach the internal-call helpers',
+    one(db, 'authenticated', A, `select private.call_edge_function('notify', '{}')`), /permission denied/);
+  await expectError('the service role cannot rewrite the internal-call credentials',
+    one(db, 'service_role', null, 'select private.set_function_credentials($1, $2)', [PROJECT_URL, SECRET_KEY]),
+    /permission denied/);
+
+  // A guild with a deed, then a reaction, a comment and a milestone.
+  await db.query(`insert into auth.users (id, email) values ($1, 'd@example.test'), ($2, 'e@example.test')`, [D, E]);
+  const hall = await one(db, 'authenticated', D, `select * from public.create_guild('Hall of Echoes')`);
+  const code = (await one(db, 'authenticated', D, 'select * from public.create_invite($1)', [hall.id])).code;
+  await one(db, 'authenticated', E, 'select * from public.join_guild_by_code($1)', [code]);
+  const deed = await one(db, 'postgres', null, `insert into public.feed_events (guild_id, actor_id, kind, payload)
+    values ($1, $2, 'completion', '{"tier":"daily"}') returning id`, [hall.id, D]);
+  check('completion events send no notification', (await requests()).length === 0);
+
+  await one(db, 'authenticated', E, `select public.react($1, 'honour')`, [deed.id]);
+  const [reaction] = await requests();
+  check('a reaction is posted to notify with the secret key as apikey',
+    reaction?.url === `${PROJECT_URL}/functions/v1/notify` && reaction.headers.apikey === SECRET_KEY
+      && reaction.headers.Authorization === undefined && reaction.timeout_milliseconds === 5000,
+    JSON.stringify({ url: reaction?.url, headers: Object.keys(reaction?.headers ?? {}) }));
+  check('the request has the Database Webhook shape notify expects',
+    reaction?.body.type === 'INSERT' && reaction.body.table === 'reactions' && reaction.body.schema === 'public'
+      && reaction.body.record.event_id === deed.id && reaction.body.record.user_id === E
+      && reaction.body.old_record === null, JSON.stringify(reaction?.body));
+
+  await one(db, 'authenticated', E, `select * from public.add_comment($1, 'Well met')`, [deed.id]);
+  await one(db, 'postgres', null, `insert into public.feed_events (guild_id, kind, payload)
+    values ($1, 'challenge_milestone', '{"milestone":25,"title":"Long road"}')`, [hall.id]);
+  const posted = (await requests()).map((r) => `${r.body.table}:${r.body.record.body ?? r.body.record.kind ?? ''}`);
+  check('comments and challenge milestones are posted too',
+    posted.join(',') === 'reactions:honour,comments:Well met,feed_events:challenge_milestone', posted.join(','));
+
+  await db.exec(`create or replace function net.http_post(
+      url text, body jsonb default '{}'::jsonb, params jsonb default '{}'::jsonb,
+      headers jsonb default '{}'::jsonb, timeout_milliseconds integer default 5000
+    ) returns bigint language plpgsql as $$ begin raise exception 'pg_net is down'; end $$`);
+  await one(db, 'authenticated', E, `select public.react($1, 'steel')`, [deed.id]);
+  const kept = await one(db, 'postgres', null,
+    `select count(*)::int as n from public.reactions where event_id = $1 and user_id = $2`, [deed.id, E]);
+  check('a failing pg_net never fails the user\'s write', kept.n === 2);
+
+  // pg_cron's dispatch, and a project still on the legacy service-role key.
+  await db.exec(`create or replace function net.http_post(
+      url text, body jsonb default '{}'::jsonb, params jsonb default '{}'::jsonb,
+      headers jsonb default '{}'::jsonb, timeout_milliseconds integer default 5000
+    ) returns bigint language sql as $fn$
+      insert into net.requests (url, body, headers, timeout_milliseconds)
+      values (url, body, headers, timeout_milliseconds) returning id
+    $fn$`);
+  await db.query(`delete from net.requests`);
+  await db.query(`insert into public.chronicles (owner_id, period, period_start, period_end, locale, status)
+    values ($1, 'week', date '2026-10-26', date '2026-11-02', 'en', 'pending')`, [D]);
+  await one(db, 'postgres', null, 'select private.dispatch_pending_chronicles()');
+  const [dispatch] = await requests();
+  check('pg_cron dispatch wakes generate-chronicle with the secret key',
+    dispatch?.url === `${PROJECT_URL}/functions/v1/generate-chronicle` && dispatch.body.mode === 'pending'
+      && dispatch.headers.apikey === SECRET_KEY && dispatch.timeout_milliseconds === 60000,
+    JSON.stringify({ url: dispatch?.url, body: dispatch?.body }));
+
+  await db.query(`delete from vault.secrets where name = 'wyrd_secret_key'`);
+  await one(db, 'postgres', null, `select vault.create_secret($1, 'wyrd_service_role_key')`, [LEGACY_KEY]);
+  await one(db, 'postgres', null, `select private.call_edge_function('notify', '{}')`);
+  const legacy = (await requests()).at(-1);
+  check('a legacy service-role key is used as fallback, also as bearer token',
+    legacy?.headers.apikey === LEGACY_KEY && legacy.headers.Authorization === `Bearer ${LEGACY_KEY}`);
+}
+
 async function main() {
   const db = await freshDatabase(NEW_PROJECT_DEFAULTS);
   console.log('Applying migrations (new project: nothing exposed without a GRANT)');
@@ -865,6 +1008,13 @@ async function main() {
     await smoke(db, { profileFields: surface.fields });
   } catch (error) {
     check('smoke checks completed', false, String(error?.message ?? error));
+  }
+
+  console.log('Internal calls (pg_cron and notification triggers through pg_net)');
+  try {
+    await internalCalls(db);
+  } catch (error) {
+    check('internal call checks completed', false, String(error?.message ?? error));
   }
   const failed = results.filter((r) => !r.ok);
   console.log(`\n${results.length - failed.length}/${results.length} checks passed`);
