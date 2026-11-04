@@ -83,6 +83,19 @@ void main() {
     await closeApp(tester, db);
   });
 
+  testWidgets('the web app reopened at the link\'s fragment lands home and shows it there', (tester) async {
+    // Hash routing reads `#error=…` as the location the app opens at.
+    tester.binding.platformDispatcher.defaultRouteNameTestValue =
+        'error=access_denied&error_description=The+user+has+denied+your+application+access.';
+    addTearDown(tester.binding.platformDispatcher.clearDefaultRouteNameTestValue);
+    errors.add(cancelled);
+    final db = await pumpApp(tester);
+    await arrive(tester);
+    expect(find.text('Arin'), findsOneWidget, reason: 'the character sheet, not "Page Not Found"');
+    expect(find.widgetWithText(SnackBar, 'Sign-in was cancelled.'), findsOneWidget);
+    await closeApp(tester, db);
+  });
+
   testWidgets('in Persian, right to left', (tester) async {
     final db = await pumpApp(tester, language: 'fa');
     errors.add(cancelled);
