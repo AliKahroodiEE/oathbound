@@ -1,16 +1,16 @@
 -- =============================================================================
--- Oathbound · scheduled jobs (pg_cron) and their job functions
+-- Wyrd · scheduled jobs (pg_cron) and their job functions
 --
 -- The job functions are plain SQL and can be run by hand or from any
 -- scheduler. Scheduling is skipped (with a NOTICE) when pg_cron is not
 -- available, e.g. in PGlite-based validation; pg_net + Vault are optional
 -- and only used to wake the generate-chronicle Edge Function.
 --
---   oathbound-monthly         05:00 UTC on the 1st  snapshots + emergent classes
---   oathbound-chronicles      03:15 UTC daily        enqueue last week's chronicles
---   oathbound-dispatch        every 15 minutes       drain pending chronicles (pg_net)
---   oathbound-hourly          minute 7 every hour    condition rollover, end challenges
---   oathbound-retention       04:30 UTC daily        retention cleanup
+--   wyrd-monthly         05:00 UTC on the 1st  snapshots + emergent classes
+--   wyrd-chronicles      03:15 UTC daily        enqueue last week's chronicles
+--   wyrd-dispatch        every 15 minutes       drain pending chronicles (pg_net)
+--   wyrd-hourly          minute 7 every hour    condition rollover, end challenges
+--   wyrd-retention       04:30 UTC daily        retention cleanup
 -- =============================================================================
 
 -- ---------------------------------------------------------------------------
@@ -193,8 +193,8 @@ end;
 $$;
 
 -- Wakes generate-chronicle to drain pending rows. Requires pg_net and two
--- Vault secrets (see backend/README.md): oathbound_project_url and
--- oathbound_service_role_key. Without them it does nothing; pending rows
+-- Vault secrets (see backend/README.md): wyrd_project_url and
+-- wyrd_service_role_key. Without them it does nothing; pending rows
 -- can also be drained by calling the function from any external scheduler.
 create or replace function private.dispatch_pending_chronicles()
 returns void
@@ -211,9 +211,9 @@ begin
   end if;
   begin
     execute 'select decrypted_secret from vault.decrypted_secrets where name = $1'
-      into v_url using 'oathbound_project_url';
+      into v_url using 'wyrd_project_url';
     execute 'select decrypted_secret from vault.decrypted_secrets where name = $1'
-      into v_key using 'oathbound_service_role_key';
+      into v_key using 'wyrd_service_role_key';
     if v_url is null or v_key is null then
       raise notice 'chronicle dispatch: Vault secrets not configured';
       return;
@@ -344,15 +344,15 @@ begin
     raise notice 'pg_net is not available (%); chronicle dispatch will be a no-op', sqlerrm;
   end;
 
-  perform cron.schedule('oathbound-monthly', '0 5 1 * *',
+  perform cron.schedule('wyrd-monthly', '0 5 1 * *',
     $job$select private.take_monthly_snapshots(); select private.recompute_classes();$job$);
-  perform cron.schedule('oathbound-chronicles', '15 3 * * *',
+  perform cron.schedule('wyrd-chronicles', '15 3 * * *',
     $job$select private.enqueue_weekly_chronicles();$job$);
-  perform cron.schedule('oathbound-dispatch', '*/15 * * * *',
+  perform cron.schedule('wyrd-dispatch', '*/15 * * * *',
     $job$select private.dispatch_pending_chronicles();$job$);
-  perform cron.schedule('oathbound-hourly', '7 * * * *',
+  perform cron.schedule('wyrd-hourly', '7 * * * *',
     $job$select private.refresh_conditions(); select private.end_challenges();$job$);
-  perform cron.schedule('oathbound-retention', '30 4 * * *',
+  perform cron.schedule('wyrd-retention', '30 4 * * *',
     $job$select private.retention_cleanup();$job$);
 end;
 $outer$;

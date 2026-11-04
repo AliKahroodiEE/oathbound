@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:drift/drift.dart';
-import 'package:oathbound_engine/oathbound_engine.dart';
+import 'package:wyrd_engine/wyrd_engine.dart';
 
 import '../db/database.dart';
 import '../models.dart';

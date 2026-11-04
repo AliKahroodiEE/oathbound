@@ -1,5 +1,5 @@
-name: oathbound
-description: "Oathbound — your character is who you become."
+name: wyrd
+description: "Wyrd — your character is who you become."
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
 version: 1.0.0+1
@@ -26,8 +26,8 @@ dependencies:
   flutter_timezone: ^5.1.1
   flutter_localizations:
     sdk: flutter
-  oathbound_engine:
-    path: ../packages/oathbound_engine
+  wyrd_engine:
+    path: ../packages/wyrd_engine
 
 dev_dependencies:
   flutter_test:

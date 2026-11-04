@@ -1,6 +1,6 @@
 /**
  * Every tunable number of the progression rulebook (TypeScript twin of
- * `packages/oathbound_engine/lib/src/rules.dart`).
+ * `packages/wyrd_engine/lib/src/rules.dart`).
  *
  * Changing any value here requires bumping RULES_VERSION in BOTH engines,
  * updating `docs/product/progression-rules.md`, and regenerating the shared

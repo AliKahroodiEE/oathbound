@@ -1,6 +1,6 @@
 import 'package:flutter/animation.dart';
 import 'package:flutter/painting.dart';
-import 'package:oathbound_engine/oathbound_engine.dart';
+import 'package:wyrd_engine/wyrd_engine.dart';
 
 /// Ashen Codex colour tokens (docs/design/design-system.md §2).
 /// Feature code must use these, never raw colours.

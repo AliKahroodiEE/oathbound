@@ -10,7 +10,7 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
-  String get appName => 'Oathbound';
+  String get appName => 'Wyrd';
 
   @override
   String get appTagline => 'Your character is not someone you play. Your character is who you become.';

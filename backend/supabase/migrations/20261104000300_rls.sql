@@ -1,5 +1,5 @@
 -- =============================================================================
--- Oathbound · row-level security
+-- Wyrd · row-level security
 --
 -- RLS is enabled on EVERY table in `public`. Principles (overview §6):
 --   * Owners read their own rows; owners write only quests, subtasks,

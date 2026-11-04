@@ -192,7 +192,7 @@ class AppDatabase extends _$AppDatabase {
   );
 
   static QueryExecutor _open() => driftDatabase(
-    name: 'oathbound',
+    name: 'wyrd',
     web: DriftWebOptions(sqlite3Wasm: Uri.parse('sqlite3.wasm'), driftWorker: Uri.parse('drift_worker.js')),
   );
 }

@@ -3,7 +3,7 @@
  * offline, disabled, failing, rate-limited or not configured. It never
  * invents attribute weights beyond the category defaults.
  *
- * Twin of `packages/oathbound_engine/lib/src/heuristic.dart`; keyword lists
+ * Twin of `packages/wyrd_engine/lib/src/heuristic.dart`; keyword lists
  * and thresholds must stay identical so the client's provisional result and
  * the server's fallback result agree.
  */

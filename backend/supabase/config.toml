@@ -3,7 +3,7 @@
 # here is a secret. Values referenced as env(...) come from the shell or
 # backend/supabase/.env (never committed).
 
-project_id = "oathbound"
+project_id = "wyrd"
 
 [api]
 enabled = true
@@ -56,7 +56,7 @@ enabled = true
 site_url = "http://localhost:3000"
 additional_redirect_urls = [
   "http://localhost:3000/auth/callback",
-  "io.oathbound.app://auth-callback",
+  "io.wyrd.app://auth-callback",
 ]
 jwt_expiry = 3600
 enable_refresh_token_rotation = true

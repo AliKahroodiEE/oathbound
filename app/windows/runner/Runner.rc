@@ -90,12 +90,12 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "AliKahroodiEE" "\0"
-            VALUE "FileDescription", "Oathbound" "\0"
+            VALUE "FileDescription", "Wyrd" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "oathbound" "\0"
+            VALUE "InternalName", "wyrd" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2026 AliKahroodiEE. All rights reserved." "\0"
-            VALUE "OriginalFilename", "oathbound.exe" "\0"
-            VALUE "ProductName", "Oathbound" "\0"
+            VALUE "OriginalFilename", "wyrd.exe" "\0"
+            VALUE "ProductName", "Wyrd" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

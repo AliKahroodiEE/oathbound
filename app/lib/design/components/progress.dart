@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:oathbound_engine/oathbound_engine.dart';
+import 'package:wyrd_engine/wyrd_engine.dart';
 
 import '../sigils.dart';
 import '../tokens.dart';

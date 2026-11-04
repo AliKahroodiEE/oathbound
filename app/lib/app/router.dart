@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:oathbound_engine/oathbound_engine.dart';
+import 'package:wyrd_engine/wyrd_engine.dart';
 
 import '../features/auth/auth_screen.dart';
 import '../features/character/character_screen.dart';

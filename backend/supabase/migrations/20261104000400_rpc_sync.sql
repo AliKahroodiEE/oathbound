@@ -1,5 +1,5 @@
 -- =============================================================================
--- Oathbound · sync RPCs (ADR-003, overview §5)
+-- Wyrd · sync RPCs (ADR-003, overview §5)
 --
 -- sync_push(changes jsonb)  — applies the client outbox idempotently.
 -- sync_pull(cursor bigint)  — returns the caller's rows changed after cursor.

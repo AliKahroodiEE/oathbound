@@ -1,6 +1,6 @@
-# oathbound
+# wyrd
 
-Oathbound — your character is who you become.
+Wyrd — your character is who you become.
 
 ## Getting Started
 

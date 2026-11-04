@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:oathbound/data/models.dart';
-import 'package:oathbound/features/reminders/reminder_planner.dart';
-import 'package:oathbound_engine/oathbound_engine.dart';
+import 'package:wyrd/data/models.dart';
+import 'package:wyrd/features/reminders/reminder_planner.dart';
+import 'package:wyrd_engine/wyrd_engine.dart';
 
 Quest quest({
   String id = 'q',

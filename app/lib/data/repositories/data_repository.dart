@@ -14,7 +14,7 @@ class DataRepository {
       for (final r in await _db.select(t).get()) r.toJson(),
     ];
     return {
-      'format': 'oathbound-export',
+      'format': 'wyrd-export',
       'version': 1,
       'exportedAt': DateTime.now().toUtc().toIso8601String(),
       'quests': await rows(_db.quests),

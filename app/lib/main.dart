@@ -22,7 +22,7 @@ Future<void> main() async {
         backendReadyProvider.overrideWithValue(backendReady),
         initialOnboardedProvider.overrideWithValue(profile.onboardingComplete),
       ],
-      child: const OathboundApp(),
+      child: const WyrdApp(),
     ),
   );
 }

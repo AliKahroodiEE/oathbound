@@ -1,5 +1,5 @@
 -- =============================================================================
--- Oathbound · progression RPCs (overview §4, progression-rules §5–§11)
+-- Wyrd · progression RPCs (overview §4, progression-rules §5–§11)
 --
 -- The TypeScript engine in the evaluate-completion Edge Function computes
 -- the authoritative RewardResult; apply_progression persists it in ONE

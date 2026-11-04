@@ -2,7 +2,7 @@
  * Core vocabulary and data shapes of the progression engine.
  *
  * TypeScript twin of `model.dart`, `proposal.dart`, `facts.dart` and
- * `result.dart` in `packages/oathbound_engine/lib/src/`. Only erasable
+ * `result.dart` in `packages/wyrd_engine/lib/src/`. Only erasable
  * TypeScript syntax is used (no `enum`, namespaces or parameter properties)
  * so the same file runs under Deno and under Node's built-in type stripping.
  */

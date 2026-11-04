@@ -26,7 +26,7 @@ import * as engine from '../supabase/functions/_shared/engine/index.ts';
 const MIGRATIONS = fileURLToPath(new URL('../supabase/migrations/', import.meta.url));
 const CURVES = JSON.parse(
   readFileSync(
-    new URL('../../packages/oathbound_engine/test/vectors/curves.json', import.meta.url),
+    new URL('../../packages/wyrd_engine/test/vectors/curves.json', import.meta.url),
     'utf8',
   ),
 );

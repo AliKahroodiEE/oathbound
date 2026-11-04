@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:oathbound_engine/oathbound_engine.dart';
+import 'package:wyrd_engine/wyrd_engine.dart';
 
 import 'tokens.dart';
 

@@ -10,7 +10,7 @@ class AppLocalizationsFa extends AppLocalizations {
   AppLocalizationsFa([String locale = 'fa']) : super(locale);
 
   @override
-  String get appName => 'Oathbound';
+  String get appName => 'سرنوشت‌ساز';
 
   @override
   String get appTagline => 'شخصیت تو کسی نیست که نقشش را بازی می‌کنی؛ کسی است که به آن تبدیل می‌شوی.';

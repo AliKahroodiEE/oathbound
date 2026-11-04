@@ -1,4 +1,4 @@
-/// Deterministic progression rules for Oathbound.
+/// Deterministic progression rules for Wyrd.
 ///
 /// The authoritative specification is `docs/product/progression-rules.md`.
 /// A TypeScript twin runs on the server; both must pass the conformance

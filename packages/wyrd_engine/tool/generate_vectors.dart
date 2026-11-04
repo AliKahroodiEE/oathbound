@@ -6,7 +6,7 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:oathbound_engine/oathbound_engine.dart';
+import 'package:wyrd_engine/wyrd_engine.dart';
 
 Map<String, Object?> proposal({
   String category = 'study',
