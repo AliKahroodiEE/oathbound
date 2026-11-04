@@ -57,9 +57,13 @@ same outputs, on every platform.
 
 ### 5.1 Normalise the proposal
 1. Clamp `difficulty` to 1–5 and `confidence` to 0–1.
-2. Drop unknown attributes and duplicates (keep the higher weight).
-3. Keep the three highest weights; drop weights < 0.10 unless it is the only one.
-4. Renormalise weights to sum to 1. If nothing remains, use the category defaults (§8.1).
+2. Drop unknown attributes, non-positive or non-finite weights, and duplicates (keep the
+   higher weight).
+3. Scale weights to sum to 1, then keep the three highest (ties broken by attribute order:
+   strength, intelligence, discipline, creativity, vitality, social).
+4. Drop kept weights whose scaled value is < 0.10; if none would remain, keep the highest.
+5. Rescale the survivors to sum to 1. If nothing remains at all, use the category defaults
+   (§8.1) and record adjustment `weights_defaulted`.
 
 ### 5.2 Effective minutes `m`
 1. If `trackedMinutes ≥ 1` → `m = trackedMinutes` (timer is the strongest evidence).
@@ -96,7 +100,8 @@ describe the task more concretely. Heuristic evaluations carry no penalty.
 `adjusted = base × R × confidenceMultiplier`; each attribute receives `adjusted × weight`.
 
 ### 5.8 Follow-through bonus (deterministic Discipline)
-If the quest was planned (created ≥ 60 min before completion, or it is a recurring occurrence)
+If the completion is non-trivial **and** the quest was planned (created ≥ 60 min before
+completion, or it is a recurring occurrence)
 **and** it was completed on or before `dueAt` (or has no due date): Discipline receives
 `+10 %` of `adjusted`, plus `+5 %` if it had an implementation intention. Minimum +1.
 Adjustment `follow_through`. This is the only place the engine creates attribute value the
@@ -112,7 +117,7 @@ grant        = round(effective(rawToday + raw) − effective(rawToday))
 Adjustments `soft_cap` / `hard_cap`. The copy frames this as rest, not restriction.
 
 ### 5.10 Output
-Integer grants (zero grants dropped), total, effective minutes, adjustments with parameters,
+Raw amounts are rounded to integers before caps. Integer grants (zero grants dropped), total, effective minutes, adjustments with parameters,
 rule version, and whether the proposal came from AI or the heuristic.
 
 ### Worked example
@@ -133,7 +138,7 @@ weights intelligence 0.75 / discipline 0.25, planned that morning, no due date.
 | Curve | XP required to advance from `n` to `n + 1` |
 | --- | --- |
 | Character level | `round(100 × n^1.5)` → 100, 283, 520, 800, 1118 … |
-| Attribute rank | `round(40 × n^1.4)` → 40, 106, 187, 279, 381 … |
+| Attribute rank | `round(40 × n^1.4)` → 40, 106, 186, 279, 381 … |
 
 Both start at 1 with 0 XP. A level is never lost. Progress bars always show true remaining
 XP — no artificial acceleration near the end of a bar.
