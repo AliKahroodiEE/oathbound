@@ -6,6 +6,8 @@ import 'package:wyrd/data/models.dart';
 import 'package:wyrd/data/remote/remote_api.dart';
 import 'package:wyrd/data/repositories/progression_repository.dart';
 import 'package:wyrd/data/repositories/quest_repository.dart';
+import 'package:wyrd/data/repositories/settings_repository.dart';
+import 'package:wyrd/data/sync/sync_coordinator.dart';
 import 'package:wyrd/data/sync/sync_service.dart';
 import 'package:wyrd_engine/wyrd_engine.dart';
 
@@ -48,6 +50,11 @@ class FakeApi implements RemoteApi {
 
   @override
   Future<void> updateProfile(Map<String, Object?> fields) async => profiles.add(fields);
+
+  final notificationPrefs = <Map<String, Object?>>[];
+
+  @override
+  Future<void> updateNotificationPrefs(Map<String, Object?> prefs) async => notificationPrefs.add(prefs);
 }
 
 Map<String, Object?> serverResult(int discipline) => {
@@ -189,6 +196,32 @@ void main() {
     expect(api.profiles, hasLength(1));
     await sync.syncOnce(profile: {...profile, 'ai_evaluation_enabled': true});
     expect(api.profiles, hasLength(2));
+  });
+
+  test('pushes the notification settings only when they change', () async {
+    final prefs = serverNotificationPrefs(const UserProfile());
+    await sync.syncOnce(notificationPrefs: prefs);
+    await sync.syncOnce(notificationPrefs: prefs);
+    expect(api.notificationPrefs, hasLength(1));
+    expect(api.notificationPrefs.single, {
+      'categories': {
+        'reminders': true,
+        'guild_reactions': true,
+        'guild_comments': true,
+        'challenge_milestones': true,
+        'weekly_summary': true,
+      },
+      'quiet_hours_start': '22:00',
+      'quiet_hours_end': '08:00',
+    });
+    final quiet = serverNotificationPrefs(
+      const UserProfile(notifGuild: false, quietStartMinutes: 23 * 60 + 30, quietEndMinutes: 7 * 60),
+    );
+    await sync.syncOnce(notificationPrefs: quiet);
+    expect(api.notificationPrefs, hasLength(2));
+    expect((api.notificationPrefs.last['categories']! as Map)['guild_comments'], isFalse);
+    expect(api.notificationPrefs.last['quiet_hours_start'], '23:30');
+    expect(api.notificationPrefs.last['quiet_hours_end'], '07:00');
   });
 
   test('HLC strings sort in mutation order', () {

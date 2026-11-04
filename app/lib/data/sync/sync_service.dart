@@ -41,11 +41,16 @@ class SyncService {
   static const _nodeKey = 'sync_node';
   static const _pendingEvalKey = 'sync_pending_evaluations';
   static const _profileKey = 'sync_profile';
+  static const _notificationPrefsKey = 'sync_notification_prefs';
 
-  /// One full cycle. [profile] holds server profile fields; it is pushed
-  /// only when it differs from the last pushed value.
-  Future<SyncReport> syncOnce({Map<String, Object?>? profile}) async {
-    if (profile != null) await _pushProfile(profile);
+  /// One full cycle. [profile] holds server profile fields and
+  /// [notificationPrefs] the notification settings; each is pushed only
+  /// when it differs from the last pushed value.
+  Future<SyncReport> syncOnce({Map<String, Object?>? profile, Map<String, Object?>? notificationPrefs}) async {
+    if (profile != null) await _pushIfChanged(_profileKey, profile, _api.updateProfile);
+    if (notificationPrefs != null) {
+      await _pushIfChanged(_notificationPrefsKey, notificationPrefs, _api.updateNotificationPrefs);
+    }
     final push = await _push();
     final evaluated = await _evaluatePending();
     final pulled = await _pull();
@@ -195,11 +200,14 @@ class SyncService {
 
   // ------------------------------------------------------------- evaluate
 
-  Future<void> _pushProfile(Map<String, Object?> profile) async {
-    final encoded = jsonEncode(profile);
-    if (jsonEncode(await _read(_profileKey)) == encoded) return;
-    await _api.updateProfile(profile);
-    await _write(_profileKey, profile);
+  Future<void> _pushIfChanged(
+    String key,
+    Map<String, Object?> value,
+    Future<void> Function(Map<String, Object?>) send,
+  ) async {
+    if (jsonEncode(await _read(key)) == jsonEncode(value)) return;
+    await send(value);
+    await _write(key, value);
   }
 
   Future<int> _evaluatePending() async {

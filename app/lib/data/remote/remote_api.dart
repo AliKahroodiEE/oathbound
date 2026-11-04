@@ -22,6 +22,10 @@ abstract class RemoteApi {
   /// Updates the caller's server profile (language, AI language and
   /// opt-in, time zone, calendar, week start, weekly target, motivation).
   Future<void> updateProfile(Map<String, Object?> fields);
+
+  /// Mirrors the notification switches and quiet hours to the server, which
+  /// decides about pushes: `{categories, quiet_hours_start, quiet_hours_end}`.
+  Future<void> updateNotificationPrefs(Map<String, Object?> prefs);
 }
 
 class SupabaseRemoteApi implements RemoteApi {
@@ -61,4 +65,8 @@ class SupabaseRemoteApi implements RemoteApi {
     if (uid == null) return;
     await _client.from('profiles').update(fields).eq('id', uid);
   }
+
+  @override
+  Future<void> updateNotificationPrefs(Map<String, Object?> prefs) =>
+      _client.rpc<void>('set_notification_prefs', params: prefs);
 }
