@@ -1,6 +1,10 @@
+import 'dart:async';
+import 'dart:ui' show Locale;
+
 import 'package:drift/drift.dart' show DatabaseConnection;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:wyrd/core/locale/regional_settings.dart';
 import 'package:wyrd/data/db/database.dart';
 import 'package:wyrd/data/models.dart';
 import 'package:wyrd/data/remote/remote_api.dart';
@@ -16,6 +20,12 @@ class FakeApi implements RemoteApi {
   Map<String, Object?> pullResponse = {'cursor': 0, 'has_more': false, 'changes': <String, Object?>{}};
   Map<String, Object?>? evaluation;
   bool failRetryable = false;
+
+  /// Changes from this position in a batch on come back retryable.
+  int? retryableFrom;
+
+  /// Holds a pull until it completes.
+  Future<void>? pullGate;
   final profiles = <Map<String, Object?>>[];
 
   @override
@@ -25,14 +35,24 @@ class FakeApi implements RemoteApi {
         for (final c in changes) {'id': c['id'], 'status': 'rejected', 'retryable': true},
       ];
     }
-    pushed.addAll(changes);
+    final from = retryableFrom ?? changes.length;
+    pushed.addAll(changes.take(from));
     return [
-      for (final c in changes) {'id': c['id'], 'status': 'applied'},
+      for (var i = 0; i < changes.length; i++)
+        i < from
+            ? {'id': changes[i]['id'], 'status': 'applied'}
+            : {'id': changes[i]['id'], 'status': 'rejected', 'retryable': true},
     ];
   }
 
+  /// Like the server: only what changed after [cursor].
   @override
-  Future<Map<String, Object?>> pull(int cursor) async => pullResponse;
+  Future<Map<String, Object?>> pull(int cursor) async {
+    if (pullGate != null) await pullGate;
+    final next = (pullResponse['cursor']! as num).toInt();
+    if (cursor >= next) return {'cursor': cursor, 'has_more': false, 'changes': <String, Object?>{}};
+    return pullResponse;
+  }
 
   Map<String, Object?>? lastClientProposal;
   String? lastClientModel;
@@ -189,39 +209,243 @@ void main() {
     expect(await progression.attributeTotals(), {Attribute.discipline: 11});
   });
 
-  test('pushes the profile only when it changes', () async {
-    const profile = {'locale': 'fa', 'ai_locale': 'fa', 'ai_evaluation_enabled': false};
-    await sync.syncOnce(profile: profile);
-    await sync.syncOnce(profile: profile);
+  test('a settings group is sent only when it changes', () async {
+    var value = <String, Object?>{'locale': 'fa', 'ai_evaluation_enabled': false};
+    final group = SyncedSettings(key: 'sync_test', current: () async => value, send: (v) async => api.profiles.add(v));
+    await sync.syncOnce(settings: [group]);
+    await sync.syncOnce(settings: [group]);
     expect(api.profiles, hasLength(1));
-    await sync.syncOnce(profile: {...profile, 'ai_evaluation_enabled': true});
+    value = {...value, 'ai_evaluation_enabled': true};
+    await sync.syncOnce(settings: [group]);
     expect(api.profiles, hasLength(2));
   });
 
-  test('pushes the notification settings only when they change', () async {
-    final prefs = serverNotificationPrefs(const UserProfile());
-    await sync.syncOnce(notificationPrefs: prefs);
-    await sync.syncOnce(notificationPrefs: prefs);
-    expect(api.notificationPrefs, hasLength(1));
-    expect(api.notificationPrefs.single, {
+  test('a settings group that fails does not hold up the outbox', () async {
+    await quests.create(const QuestDraft(title: 'Read'));
+    final report = await sync.syncOnce(
+      settings: [
+        SyncedSettings(
+          key: 'sync_test',
+          current: () async => {'a': 1},
+          send: (_) async => throw StateError('function set_notification_prefs does not exist'),
+        ),
+      ],
+    );
+    expect(report.settingsFailed, 1);
+    expect(report.pushed, 1);
+    expect(await db.select(db.outboxEntries).get(), isEmpty);
+  });
+
+  test('completions applied before a retryable failure still get evaluated', () async {
+    final q = await quests.create(const QuestDraft(title: 'Write report'));
+    await progression.complete(q, provisional: true);
+    await quests.create(const QuestDraft(title: 'Read'));
+    api.retryableFrom = 2; // quest and completion go through, the next quest waits
+    await sync.syncOnce();
+    expect(await db.select(db.outboxEntries).get(), hasLength(1));
+    api
+      ..retryableFrom = null
+      ..evaluation = {'result': serverResult(5), 'proposal': serverProposal()};
+    final next = await sync.syncOnce();
+    expect(next.evaluated, 1);
+    expect(await progression.attributeTotals(), {Attribute.discipline: 5});
+  });
+
+  group('the device belongs to one account', () {
+    Future<List<KeyValueRow>> key(String name) => (db.select(db.keyValues)..where((k) => k.key.equals(name))).get();
+
+    test('guest data joins the first account that signs in', () async {
+      await quests.create(const QuestDraft(title: 'Made as a guest'));
+      expect(await sync.claimFor('user-a'), isFalse);
+      expect(await sync.claimFor('user-a'), isFalse);
+      expect(await db.select(db.quests).get(), hasLength(1));
+      expect(await db.select(db.outboxEntries).get(), hasLength(1));
+    });
+
+    test('another account\'s data is wiped before a new account syncs', () async {
+      await sync.claimFor('user-a');
+      await quests.create(const QuestDraft(title: 'A\'s quest'));
+      api.pullResponse = {'cursor': 900, 'has_more': false, 'changes': <String, Object?>{}};
+      await sync.syncOnce();
+      await quests.create(const QuestDraft(title: 'A\'s unsynced quest'));
+      expect(await key('sync_cursor'), isNotEmpty);
+
+      expect(await sync.claimFor('user-b'), isTrue);
+      expect(await db.select(db.quests).get(), isEmpty);
+      expect(await db.select(db.outboxEntries).get(), isEmpty, reason: 'never uploaded into B');
+      expect(await key('sync_cursor'), isEmpty, reason: 'B downloads its own history from the start');
+      expect(await sync.claimFor('user-b'), isFalse);
+    });
+  });
+
+  test('a stop while a page downloads keeps it off the device', () async {
+    final gate = Completer<void>();
+    api
+      ..pullGate = gate.future
+      ..pullResponse = {
+        'cursor': 7,
+        'has_more': false,
+        'changes': {
+          'quests': [
+            {
+              'id': '018f0000-0000-7000-8000-000000000009',
+              'tier': 'daily',
+              'title': 'Arrives late',
+              'created_at': '2026-11-04T05:00:00Z',
+              'updated_at': '2026-11-04T05:00:00Z',
+            },
+          ],
+        },
+      };
+    final cycle = sync.syncOnce();
+    await pumpEventQueue();
+    sync.stop();
+    gate.complete();
+    await expectLater(cycle, throwsA(isA<SyncStopped>()));
+    expect(await db.select(db.quests).get(), isEmpty);
+    expect(await (db.select(db.keyValues)..where((k) => k.key.equals('sync_cursor'))).get(), isEmpty);
+    await expectLater(sync.syncOnce(), throwsA(isA<SyncStopped>()));
+  });
+
+  group('account settings', () {
+    late SettingsRepository settings;
+    late List<SyncedSettings> groups;
+
+    setUp(() {
+      settings = SettingsRepository(db);
+      groups = syncedSettings(
+        settings: settings,
+        api: api,
+        regional: () => const RegionalPrefs(language: 'en').resolve(const Locale('en')),
+      );
+    });
+
+    Map<String, Object?> prefsRow({bool guild = true, bool weekly = true, String start = '22:00:00'}) => {
+      'user_id': 'u',
       'categories': {
         'reminders': true,
-        'guild_reactions': true,
-        'guild_comments': true,
-        'challenge_milestones': true,
-        'weekly_summary': true,
+        'guild_reactions': guild,
+        'guild_comments': guild,
+        'challenge_milestones': guild,
+        'weekly_summary': weekly,
+        'briefing': false,
       },
-      'quiet_hours_start': '22:00',
-      'quiet_hours_end': '08:00',
+      'quiet_hours_start': start,
+      'quiet_hours_end': '08:00:00',
+    };
+
+    test('notification settings go up in the shape set_notification_prefs takes', () async {
+      await settings.updateProfile(
+        (p) => p.copyWith(notifGuild: false, quietStartMinutes: 23 * 60 + 30, quietEndMinutes: 7 * 60),
+      );
+      await sync.syncOnce(settings: groups);
+      expect(api.notificationPrefs.single, {
+        'categories': {
+          'reminders': true,
+          'guild_reactions': false,
+          'guild_comments': false,
+          'challenge_milestones': false,
+          'weekly_summary': true,
+        },
+        'quiet_hours_start': '23:30',
+        'quiet_hours_end': '07:00',
+      });
+      await sync.syncOnce(settings: groups);
+      expect(api.notificationPrefs, hasLength(1), reason: 'unchanged settings are not sent again');
     });
-    final quiet = serverNotificationPrefs(
-      const UserProfile(notifGuild: false, quietStartMinutes: 23 * 60 + 30, quietEndMinutes: 7 * 60),
-    );
-    await sync.syncOnce(notificationPrefs: quiet);
-    expect(api.notificationPrefs, hasLength(2));
-    expect((api.notificationPrefs.last['categories']! as Map)['guild_comments'], isFalse);
-    expect(api.notificationPrefs.last['quiet_hours_start'], '23:30');
-    expect(api.notificationPrefs.last['quiet_hours_end'], '07:00');
+
+    test('a new device takes over the account\'s notification settings instead of sending its defaults', () async {
+      api.pullResponse = {
+        'cursor': 5,
+        'has_more': false,
+        'changes': {
+          'notification_prefs': [prefsRow(guild: false, start: '23:30:00')],
+        },
+      };
+      await sync.syncOnce(settings: groups);
+      final p = await settings.profile();
+      expect(p.notifGuild, isFalse);
+      expect(p.quietStartMinutes, 23 * 60 + 30);
+      expect(api.notificationPrefs, isEmpty, reason: 'nothing to send back');
+    });
+
+    test('changes from another device merge key by key with changes made here', () async {
+      await sync.syncOnce(settings: groups);
+      expect(api.notificationPrefs, hasLength(1));
+      // Here: weekly summary off, not sent yet. Elsewhere: guild off.
+      await settings.updateProfile((p) => p.copyWith(notifWeekly: false));
+      api.pullResponse = {
+        'cursor': 9,
+        'has_more': false,
+        'changes': {
+          'notification_prefs': [prefsRow(guild: false)],
+        },
+      };
+      await sync.syncOnce(settings: groups);
+      final p = await settings.profile();
+      expect(p.notifGuild, isFalse, reason: 'taken over from the other device');
+      expect(p.notifWeekly, isFalse, reason: 'kept from this device');
+      final sent = api.notificationPrefs.last['categories']! as Map;
+      expect(sent['guild_comments'], isFalse);
+      expect(sent['weekly_summary'], isFalse);
+    });
+
+    test('a profile untouched since sign-up gets this device\'s choices', () async {
+      await settings.updateProfile((p) => p.copyWith(characterName: 'Arin', weeklyTarget: 5));
+      api.pullResponse = {
+        'cursor': 3,
+        'has_more': false,
+        'changes': {
+          'profiles': [
+            {
+              'id': 'u',
+              'display_name': '',
+              'weekly_target': 4,
+              'motivation': <String, Object?>{},
+              'ai_evaluation_enabled': true,
+              'created_at': '2026-11-04T05:00:00+00:00',
+              'updated_at': '2026-11-04T05:00:00+00:00',
+            },
+          ],
+        },
+      };
+      await sync.syncOnce(settings: groups);
+      expect((await settings.profile()).weeklyTarget, 5);
+      expect(api.profiles.any((f) => f['display_name'] == 'Arin' && f['weekly_target'] == 5), isTrue);
+    });
+
+    test('an account set up elsewhere comes to a new device', () async {
+      api.pullResponse = {
+        'cursor': 3,
+        'has_more': false,
+        'changes': {
+          'profiles': [
+            {
+              'id': 'u',
+              'display_name': 'Arin Vale',
+              'weekly_target': 6,
+              'motivation': {
+                'drivers': ['mastery'],
+                'tone': 'warm',
+              },
+              'ai_evaluation_enabled': false,
+              'locale': 'fa',
+              'created_at': '2026-11-01T05:00:00+00:00',
+              'updated_at': '2026-11-03T05:00:00+00:00',
+            },
+          ],
+        },
+      };
+      await sync.syncOnce(settings: groups);
+      final p = await settings.profile();
+      expect(p.characterName, 'Arin Vale');
+      expect(p.weeklyTarget, 6);
+      expect(p.aiEnabled, isFalse);
+      expect(p.tone, 'warm');
+      expect(p.drivers, ['mastery']);
+      expect(api.profiles.where((f) => f.containsKey('weekly_target')), isEmpty, reason: 'nothing sent back');
+      expect(api.profiles.single['locale'], 'en', reason: 'where this device is still goes up');
+    });
   });
 
   test('HLC strings sort in mutation order', () {
