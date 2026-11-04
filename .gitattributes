@@ -1,0 +1,11 @@
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.ttf binary
+*.otf binary
+*.woff2 binary
+*.ico binary
+
+*.g.dart linguist-generated=true
+**/l10n/generated/** linguist-generated=true
