@@ -10,9 +10,14 @@ abstract class RemoteApi {
   /// Rows changed after [cursor]: `{cursor, has_more, changes: {table: [rows]}}`.
   Future<Map<String, Object?>> pull(int cursor);
 
-  /// Authoritative evaluation: `{result, proposal, source}`, or null when
-  /// the server could not evaluate yet (retried on the next sync).
-  Future<Map<String, Object?>?> evaluate(String completionId, {required bool useAi});
+  /// Authoritative evaluation: `{status, result, proposal, source, …}`, or
+  /// null when the server could not evaluate yet (retried on next sync).
+  /// Whether AI is used follows the synced profile setting.
+  Future<Map<String, Object?>?> evaluate(String completionId);
+
+  /// Updates the caller's server profile (language, AI language and
+  /// opt-in, time zone, calendar, week start, weekly target, motivation).
+  Future<void> updateProfile(Map<String, Object?> fields);
 }
 
 class SupabaseRemoteApi implements RemoteApi {
@@ -33,12 +38,16 @@ class SupabaseRemoteApi implements RemoteApi {
   }
 
   @override
-  Future<Map<String, Object?>?> evaluate(String completionId, {required bool useAi}) async {
-    final res = await _client.functions.invoke(
-      'evaluate-completion',
-      body: {'completion_id': completionId, 'use_ai': useAi},
-    );
+  Future<Map<String, Object?>?> evaluate(String completionId) async {
+    final res = await _client.functions.invoke('evaluate-completion', body: {'completion_id': completionId});
     final data = res.data;
     return data is Map ? Map<String, Object?>.from(data) : null;
+  }
+
+  @override
+  Future<void> updateProfile(Map<String, Object?> fields) async {
+    final uid = _client.auth.currentUser?.id;
+    if (uid == null) return;
+    await _client.from('profiles').update(fields).eq('id', uid);
   }
 }

@@ -14,7 +14,7 @@ class FakeApi implements RemoteApi {
   Map<String, Object?> pullResponse = {'cursor': 0, 'has_more': false, 'changes': <String, Object?>{}};
   Map<String, Object?>? evaluation;
   bool failRetryable = false;
-  bool? lastUseAi;
+  final profiles = <Map<String, Object?>>[];
 
   @override
   Future<List<Map<String, Object?>>> push(List<Map<String, Object?>> changes) async {
@@ -33,10 +33,10 @@ class FakeApi implements RemoteApi {
   Future<Map<String, Object?>> pull(int cursor) async => pullResponse;
 
   @override
-  Future<Map<String, Object?>?> evaluate(String completionId, {required bool useAi}) async {
-    lastUseAi = useAi;
-    return evaluation;
-  }
+  Future<Map<String, Object?>?> evaluate(String completionId) async => evaluation;
+
+  @override
+  Future<void> updateProfile(Map<String, Object?> fields) async => profiles.add(fields);
 }
 
 Map<String, Object?> serverResult(int discipline) => {
@@ -87,7 +87,7 @@ void main() {
     await progression.complete(q, provisional: true);
     api.evaluation = {'result': serverResult(7), 'proposal': serverProposal(), 'source': 'ai'};
 
-    final report = await sync.syncOnce(useAi: true);
+    final report = await sync.syncOnce();
 
     expect(report.pushed, 2);
     final quest = api.pushed.firstWhere((c) => c['entity'] == 'quest');
@@ -102,14 +102,13 @@ void main() {
     expect(await db.select(db.outboxEntries).get(), isEmpty);
 
     expect(report.evaluated, 1);
-    expect(api.lastUseAi, isTrue);
     expect(await progression.attributeTotals(), {Attribute.discipline: 7});
   });
 
   test('a retryable rejection keeps the outbox for the next attempt', () async {
     await quests.create(const QuestDraft(title: 'Read'));
     api.failRetryable = true;
-    await sync.syncOnce(useAi: false);
+    await sync.syncOnce();
     final outbox = await db.select(db.outboxEntries).get();
     expect(outbox, hasLength(1));
     expect(outbox.single.attempts, 1);
@@ -118,10 +117,10 @@ void main() {
   test('evaluations that fail stay pending and are retried', () async {
     final q = await quests.create(const QuestDraft(title: 'Write report'));
     await progression.complete(q, provisional: true);
-    await sync.syncOnce(useAi: true);
+    await sync.syncOnce();
     expect((await db.select(db.evaluations).getSingle()).provisional, isTrue);
     api.evaluation = {'result': serverResult(9), 'proposal': serverProposal()};
-    final second = await sync.syncOnce(useAi: true);
+    final second = await sync.syncOnce();
     expect(second.evaluated, 1);
     expect(await progression.attributeTotals(), {Attribute.discipline: 9});
   });
@@ -150,27 +149,35 @@ void main() {
             'occurrence_day': '2026-11-04',
             'local_day': '2026-11-04',
             'completed_at': '2026-11-04T06:00:00Z',
+            'state': 'active',
+            'result': serverResult(11),
+            'category': 'work',
           },
         ],
         'evaluations': [
-          {
-            'completion_id': '018f0000-0000-7000-8000-0000000000c1',
-            'proposal': serverProposal(),
-            'result': serverResult(11),
-          },
+          {'completion_id': '018f0000-0000-7000-8000-0000000000c1', 'proposal': serverProposal()},
         ],
       },
     };
-    final report = await sync.syncOnce(useAi: true);
-    expect(report.pulled, 3);
+    final report = await sync.syncOnce();
+    expect(report.pulled, 3); // quest, completion, confirmed result
     final q = await quests.byId('018f0000-0000-7000-8000-000000000001');
     expect(q!.title, 'مطالعه الکترونیک');
     expect(q.shareLevel, ShareLevel.completionOnly);
     expect(await progression.attributeTotals(), {Attribute.discipline: 11});
 
     // Pulling the same rows again changes nothing.
-    await sync.syncOnce(useAi: true);
+    await sync.syncOnce();
     expect(await progression.attributeTotals(), {Attribute.discipline: 11});
+  });
+
+  test('pushes the profile only when it changes', () async {
+    const profile = {'locale': 'fa', 'ai_locale': 'fa', 'ai_evaluation_enabled': false};
+    await sync.syncOnce(profile: profile);
+    await sync.syncOnce(profile: profile);
+    expect(api.profiles, hasLength(1));
+    await sync.syncOnce(profile: {...profile, 'ai_evaluation_enabled': true});
+    expect(api.profiles, hasLength(2));
   });
 
   test('HLC strings sort in mutation order', () {

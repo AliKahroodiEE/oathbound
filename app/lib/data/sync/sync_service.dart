@@ -35,10 +35,14 @@ class SyncService {
   static const _cursorKey = 'sync_cursor';
   static const _nodeKey = 'sync_node';
   static const _pendingEvalKey = 'sync_pending_evaluations';
+  static const _profileKey = 'sync_profile';
 
-  Future<SyncReport> syncOnce({required bool useAi}) async {
+  /// One full cycle. [profile] holds server profile fields; it is pushed
+  /// only when it differs from the last pushed value.
+  Future<SyncReport> syncOnce({Map<String, Object?>? profile}) async {
+    if (profile != null) await _pushProfile(profile);
     final push = await _push();
-    final evaluated = await _evaluatePending(useAi: useAi);
+    final evaluated = await _evaluatePending();
     final pulled = await _pull();
     return SyncReport(pushed: push.$1, rejected: push.$2, evaluated: evaluated, pulled: pulled);
   }
@@ -186,13 +190,20 @@ class SyncService {
 
   // ------------------------------------------------------------- evaluate
 
-  Future<int> _evaluatePending({required bool useAi}) async {
+  Future<void> _pushProfile(Map<String, Object?> profile) async {
+    final encoded = jsonEncode(profile);
+    if (jsonEncode(await _read(_profileKey)) == encoded) return;
+    await _api.updateProfile(profile);
+    await _write(_profileKey, profile);
+  }
+
+  Future<int> _evaluatePending() async {
     final pending = await _pendingEvaluations();
     var done = 0;
     final remaining = <String>[];
     for (final id in pending) {
       try {
-        final res = await _api.evaluate(id, useAi: useAi);
+        final res = await _api.evaluate(id);
         final result = res?['result'];
         final proposal = res?['proposal'];
         if (result is Map && proposal is Map) {
@@ -233,8 +244,12 @@ class SyncService {
       final changes = (res['changes'] as Map?) ?? const {};
       applied += await _applyQuests((changes['quests'] as List?) ?? const []);
       applied += await _applySubtasks((changes['subtasks'] as List?) ?? const []);
-      applied += await _applyCompletions((changes['completions'] as List?) ?? const []);
-      applied += await _applyEvaluations((changes['evaluations'] as List?) ?? const []);
+      final proposals = <String, Map<String, Object?>>{
+        for (final e in ((changes['evaluations'] as List?) ?? const []).whereType<Map<Object?, Object?>>())
+          if (e['completion_id'] is String && e['proposal'] is Map)
+            e['completion_id']! as String: Map<String, Object?>.from(e['proposal']! as Map),
+      };
+      applied += await _applyCompletions((changes['completions'] as List?) ?? const [], proposals);
       cursor = (res['cursor'] as num?)?.toInt() ?? cursor;
       await _write(_cursorKey, cursor);
       if (res['has_more'] != true) break;
@@ -314,7 +329,7 @@ class SyncService {
     return n;
   }
 
-  Future<int> _applyCompletions(List<Object?> rows) async {
+  Future<int> _applyCompletions(List<Object?> rows, Map<String, Map<String, Object?>> proposals) async {
     var n = 0;
     for (final raw in rows.whereType<Map<Object?, Object?>>()) {
       final r = Map<String, Object?>.from(raw);
@@ -354,35 +369,44 @@ class SyncService {
         )..where((l) => l.completionId.equals(id))).write(const LedgerEntriesCompanion(superseded: Value(true)));
         n++;
       }
+      if (!undone && r['result'] is Map) {
+        if (await _applyResult(id, Map<String, Object?>.from(r['result']! as Map), proposals[id], r)) n++;
+      }
     }
     return n;
   }
 
-  /// Server evaluations carry the authoritative result; they supersede
-  /// provisional local rows or create them for completions made on other
-  /// devices.
-  Future<int> _applyEvaluations(List<Object?> rows) async {
-    var n = 0;
-    for (final raw in rows.whereType<Map<Object?, Object?>>()) {
-      final r = Map<String, Object?>.from(raw);
-      final id = r['completion_id'] as String?;
-      final proposal = r['proposal'];
-      final result = r['result'];
-      if (id == null || proposal is! Map || result is! Map) continue;
-      final completion = await (_db.select(_db.completions)..where((c) => c.id.equals(id))).getSingleOrNull();
-      if (completion == null || completion.state == 'undone') continue;
-      final local = await (_db.select(_db.evaluations)..where((e) => e.completionId.equals(id))).getSingleOrNull();
-      if (local != null && !local.provisional) continue;
-      final parsedProposal = EvaluationProposal.fromJson(Map<String, Object?>.from(proposal));
-      final parsedResult = decodeResult(jsonEncode(result));
-      if (local == null) {
-        await _progression.importConfirmed(completion, parsedProposal, parsedResult);
-      } else {
-        await _progression.reconcile(id, parsedProposal, parsedResult);
-      }
-      n++;
+  /// Applies a server-confirmed result: supersedes a provisional local one,
+  /// or records it for a completion made on another device.
+  Future<bool> _applyResult(
+    String completionId,
+    Map<String, Object?> result,
+    Map<String, Object?>? proposal,
+    Map<String, Object?> completionRow,
+  ) async {
+    final completion = await (_db.select(_db.completions)..where((c) => c.id.equals(completionId))).getSingleOrNull();
+    if (completion == null || completion.state == 'undone') return false;
+    final local = await (_db.select(
+      _db.evaluations,
+    )..where((e) => e.completionId.equals(completionId))).getSingleOrNull();
+    if (local != null && !local.provisional) return false;
+    final parsedResult = decodeResult(jsonEncode(result));
+    final parsedProposal = proposal != null
+        ? EvaluationProposal.fromJson(proposal)
+        : EvaluationProposal(
+            category: QuestCategory.parse(completionRow['category']),
+            similarityKey: parsedResult.similarityKey,
+            difficulty: 3,
+            estimatedMinutes: parsedResult.effectiveMinutes.clamp(1, 600),
+            attributes: const [],
+            source: parsedResult.source,
+          );
+    if (local == null) {
+      await _progression.importConfirmed(completion, parsedProposal, parsedResult);
+    } else {
+      await _progression.reconcile(completionId, parsedProposal, parsedResult);
     }
-    return n;
+    return true;
   }
 
   Future<bool> _hasPending(String entity, String id) async => (await (_db.select(
