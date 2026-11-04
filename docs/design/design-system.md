@@ -1,6 +1,6 @@
 # Design System — "Ashen Codex"
 
-The visual language of Oathbound: carved stone, ink, ember. Serious, quiet, legible.
+The visual language of Wyrd: carved stone, ink, ember. Serious, quiet, legible.
 Implemented in `app/lib/design/` (tokens, theme, components). Tokens are the single source
 of truth — no raw colours, sizes or durations in feature code.
 

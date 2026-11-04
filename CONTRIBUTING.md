@@ -1,8 +1,8 @@
-# Contributing to Oathbound
+# Contributing to Wyrd
 
 Thank you for your interest.
 
-Oathbound is **source-available** under the [PolyForm Strict License 1.0.0](LICENSE.md). That
+Wyrd is **source-available** under the [PolyForm Strict License 1.0.0](LICENSE.md). That
 license does not grant anyone the right to make changes or new works based on the software, so
 code contributions can only be accepted from people who have signed a separate written
 contributor agreement with the author.

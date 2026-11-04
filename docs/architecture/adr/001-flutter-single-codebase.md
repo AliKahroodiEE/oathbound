@@ -3,7 +3,7 @@
 Status: Accepted · 2026-11-04
 
 ## Context
-Oathbound must ship on Android, iOS, macOS, Windows and Web with identical business logic,
+Wyrd must ship on Android, iOS, macOS, Windows and Web with identical business logic,
 a distinctive custom visual identity, and first-class RTL. Alternatives considered: native per
 platform, React Native + react-native-web, Kotlin Multiplatform + Compose Multiplatform.
 

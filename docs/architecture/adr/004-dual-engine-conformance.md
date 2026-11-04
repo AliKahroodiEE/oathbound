@@ -10,9 +10,9 @@ PL/pgSQL only; implement twice.
 
 ## Decision
 Implement the engine as a small, pure, dependency-free module in both languages:
-`packages/oathbound_engine` (Dart) and `backend/supabase/functions/_shared/engine/` (TS).
+`packages/wyrd_engine` (Dart) and `backend/supabase/functions/_shared/engine/` (TS).
 Both test suites load the same JSON **conformance vectors**
-(`packages/oathbound_engine/test/vectors/*.json`): inputs and the exact expected output.
+(`packages/wyrd_engine/test/vectors/*.json`): inputs and the exact expected output.
 CI fails if either implementation disagrees with a vector. Every rule change bumps
 `RULES_VERSION`, adds vectors, and is recorded in the ledger.
 

@@ -1,4 +1,4 @@
-# Oathbound — Product Requirements Document
+# Wyrd — Product Requirements Document
 
 Status: Draft 1 · Owner: product · Last updated: 2026-11-04
 
@@ -18,7 +18,7 @@ Related documents:
 Productivity tools treat people as task lists; RPG-flavoured habit apps treat them as players
 grinding points. Neither gives a person a durable, honest record of who they are becoming.
 
-Oathbound turns accumulated real-world effort into a persistent character with a history,
+Wyrd turns accumulated real-world effort into a persistent character with a history,
 inside a serious dark-fantasy world, and surrounds it with small accountability groups.
 Success is measured by real-world follow-through, not time in app.
 
@@ -277,7 +277,7 @@ chronicle → export as image (P2).
 
 ## 9. Open questions
 
-1. Product name and Persian brand rendering (working name: Oathbound).
+1. Product name and Persian brand rendering (working name: Wyrd).
 2. Minimum age (proposed 16+ for public guilds; 13+ private-only).
 3. Whether premium pricing differs by region (Iran payment rails are limited).
 4. AI provider data-residency requirements for EU users.

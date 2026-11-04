@@ -1,6 +1,6 @@
 <div align="center">
 
-# Oathbound
+# Wyrd
 
 **Your character is not someone you play. Your character is who you become.**
 
@@ -17,7 +17,7 @@ Android · iOS · macOS · Windows · Web — English & فارسی (full RTL) fr
 
 ## What it is
 
-Oathbound is a task and habit system wrapped in a serious, atmospheric RPG. You don't assign
+Wyrd is a task and habit system wrapped in a serious, atmospheric RPG. You don't assign
 yourself points. You do real things — study, train, build, reach out to people — and an AI
 evaluator proposes how that effort should shape your character. A deterministic progression
 engine then validates, caps and records every reward in an auditable ledger, and tells you
@@ -88,7 +88,7 @@ Backend setup is documented in [`backend/README.md`](backend/README.md).
 ## Tests
 
 ```bash
-cd packages/oathbound_engine && dart test     # rules, caps, curves, consistency, vectors
+cd packages/wyrd_engine && dart test     # rules, caps, curves, consistency, vectors
 cd app && flutter test                        # data layer, l10n gates, RTL lint, smoke tests
 cd app && flutter analyze --fatal-infos
 ```

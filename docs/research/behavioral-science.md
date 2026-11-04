@@ -2,7 +2,7 @@
 
 **Phase 1 — Research** · Status: draft for product review · Last updated: 2026-11-04
 
-This document collects the behavioral-science evidence behind Oathbound's core mechanics and turns it into
+This document collects the behavioral-science evidence behind Wyrd's core mechanics and turns it into
 concrete product rules. It is meant to be argued with. Every design implication names the evidence it rests
 on and how strong that evidence is, so that later phases (product spec, UX, architecture) can tell a
 research-backed rule apart from a reasonable guess.
