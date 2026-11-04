@@ -1381,6 +1381,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pushUnsupported => 'This browser can\'t receive notifications.';
 
   @override
+  String get pushUnsupportedDevice => 'This device can\'t receive notifications.';
+
+  @override
   String get pushInstallHint =>
       'On iPhone, add Wyrd to your Home Screen (Share, then Add to Home Screen) and open it from there to get notifications.';
 
@@ -1581,6 +1584,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get authErrNetwork => 'Can\'t reach the server. Check your connection and try again.';
+
+  @override
+  String get authErrCancelled => 'Sign-in was cancelled.';
 
   @override
   String get deleteAccount => 'Delete account';

@@ -78,4 +78,78 @@ void main() {
     expect(message(const AuthException('x', code: 'something_new')), l10n.errorGeneric);
     expect(message(StateError('boom')), l10n.errorGeneric);
   });
+
+  group('a Google or GitHub sign-in that comes back with an error', () {
+    final AppLocalizations l10n = AppLocalizationsEn();
+    late GoTrueClient auth;
+
+    setUp(() => auth = GoTrueClient(url: 'http://127.0.0.1:9/auth/v1', autoRefreshToken: false));
+    tearDown(() => auth.dispose());
+
+    /// What gotrue makes of the link a sign-in came back with; supabase_flutter
+    /// reports it on Auth's event stream. [query] is what Auth appends.
+    Future<Object> cameBackWith(String query) async {
+      try {
+        await auth.getSessionFromUrl(Uri.parse('app.wyrd://auth-callback$query'));
+      } on Object catch (error) {
+        return error;
+      }
+      fail('the link $query was taken for a session');
+    }
+
+    test('is explained by Auth\'s own code, which the link carries as error_code', () async {
+      final cancelled = await cameBackWith(
+        '?error=access_denied&error_description=The+user+has+denied+your+application+access.'
+        '#error=access_denied&error_description=The+user+has+denied+your+application+access.',
+      );
+      final badState = await cameBackWith(
+        '?error=invalid_request&error_code=bad_oauth_state&error_description=OAuth+callback+with+invalid+state',
+      );
+      final signupsOff = await cameBackWith(
+        '?error=access_denied&error_code=signup_disabled&error_description=Signups+not+allowed+for+this+instance',
+      );
+      final noCode = await cameBackWith('');
+
+      expect(authErrorMessage(l10n, cancelled), l10n.authErrCancelled);
+      expect(authErrorMessage(l10n, badState), l10n.authErrProvider);
+      expect(authErrorMessage(l10n, signupsOff), l10n.authErrProvider, reason: 'not cancelled by the reader');
+      expect(authErrorMessage(l10n, noCode), l10n.errorGeneric);
+      for (final error in [cancelled, badState, signupsOff, noCode]) {
+        expect(isRedirectSignInError(error), isTrue, reason: '$error');
+      }
+    });
+
+    test('is told apart from the other errors on Auth\'s event stream', () {
+      expect(
+        isRedirectSignInError(const AuthException('x', statusCode: 'bad_oauth_callback', code: 'invalid_request')),
+        isTrue,
+      );
+      expect(
+        isRedirectSignInError(const AuthException('x', statusCode: 'provider_disabled', code: 'invalid_request')),
+        isTrue,
+      );
+      expect(isRedirectSignInError(const AuthException('x', code: 'oauth_provider_not_supported')), isTrue);
+      for (final code in ['flow_state_not_found', 'flow_state_expired', 'bad_code_verifier']) {
+        expect(
+          isRedirectSignInError(AuthApiException('x', statusCode: '400', code: code)),
+          isTrue,
+          reason: code,
+        );
+      }
+      expect(isRedirectSignInError(const AuthPKCEGrantCodeExchangeError('No code detected.')), isTrue);
+
+      // Offline, or a token refresh or a stored session that failed.
+      expect(isRedirectSignInError(AuthRetryableFetchException(message: 'Failed host lookup')), isFalse);
+      expect(isRedirectSignInError(AuthRetryableFetchException(statusCode: '503')), isFalse);
+      expect(
+        isRedirectSignInError(const AuthException('Initial session is missing data.', code: 'session_missing')),
+        isFalse,
+      );
+      expect(
+        isRedirectSignInError(const AuthApiException('x', statusCode: '400', code: 'refresh_token_not_found')),
+        isFalse,
+      );
+      expect(isRedirectSignInError(const FormatException('Unexpected end of input')), isFalse);
+    });
+  });
 }

@@ -56,12 +56,13 @@ class _PushDeviceTileState extends ConsumerState<PushDeviceTile> {
             trailing: OutlinedButton(onPressed: push.enable, child: Text(l10n.pushAllow)),
           ),
           PushStatus.blocked => row(Icons.notifications_off_outlined, palette.warning, l10n.pushDeviceBlocked),
-          PushStatus.unsupported => row(
-            Icons.notifications_off_outlined,
-            palette.inkMuted,
+          PushStatus.unsupported => row(Icons.notifications_off_outlined, palette.inkMuted, switch (push.platform) {
             // iPhones get web push only from a Home Screen web app.
-            kIsWeb && defaultTargetPlatform == TargetPlatform.iOS ? l10n.pushInstallHint : l10n.pushUnsupported,
-          ),
+            'web' when defaultTargetPlatform == TargetPlatform.iOS => l10n.pushInstallHint,
+            'web' => l10n.pushUnsupported,
+            // The Android app got no token (no Google Play services, say).
+            _ => l10n.pushUnsupportedDevice,
+          }),
         };
       },
     );

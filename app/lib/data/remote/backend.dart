@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -54,8 +56,25 @@ final currentUserProvider = StreamProvider<User?>((ref) async* {
   yield client.auth.currentUser;
   // A token refresh while offline or an OAuth callback that returns an
   // error arrives as a stream error; the session is unchanged by it, and
-  // letting it through would end this stream for good.
+  // letting it through would end this stream for good. [authErrorsProvider]
+  // passes those errors on.
   await for (final state in client.auth.onAuthStateChange.handleError((Object _) {})) {
     yield state.session?.user;
   }
+});
+
+/// The errors Auth reports on its event stream, as they come: a Google or
+/// GitHub sign-in that came back refused or broken (supabase_flutter reports
+/// what the link brought), but also token refreshes that failed offline.
+/// Earlier errors are replayed to a new listener, so one from the link that
+/// reopened the web app reaches the app once it is up.
+final authErrorsProvider = Provider<Stream<Object>>((ref) {
+  final client = ref.watch(supabaseClientProvider);
+  if (client == null) return const Stream.empty();
+  return client.auth.onAuthStateChange.transform(
+    StreamTransformer<AuthState, Object>.fromHandlers(
+      handleData: (_, _) {},
+      handleError: (error, _, sink) => sink.add(error),
+    ),
+  );
 });

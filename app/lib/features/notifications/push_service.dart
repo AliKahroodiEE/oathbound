@@ -18,7 +18,8 @@ enum PushStatus {
   /// Push is not offered: not configured, signed out, or both switches off.
   hidden,
 
-  /// This browser cannot receive push (on iPhone: until Wyrd is on the Home Screen).
+  /// This browser cannot receive push (on iPhone: until Wyrd is on the Home
+  /// Screen), or this browser or phone gets no push token.
   unsupported,
 
   /// The switches want push, but the system permission is not granted yet.
@@ -154,6 +155,10 @@ class PushService {
 
   bool get isAvailable => _messaging != null && _registry != null && _platform != null;
 
+  /// This device's `push_tokens.platform`: `web`, `android`, or null where
+  /// push is not offered.
+  String? get platform => _platform;
+
   /// Foreground pushes for the signed-in account that its switches allow.
   Stream<PushMessage> get messages => _messages.stream;
 
@@ -248,12 +253,19 @@ class PushService {
     await _reconcile();
   });
 
-  /// Runs [step] after the steps before it, so events never interleave.
+  /// How long a step may wait on Firebase, the browser or the server before
+  /// the steps queued behind it go ahead.
+  static const _stepTimeout = Duration(seconds: 45);
+
+  /// Runs [step] after the steps before it, so events never interleave. A
+  /// step that is still waiting after [_stepTimeout] (a platform call that
+  /// never answers) is given up, so it cannot hold back the rest of the
+  /// session, such as retiring the token after signing out.
   Future<void> _run(Future<void> Function() step) {
     return _queue = _queue.then((_) async {
       if (_disposed) return;
       try {
-        await step();
+        await step().timeout(_stepTimeout);
       } on Object catch (error) {
         debugPrint('Push update failed: $error');
       }
@@ -286,7 +298,16 @@ class PushService {
       _show(permission == PushPermission.blocked ? PushStatus.blocked : PushStatus.off);
       return;
     }
-    final token = await messaging.token();
+    final String? token;
+    try {
+      token = await messaging.token();
+    } on Object catch (error) {
+      // No push service behind this browser (Brave with it switched off) or
+      // phone (no Google Play services): Allow could not get any further.
+      debugPrint('Push token unavailable: $error');
+      _show(PushStatus.unsupported);
+      return;
+    }
     if (token == null) {
       _show(PushStatus.off);
       return;

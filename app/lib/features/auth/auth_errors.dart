@@ -26,10 +26,45 @@ abstract final class AuthCodes {
     'bad_oauth_state',
     'bad_oauth_callback',
   };
+
+  /// The provider's page was left without signing in.
+  static const accessDenied = 'access_denied';
+
+  /// What a Google or GitHub sign-in can come back with when it was refused
+  /// or broke on the way: in the link itself, or when its code is traded
+  /// for a session.
+  static const redirect = {
+    accessDenied,
+    'flow_state_not_found',
+    'flow_state_expired',
+    'bad_code_verifier',
+    'bad_oauth_state',
+    'bad_oauth_callback',
+    'provider_disabled',
+    'oauth_provider_not_supported',
+  };
 }
 
 /// Whether [error] is Auth reporting [code].
 bool isAuthCode(Object error, String code) => error is AuthException && error.code == code;
+
+/// Whether [error] is a Google or GitHub sign-in that came back refused or
+/// broken. supabase_flutter reports these on Auth's event stream, where
+/// token refreshes that failed (offline, say) land too; those are not news.
+bool isRedirectSignInError(Object error) {
+  if (error is AuthPKCEGrantCodeExchangeError) return true;
+  if (error is! AuthException || error is AuthRetryableFetchException) return false;
+  return AuthCodes.redirect.contains(error.code) || AuthCodes.redirect.contains(_code(error));
+}
+
+/// The most specific code Auth gave for [error]. A sign-in link that comes
+/// back with an error carries two, and gotrue files the link's `error`
+/// (`access_denied`, `invalid_request`) as [AuthException.code] and Auth's
+/// own `error_code` (`bad_oauth_state`), if any, as [AuthException.statusCode].
+String? _code(AuthException error) {
+  final status = error.statusCode;
+  return status != null && int.tryParse(status) == null ? status : error.code;
+}
 
 /// A message for [error] in the reader's language.
 String authErrorMessage(AppLocalizations l10n, Object error) {
@@ -37,7 +72,7 @@ String authErrorMessage(AppLocalizations l10n, Object error) {
   if (error is AuthRetryableFetchException || error is ClientException) return l10n.authErrNetwork;
   if (error is AuthWeakPasswordException) return l10n.authErrWeakPassword;
   if (error is AuthException) {
-    final code = error.code;
+    final code = _code(error);
     if (code == AuthCodes.invalidCredentials) return l10n.authInvalid;
     if (code == AuthCodes.emailNotConfirmed) return l10n.authErrNotConfirmed;
     if (code == AuthCodes.otpExpired) return l10n.authErrCode;
@@ -48,6 +83,7 @@ String authErrorMessage(AppLocalizations l10n, Object error) {
     if (AuthCodes.rateLimits.contains(code) || error.statusCode == '429') return l10n.authErrRateLimit;
     if (AuthCodes.timeouts.contains(code)) return l10n.authErrNetwork;
     if (AuthCodes.unavailable.contains(code)) return l10n.authErrProvider;
+    if (code == AuthCodes.accessDenied) return l10n.authErrCancelled;
   }
   return l10n.errorGeneric;
 }

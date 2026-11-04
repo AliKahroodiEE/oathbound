@@ -14,6 +14,13 @@ class FakeMessaging implements PushMessaging {
   PushPermission current = PushPermission.askable;
   PushPermission answer = PushPermission.granted;
   String currentToken = 'token-1';
+
+  /// Thrown by [token], as where no push service answers (Brave with it
+  /// switched off, a phone without Google Play services).
+  Object? tokenError;
+
+  /// Makes [token] never answer, like a stuck platform call.
+  bool tokenHangs = false;
   int prompts = 0;
   int deletions = 0;
 
@@ -48,6 +55,9 @@ class FakeMessaging implements PushMessaging {
   @override
   Future<String?> token() async {
     calls++;
+    if (tokenHangs) return Completer<String?>().future;
+    final error = tokenError;
+    if (error != null) throw error;
     return current == PushPermission.granted ? currentToken : null;
   }
 
@@ -209,6 +219,23 @@ void main() {
       expect(registry.registered, isEmpty);
     });
 
+    test('a device that gets no token shows as unsupported', () async {
+      messaging
+        ..current = PushPermission.granted
+        ..tokenError = Exception('AbortError: Registration failed - push service error');
+      create(platform: 'web')
+        ..setUser('u1')
+        ..setPreferences(_both);
+      await settle();
+      expect(push.status.value, PushStatus.unsupported);
+      expect(registry.registered, isEmpty);
+
+      messaging.tokenError = null; // A later visit tries again.
+      await push.settingsOpened();
+      expect(push.status.value, PushStatus.on);
+      expect(registry.registered, [('token-1', 'web')]);
+    });
+
     test('builds without Firebase stay inert', () async {
       keep(PushService(messaging: null, registry: registry, prompts: prompts, platform: 'android'))
         ..setUser('u1')
@@ -340,6 +367,33 @@ void main() {
       await settle();
       expect(messaging.deletions, 0);
       expect(registry.unregistered, isEmpty);
+    });
+  });
+
+  group('a platform call that never answers', () {
+    // A widget test for its fake clock.
+    testWidgets('holds up the steps behind it for 45 s, not for good', (tester) async {
+      create()
+        ..setUser('u1')
+        ..setPreferences(_both);
+      await tester.pump();
+      expect(push.status.value, PushStatus.off);
+
+      // Allowed in the browser's settings, but the token never comes.
+      messaging
+        ..current = PushPermission.granted
+        ..tokenHangs = true;
+      unawaited(push.settingsOpened());
+      var retired = false;
+      unawaited(push.beforeSignOut().then((_) => retired = true));
+
+      await tester.pump(const Duration(seconds: 44));
+      expect(retired, isFalse, reason: 'still waiting on the token');
+      expect(messaging.deletions, 0);
+
+      await tester.pump(const Duration(seconds: 2));
+      expect(retired, isTrue, reason: 'signing out still retires the token');
+      expect(messaging.deletions, 1);
     });
   });
 
@@ -527,6 +581,21 @@ void main() {
       expect(find.text(l10n.pushDeviceOn), findsOneWidget);
     });
 
+    testWidgets('stops offering Allow once allowed but no token comes', (tester) async {
+      messaging.tokenError = Exception('AbortError: Registration failed - push service error');
+      create(platform: 'web')
+        ..setUser('u1')
+        ..setPreferences(_both);
+      await pumpRow(tester);
+      expect(find.text(l10n.pushDeviceOff), findsOneWidget);
+
+      await tester.tap(find.text(l10n.pushAllow));
+      await tester.pump();
+      expect(messaging.prompts, 1);
+      expect(find.text(l10n.pushAllow), findsNothing);
+      expect(find.text(l10n.pushUnsupported), findsOneWidget);
+    });
+
     testWidgets('points to the settings once blocked, without an Allow button', (tester) async {
       messaging.current = PushPermission.blocked;
       create()
@@ -546,6 +615,27 @@ void main() {
       expect(find.text(l10n.pushUnsupported), findsOneWidget);
       expect(find.text(l10n.pushAllow), findsNothing);
     });
+
+    testWidgets('in the Android app, speaks of the device rather than a browser', (tester) async {
+      messaging
+        ..current = PushPermission.granted
+        ..tokenError = Exception('java.io.IOException: SERVICE_NOT_AVAILABLE');
+      create()
+        ..setUser('u1')
+        ..setPreferences(_both);
+      await pumpRow(tester);
+      expect(find.text(l10n.pushUnsupportedDevice), findsOneWidget);
+      expect(find.text(l10n.pushAllow), findsNothing);
+    });
+
+    testWidgets('in an iPhone browser, points to the Home Screen', (tester) async {
+      messaging.supported = false;
+      create(platform: 'web')
+        ..setUser('u1')
+        ..setPreferences(_both);
+      await pumpRow(tester);
+      expect(find.text(l10n.pushInstallHint), findsOneWidget);
+    }, variant: TargetPlatformVariant.only(TargetPlatform.iOS));
 
     testWidgets('stays hidden when push is not offered', (tester) async {
       create(); // Signed out.

@@ -44,6 +44,8 @@ abstract interface class AuthGateway {
   /// back.
   Future<void> signInWith(SocialProvider provider);
 
+  /// Signs this device out. Succeeds once this device holds no session,
+  /// also when the server could not be told (offline).
   Future<void> signOut();
 
   /// Deletes the account and everything stored with it on the server
@@ -133,8 +135,19 @@ class SupabaseAuthGateway implements AuthGateway {
     if (!launched) throw const AuthException('Could not open the sign-in page', code: 'provider_disabled');
   }
 
+  /// Auth forgets the session on this device first and then revokes it on
+  /// the server. Offline that last call fails although this device is
+  /// already signed out: it no longer holds the tokens, and the access token
+  /// runs out by itself. Only a sign-out that leaves a session here failed.
   @override
-  Future<void> signOut() => _auth.signOut();
+  Future<void> signOut() async {
+    try {
+      await _auth.signOut();
+    } on Object catch (error) {
+      if (_auth.currentSession != null) rethrow;
+      debugPrint('Signed out on this device; the server was not told ($error)');
+    }
+  }
 
   @override
   Future<void> deleteAccount() => _client.rpc<void>('delete_my_account');

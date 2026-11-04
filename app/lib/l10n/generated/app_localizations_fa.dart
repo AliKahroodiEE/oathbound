@@ -1369,6 +1369,9 @@ class AppLocalizationsFa extends AppLocalizations {
   String get pushUnsupported => 'این مرورگر نمی‌تواند اعلان دریافت کند.';
 
   @override
+  String get pushUnsupportedDevice => 'این دستگاه نمی‌تواند اعلان دریافت کند.';
+
+  @override
   String get pushInstallHint =>
       'روی آیفون، سرنوشت‌ساز را به صفحه‌ی اصلی اضافه کن (Share و بعد Add to Home Screen) و از همان‌جا بازش کن تا اعلان‌ها به دستت برسد.';
 
@@ -1569,6 +1572,9 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get authErrNetwork => 'به سرور دسترسی نداریم. اتصالت را بررسی کن و دوباره امتحان کن.';
+
+  @override
+  String get authErrCancelled => 'ورود لغو شد.';
 
   @override
   String get deleteAccount => 'حذف حساب';

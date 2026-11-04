@@ -2588,6 +2588,12 @@ abstract class AppLocalizations {
   /// **'This browser can\'t receive notifications.'**
   String get pushUnsupported;
 
+  /// No description provided for @pushUnsupportedDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'This device can\'t receive notifications.'**
+  String get pushUnsupportedDevice;
+
   /// No description provided for @pushInstallHint.
   ///
   /// In en, this message translates to:
@@ -2965,6 +2971,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Can\'t reach the server. Check your connection and try again.'**
   String get authErrNetwork;
+
+  /// No description provided for @authErrCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign-in was cancelled.'**
+  String get authErrCancelled;
 
   /// No description provided for @deleteAccount.
   ///
