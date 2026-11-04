@@ -295,6 +295,14 @@ class ProgressionRepository {
         await _writeGrants(completionId, eval.localDay, result, provisional: false);
       });
 
+  /// Records a server-confirmed result for a completion that arrived from
+  /// another device (no local evaluation exists yet).
+  Future<void> importConfirmed(CompletionRow completion, EvaluationProposal proposal, RewardResult result) =>
+      _db.transaction(() async {
+        await _writeEvaluation(completion.id, completion.localDay, proposal, result, provisional: false);
+        await _writeGrants(completion.id, completion.localDay, result, provisional: false);
+      });
+
   Future<void> setRestDay(String day, bool rest) =>
       _db.into(_db.dayMarks).insertOnConflictUpdate(DayMarksCompanion.insert(localDay: day, rest: Value(rest)));
 
