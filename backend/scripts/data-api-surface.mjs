@@ -204,12 +204,80 @@ export function scanDataApi(files, base, { dynamicRpcAllowed = [] } = {}) {
   return { tables, rpcs, realtime, errors };
 }
 
+/** `src` with its `//` and (nested) `/* … *\/` comments blanked out; strings stay. */
+function withoutComments(src) {
+  let out = '';
+  let i = 0;
+  while (i < src.length) {
+    if (src[i] === "'" || src[i] === '"' || src[i] === '`') {
+      const end = skipString(src, i);
+      out += src.slice(i, end);
+      i = end;
+    } else if (src.startsWith('//', i)) {
+      const end = src.indexOf('\n', i);
+      i = end === -1 ? src.length : end;
+      out += ' ';
+    } else if (src.startsWith('/*', i)) {
+      let depth = 0;
+      do {
+        if (src.startsWith('/*', i)) {
+          depth++;
+          i += 2;
+        } else if (src.startsWith('*/', i)) {
+          depth--;
+          i += 2;
+        } else {
+          i++;
+        }
+      } while (depth > 0 && i < src.length);
+      out += ' ';
+    } else {
+      out += src[i++];
+    }
+  }
+  return out;
+}
+
+/** Index of the first `else` keyword outside strings and brackets in `text`, or -1. */
+function topLevelElse(text) {
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (c === "'" || c === '"' || c === '`') i = skipString(text, i) - 1;
+    else if (c === '(' || c === '[' || c === '{') i = skipGroup(text, i) - 1;
+    else if (/^else\b/.test(text.slice(i, i + 5)) && !/[\w$]/.test(text[i - 1] ?? '')) return i;
+  }
+  return -1;
+}
+
+/**
+ * The keys one Dart map entry can add: `'key': value` (also `"key"`, and a
+ * null-aware `'key': ?value`) and `if (…) entry` with an optional
+ * `else entry`. A spread (`...m`, `...?m`) adds none that can be read, and
+ * is skipped. null for anything else (a computed key, a `for` element).
+ */
+function entryKeys(entry) {
+  const text = entry.trim();
+  if (text === '' || text.startsWith('...')) return [];
+  const key = /^(['"])([a-z_][a-z0-9_]*)\1\s*:/.exec(text);
+  if (key) return [key[2]];
+  const condition = /^if\s*\(/.exec(text);
+  if (!condition) return null;
+  const rest = text.slice(skipGroup(text, condition[0].length - 1));
+  const otherwise = topLevelElse(rest);
+  const branches = otherwise === -1 ? [rest] : [rest.slice(0, otherwise), rest.slice(otherwise + 'else'.length)];
+  const keys = branches.map(entryKeys);
+  return keys.includes(null) ? null : keys.flat();
+}
+
 /**
  * The string keys of the map literal returned by the Dart function `fnName`
- * in `file` (used for the profile fields the app sends to `profiles`).
+ * in `source` (the profile fields the app sends to `profiles`), as
+ * { keys, unreadable }: `unreadable` lists the entries whose keys cannot be
+ * read, so a field the check cannot see fails it instead of slipping
+ * through. null when there is no such function or it returns no map literal.
  */
-export function returnedMapKeys(file, fnName) {
-  const src = readFileSync(file, 'utf8');
+export function returnedMapKeysIn(source, fnName) {
+  const src = withoutComments(source);
   const def = new RegExp(`\\b${fnName}\\s*\\([^)]*\\)\\s*(?:async\\s*)?\\{`).exec(src);
   if (!def) return null;
   const body = src.slice(def.index + def[0].length - 1, skipGroup(src, def.index + def[0].length - 1));
@@ -219,16 +287,23 @@ export function returnedMapKeys(file, fnName) {
   const map = body.slice(open + 1, skipGroup(body, open) - 1);
   // Top-level entries only: split on commas outside strings and brackets.
   const keys = [];
+  const unreadable = [];
   let entry = 0;
   for (let i = 0; i <= map.length; i++) {
     const c = map[i];
     if (c === "'" || c === '"' || c === '`') i = skipString(map, i) - 1;
     else if (c === '(' || c === '[' || c === '{') i = skipGroup(map, i) - 1;
     else if (c === ',' || i === map.length) {
-      const key = /^\s*'([a-z_][a-z0-9_]*)'\s*:/.exec(map.slice(entry, i));
-      if (key) keys.push(key[1]);
+      const found = entryKeys(map.slice(entry, i));
+      if (found === null) unreadable.push(map.slice(entry, i).trim().replace(/\s+/g, ' '));
+      else keys.push(...found);
       entry = i + 1;
     }
   }
-  return keys;
+  return { keys: [...new Set(keys)], unreadable };
+}
+
+/** {@link returnedMapKeysIn} for the Dart file at `file`. */
+export function returnedMapKeys(file, fnName) {
+  return returnedMapKeysIn(readFileSync(file, 'utf8'), fnName);
 }

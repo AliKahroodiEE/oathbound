@@ -19,6 +19,8 @@
  *    that uses it (authenticated for the app, service_role for the
  *    functions), nothing else is, anon gets nothing, no function is
  *    executable by PUBLIC and Realtime publishes exactly the watched tables.
+ *    Every profile field the app syncs (_serverProfile's map, conditional
+ *    entries included) must be updatable by authenticated.
  *    A second database with the old platform defaults (everything granted
  *    to all three roles, no publication) must end with the same privileges.
  * 4. Runs smoke checks as the real roles: RLS isolation, sync_push LWW and
@@ -40,7 +42,7 @@ import { fileURLToPath } from 'node:url';
 import { PGlite } from '@electric-sql/pglite';
 
 import * as engine from '../supabase/functions/_shared/engine/index.ts';
-import { listSources, returnedMapKeys, scanDataApi } from './data-api-surface.mjs';
+import { listSources, returnedMapKeys, returnedMapKeysIn, scanDataApi } from './data-api-surface.mjs';
 
 const MIGRATIONS = fileURLToPath(new URL('../supabase/migrations/', import.meta.url));
 const DROP_NOTIFY_WEBHOOKS = '20261104001040_drop_notify_webhooks.sql';
@@ -299,6 +301,33 @@ async function heldPrivilegeKinds(db, role) {
   return rows;
 }
 
+// The entry shapes returnedMapKeys reads (and the ones it skips or reports)
+// in the Dart map literal _serverProfile returns.
+const PROFILE_MAP_SAMPLE = `
+Future<Map<String, Object?>> _serverProfile(Ref ref, UserProfile p) async {
+  final zone = await zoneOf(p); // isn't in the map: {'not_a_field': 1}
+  return {
+    // Comments may hold quotes ('x': y), commas, colons: and "strings".
+    if (p.name.isNotEmpty) 'display_name': p.name.length > 40 ? p.name.substring(0, 40) : p.name,
+    if (p.region != null && (p.strict || !p.legacy)) 'region': p.region,
+    if (p.jalali) 'calendar': 'jalali' else 'week_start': 6,
+    'time_zone': ?zone,
+    "locale": 'fa, en',
+    'motivation': {'tone': p.tone, 'drivers': [p.a, p.b]},
+    ...p.extra,
+    if (p.more != null) ...?p.more,
+    /* 'commented_out': 1, /* nested */ */
+    for (final f in flags) f: true,
+    kHandle: handle,
+    'ai_evaluation_enabled': f(p.ai, (p.a, p.b)),
+  };
+}
+`;
+const PROFILE_MAP_SAMPLE_KEYS = {
+  keys: ['display_name', 'region', 'calendar', 'week_start', 'time_zone', 'locale', 'motivation', 'ai_evaluation_enabled'],
+  unreadable: ['for (final f in flags) f: true', 'kHandle: handle'],
+};
+
 async function publicFunctions(db) {
   const { rows } = await db.query(/* sql */ `
     select p.oid, p.proname as name, p.oid::regprocedure::text as signature,
@@ -417,25 +446,34 @@ async function checkDataApi(db) {
   check('no Data API role can use a sequence', sequences.length === 0,
     sequences.map((s) => `${s.rolname} on ${s.relname}`).join(', '));
 
-  // The profile fields the app syncs (sync_coordinator.dart → remote_api.dart).
-  const fields = returnedMapKeys(APP_PROFILE_FIELDS, '_serverProfile');
-  const notUpdatable = [];
-  for (const field of fields ?? []) {
+  // The profile fields the app syncs (sync_coordinator.dart → remote_api.dart),
+  // read by returnedMapKeys, which first has to read a sample of every entry
+  // shape correctly.
+  const sample = returnedMapKeysIn(PROFILE_MAP_SAMPLE, '_serverProfile');
+  check('returnedMapKeys reads plain, conditional and null-aware entries, skips spreads, reports the rest',
+    JSON.stringify(sample) === JSON.stringify(PROFILE_MAP_SAMPLE_KEYS)
+      && returnedMapKeysIn('void _other() {}', '_serverProfile') === null,
+    JSON.stringify(sample));
+  const profile = returnedMapKeys(APP_PROFILE_FIELDS, '_serverProfile');
+  const fields = profile?.keys ?? [];
+  const problems = profile === null
+    ? ['no _serverProfile(…) { … return { … }; } in sync_coordinator.dart; extend returnedMapKeys']
+    : profile.unreadable.map((e) => `cannot read the entry "${e}"; extend returnedMapKeys in data-api-surface.mjs`);
+  for (const field of fields) {
     const r = await db.query(
       `select exists (select 1 from pg_attribute where attrelid = 'public.profiles'::regclass and attname = $1
                        and not attisdropped)
               and has_column_privilege('authenticated', 'public.profiles', $1, 'UPDATE') as ok`, [field]);
-    if (!r.rows[0].ok) notUpdatable.push(field);
+    if (!r.rows[0].ok) problems.push(`cannot update profiles.${field}`);
   }
   check('authenticated may update every profile field the app syncs',
-    fields !== null && fields.length > 0 && notUpdatable.length === 0,
-    fields === null ? '_serverProfile() not found in sync_coordinator.dart' : notUpdatable.join(', ') || fields.join(', '));
+    fields.length > 0 && problems.length === 0, problems.join('; ') || fields.join(', '));
 
   // Informational: user RPCs granted for features the app does not call yet.
   const unused = fns.filter((f) => f.authenticated && !app.rpcs.some((c) => c.name === f.name)
     && !['is_guild_member', 'guild_role_of', 'is_guild_officer', 'is_blocked_by_me'].includes(f.name)).map((f) => f.name);
   if (unused.length > 0) console.log(`  info user RPCs not called from app/lib yet: ${unused.join(', ')}`);
-  return { fields: fields ?? [] };
+  return { fields };
 }
 
 // ---------------------------------------------------------------------------

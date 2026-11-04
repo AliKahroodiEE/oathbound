@@ -216,6 +216,9 @@ project's default privileges, which expose nothing) and drives
   `service_role`): a call without its grant, a grant nothing uses, anything
   for `anon` and any function `PUBLIC` can execute fail the run, and so does
   a Realtime publication that holds anything but the watched tables;
+* requires UPDATE on every profile field the app syncs (the map
+  `_serverProfile` in `sync_coordinator.dart` returns, conditional and
+  null-aware entries included); an entry it cannot read fails the run;
 * applies the migrations a second time with the old platform defaults
   (everything granted to all three roles) and requires identical privileges;
 * exercises pg_cron's dispatch and the notification triggers against
