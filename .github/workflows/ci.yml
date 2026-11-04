@@ -26,21 +26,22 @@ jobs:
       - run: dart analyze --fatal-infos
       - run: dart test
 
-  backend-engine:
-    name: Progression engine (TypeScript conformance)
+  backend:
+    name: Backend (TypeScript engine conformance, SQL migrations)
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 24
-      - name: Run conformance vectors
-        run: |
-          if [ -f backend/supabase/functions/_shared/engine/engine.test.ts ]; then
-            node --test backend/supabase/functions/_shared/engine/engine.test.ts
-          else
-            echo "TypeScript engine not present yet"
-          fi
+      - run: npm ci
+      - name: Engine conformance vectors and shared modules
+        run: npm test
+      - name: Migrations and RLS checks (PGlite)
+        run: npm run validate:sql
 
   app:
     name: Flutter app
@@ -60,7 +61,7 @@ jobs:
           flutter gen-l10n
           git diff --exit-code -- lib/l10n/generated
       - name: Formatting
-        run: dart format --output=none --set-exit-if-changed lib/app lib/core lib/data/models.dart lib/data/repositories lib/data/db/database.dart lib/design lib/features lib/l10n/content.dart lib/main.dart test
+        run: dart format --output=none --set-exit-if-changed $(find lib test -name '*.dart' ! -name '*.g.dart' ! -path '*/generated/*')
       - run: flutter analyze --fatal-infos
       - run: flutter test
       - run: flutter build web --release
