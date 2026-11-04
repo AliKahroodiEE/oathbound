@@ -136,7 +136,7 @@ class _RadarPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final c = size.center(Offset.zero);
-    final r = size.shortestSide / 2 - 30;
+    final r = size.shortestSide / 2 - 40;
     final grid = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1
@@ -189,8 +189,14 @@ class _RadarPainter extends CustomPainter {
         textDirection: direction,
         maxLines: 1,
       )..layout(maxWidth: 90);
-      final lp = _point(c, r + 16, i);
-      tp.paint(canvas, lp - Offset(tp.width / 2, tp.height / 2));
+      // Anchor labels away from the shape: left-aligned on the right side,
+      // right-aligned on the left side, centred at the top and bottom.
+      final lp = _point(c, r + 12, i);
+      final dx = lp.dx - c.dx;
+      final x = dx > 8 ? lp.dx : (dx < -8 ? lp.dx - tp.width : lp.dx - tp.width / 2);
+      final dy = lp.dy - c.dy;
+      final y = dy < -r * 0.9 ? lp.dy - tp.height : (dy > r * 0.9 ? lp.dy : lp.dy - tp.height / 2);
+      tp.paint(canvas, Offset(x, y));
     }
   }
 

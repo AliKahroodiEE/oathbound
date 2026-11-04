@@ -103,7 +103,24 @@ class SectionHeader extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
             ),
           ),
-          if (trailing != null) ...[const SizedBox(width: AppSpace.sm), Flexible(child: trailing!)],
+          if (trailing != null) ...[
+            const SizedBox(width: AppSpace.sm),
+            // Natural width, capped so long labels at large text sizes can't crowd out the title.
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 160),
+              // Header actions are compact so the header stays one line tall.
+              child: TextButtonTheme(
+                data: TextButtonThemeData(
+                  style: TextButton.styleFrom(
+                    minimumSize: const Size(0, 36),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ),
+                child: trailing!,
+              ),
+            ),
+          ],
         ],
       ),
     );

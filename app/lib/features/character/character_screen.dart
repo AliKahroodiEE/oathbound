@@ -217,44 +217,54 @@ class _Hero extends ConsumerWidget {
           const SizedBox(height: AppSpace.lg),
           LayoutBuilder(
             builder: (context, c) {
-              final perRow = c.maxWidth >= 480 ? 3 : (c.maxWidth >= 300 ? 2 : 1);
-              final tileW = (c.maxWidth - AppSpace.sm * (perRow - 1)) / perRow;
-              return Wrap(
-                spacing: AppSpace.sm,
-                runSpacing: AppSpace.sm,
-                children: [
-                  SizedBox(
-                    width: tileW,
-                    child: Tooltip(
-                      message: conditionHelp,
-                      triggerMode: TooltipTriggerMode.tap,
-                      child: StatTile(
-                        icon: Icons.favorite_rounded,
-                        color: conditionColor,
-                        value: '$conditionText · ${f.number(state.condition)}',
-                        label: l10n.conditionLabel,
+              final tiles = [
+                Tooltip(
+                  message: conditionHelp,
+                  triggerMode: TooltipTriggerMode.tap,
+                  child: StatTile(
+                    vertical: true,
+                    icon: Icons.favorite_rounded,
+                    color: conditionColor,
+                    value: '$conditionText · ${f.number(state.condition)}',
+                    label: l10n.conditionLabel,
+                  ),
+                ),
+                StatTile(
+                  vertical: true,
+                  icon: Icons.local_fire_department_rounded,
+                  color: AppColors.emberGlow,
+                  value: l10n.weeksKept(w.currentStreak, f.number(w.currentStreak)),
+                  label: l10n.bestRecord(f.number(w.bestStreak)),
+                ),
+                StatTile(
+                  vertical: true,
+                  icon: Icons.link_rounded,
+                  color: AppColors.gold,
+                  value: l10n.chainDays(state.chain.current, f.number(state.chain.current)),
+                  label: l10n.bestRecord(f.number(state.chain.best)),
+                ),
+              ];
+              if (c.maxWidth < 300) {
+                return Column(
+                  children: [
+                    for (final t in tiles)
+                      Padding(
+                        padding: const EdgeInsetsDirectional.only(bottom: AppSpace.sm),
+                        child: t,
                       ),
-                    ),
-                  ),
-                  SizedBox(
-                    width: tileW,
-                    child: StatTile(
-                      icon: Icons.local_fire_department_rounded,
-                      color: AppColors.emberGlow,
-                      value: l10n.weeksKept(w.currentStreak, f.number(w.currentStreak)),
-                      label: l10n.bestRecord(f.number(w.bestStreak)),
-                    ),
-                  ),
-                  SizedBox(
-                    width: tileW,
-                    child: StatTile(
-                      icon: Icons.link_rounded,
-                      color: AppColors.gold,
-                      value: l10n.chainDays(state.chain.current, f.number(state.chain.current)),
-                      label: l10n.bestRecord(f.number(state.chain.best)),
-                    ),
-                  ),
-                ],
+                  ],
+                );
+              }
+              return IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    for (var k = 0; k < tiles.length; k++) ...[
+                      if (k > 0) const SizedBox(width: AppSpace.sm),
+                      Expanded(child: tiles[k]),
+                    ],
+                  ],
+                ),
               );
             },
           ),

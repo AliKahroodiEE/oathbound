@@ -137,19 +137,26 @@ class AttributeTile extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(name, style: text.titleSmall, maxLines: 1, overflow: TextOverflow.ellipsis),
-                        Text(
-                          rankLabel,
-                          style: text.labelMedium?.copyWith(color: color, fontWeight: FontWeight.w700),
+                        Text.rich(
+                          TextSpan(
+                            children: [
+                              TextSpan(
+                                text: rankLabel,
+                                style: text.labelMedium?.copyWith(color: color, fontWeight: FontWeight.w700),
+                              ),
+                              if (todayLabel != null)
+                                TextSpan(
+                                  text: '  $todayLabel',
+                                  style: text.labelMedium?.copyWith(color: AppColors.attrVitality),
+                                ),
+                            ],
+                          ),
                           maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ],
                     ),
                   ),
-                  if (todayLabel != null)
-                    Text(
-                      todayLabel!,
-                      style: text.labelSmall?.copyWith(color: AppColors.attrVitality, letterSpacing: 0),
-                    ),
                 ],
               ),
               const SizedBox(height: AppSpace.sm + 2),
@@ -171,6 +178,7 @@ class StatTile extends StatelessWidget {
     required this.label,
     this.caption,
     this.color = AppColors.ember,
+    this.vertical = false,
   });
 
   final IconData icon;
@@ -179,9 +187,31 @@ class StatTile extends StatelessWidget {
   final String? caption;
   final Color color;
 
+  /// Stacked layout for narrow, three-across rows.
+  final bool vertical;
+
   @override
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
+    if (vertical) {
+      return Container(
+        padding: const EdgeInsetsDirectional.all(AppSpace.md),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.07),
+          borderRadius: AppRadius.softAll,
+          border: Border.all(color: color.withValues(alpha: 0.22)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, size: 20, color: color),
+            const SizedBox(height: AppSpace.sm),
+            Text(value, style: text.titleSmall, maxLines: 2, overflow: TextOverflow.ellipsis),
+            Text(label, style: text.bodySmall, maxLines: 1, overflow: TextOverflow.ellipsis),
+          ],
+        ),
+      );
+    }
     return Container(
       padding: const EdgeInsetsDirectional.all(AppSpace.md),
       decoration: BoxDecoration(
