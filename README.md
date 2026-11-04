@@ -34,38 +34,61 @@ exactly why you grew.
 
 ## Status
 
-Early development. The work is organised in phases (see [`docs/`](docs/)):
+Milestone **M0 — Foundation** is implemented; **M1 — Connected** is in progress.
 
-1. Research — behavioural science foundations
-2. Product specification — requirements, progression and AI rules
-3. UX/UI — information architecture and design system
-4. Technical architecture — backend, sync, AI, notifications
-5. Implementation
-6. Testing across platforms and locales
+| Area | State |
+| --- | --- |
+| Research, product spec, progression rules, design system, UX, architecture | ✅ [`docs/`](docs/) |
+| Progression engine (Dart) with 103 tests and shared conformance vectors | ✅ [`packages/oathbound_engine`](packages/oathbound_engine) |
+| Local-first app: character sheet, quests (daily/contracts/objectives, recurrence, subtasks, timer, reminders), reward reveal with explanations, ledger, week/month/year chronicle, settings, onboarding | ✅ [`app/`](app/) |
+| English + Persian, full RTL, Jalali/Gregorian, native/Latin digits | ✅ |
+| Adaptive layouts: phone (bottom bar), tablet (rail), desktop/web (sidebar, multi-column) | ✅ |
+| Backend: schema, row-level security, sync and progression RPCs, AI evaluation and chronicle functions | 🚧 [`backend/`](backend/) |
+| Accounts, sync, guilds in the client | 🚧 |
+
+Verified in this environment: engine and app test suites, static analysis, and the web build
+exercised in a browser in English and Persian at phone, tablet and desktop widths. Android, iOS,
+macOS and Windows builds need their platform toolchains (Android SDK, Xcode, Visual Studio)
+and have not yet been built.
 
 ## Repository layout
 
 ```
 .
 ├── app/            Flutter client (Android, iOS, macOS, Windows, Web)
-├── packages/       Shared pure-Dart packages (e.g. the progression engine)
-├── backend/        Database schema, row-level security, server functions
+├── packages/       Shared pure-Dart packages (the progression engine)
+├── backend/        Supabase schema, row-level security, Edge Functions
 └── docs/           Research, product spec, design system, architecture, ADRs
 ```
 
 ## Getting started
 
-Prerequisites: Flutter (stable, 3.47+), Dart 3.13+. Platform toolchains as needed
-(Xcode for iOS/macOS, Android SDK for Android, Visual Studio for Windows).
+Prerequisites: Flutter 3.47+ (stable), Dart 3.13+, plus the toolchain for each target platform.
 
 ```bash
 cd app
 flutter pub get
-flutter run -d chrome
+flutter run -d chrome          # or: -d macos, -d windows, an Android device or iOS simulator
 ```
 
-Backend setup and environment variables are documented in [`backend/README.md`](backend/README.md)
-once that phase lands.
+Without backend configuration the app runs fully on the device (guest mode): every feature
+except accounts, sync and guilds works offline. To connect a Supabase backend:
+
+```bash
+flutter run --dart-define=SUPABASE_URL=https://<project>.supabase.co --dart-define=SUPABASE_ANON_KEY=<anon-key>
+```
+
+Backend setup is documented in [`backend/README.md`](backend/README.md).
+
+## Tests
+
+```bash
+cd packages/oathbound_engine && dart test     # rules, caps, curves, consistency, vectors
+cd app && flutter test                        # data layer, l10n gates, RTL lint, smoke tests
+cd app && flutter analyze --fatal-infos
+```
+
+CI runs all of these plus the web build on every push ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)).
 
 ## Localization
 
