@@ -1,7 +1,11 @@
+import 'package:drift/drift.dart' show DatabaseConnection;
+import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show User;
 import 'package:wyrd/app/providers.dart';
+import 'package:wyrd/data/ai/ai_settings_repository.dart';
+import 'package:wyrd/data/db/database.dart';
 import 'package:wyrd/data/remote/backend.dart';
 import 'package:wyrd/data/repositories/data_repository.dart';
 import 'package:wyrd/features/auth/auth_gateway.dart';
@@ -30,6 +34,15 @@ const _user = User(
 );
 
 void main() {
+  late AppDatabase db;
+  late MemoryKeyStore keys;
+
+  setUp(() {
+    db = AppDatabase(DatabaseConnection(NativeDatabase.memory(), closeStreamsSynchronously: true));
+    keys = MemoryKeyStore()..value = 'sk-users-own-key';
+  });
+  tearDown(() => db.close());
+
   Future<(FakeAuthGateway, _FakeData)> pump(WidgetTester tester, {required bool signedIn}) async {
     final gateway = FakeAuthGateway();
     final data = _FakeData();
@@ -39,6 +52,7 @@ void main() {
       overrides: [
         authGatewayProvider.overrideWithValue(gateway),
         dataRepositoryProvider.overrideWithValue(data),
+        aiSettingsRepositoryProvider.overrideWithValue(AiSettingsRepository(db, keys)),
         currentUserProvider.overrideWith((ref) => Stream.value(signedIn ? _user : null)),
       ],
     );
@@ -55,6 +69,7 @@ void main() {
     await settle(tester);
     expect(gateway.calls, isEmpty);
     expect(data.wiped, isTrue);
+    expect(keys.value, isNull, reason: 'the AI key goes too');
     expect(find.text('onboarding page'), findsOneWidget);
   });
 
@@ -68,6 +83,7 @@ void main() {
     await settle(tester);
     expect(gateway.calls, ['signOut']);
     expect(data.wiped, isTrue);
+    expect(keys.value, isNull, reason: 'the next person cannot use the AI key');
     expect(find.text('onboarding page'), findsOneWidget);
     expect(find.text('Signed out. This device no longer holds your data.'), findsOneWidget);
   });
@@ -81,6 +97,7 @@ void main() {
     await settle(tester);
     expect(gateway.calls, ['signOut']);
     expect(data.wiped, isFalse);
+    expect(keys.value, 'sk-users-own-key');
     expect(find.text('onboarding page'), findsNothing);
   });
 

@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/providers.dart';
+import '../../data/clear_device.dart';
 import '../../data/remote/backend.dart';
+import '../../data/sync/sync_coordinator.dart';
 import '../auth/auth_errors.dart';
 import '../auth/auth_gateway.dart';
 import '../auth/sign_out.dart';
@@ -38,7 +40,10 @@ class ClearDeviceButton extends ConsumerWidget {
           ),
         );
         if (ok != true || !context.mounted) return;
+        // Signing out can rebuild this button, so everything needed is taken now.
+        final sync = ref.read(syncControlProvider);
         final data = ref.read(dataRepositoryProvider);
+        final ai = ref.read(aiSettingsRepositoryProvider);
         final messenger = ScaffoldMessenger.of(context);
         final router = GoRouter.of(context);
         if (signedIn) {
@@ -49,7 +54,7 @@ class ClearDeviceButton extends ConsumerWidget {
             return;
           }
         }
-        await data.wipe();
+        await clearDevice(sync: sync, data: data, ai: ai);
         messenger.showSnackBar(SnackBar(content: Text(signedIn ? l10n.deviceCleared : l10n.dataDeleted)));
         router.go('/onboarding');
       },

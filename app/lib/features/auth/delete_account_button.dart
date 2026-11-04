@@ -3,12 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/providers.dart';
+import '../../data/clear_device.dart';
+import '../../data/sync/sync_coordinator.dart';
 import 'auth_errors.dart';
 import 'auth_gateway.dart';
 
 /// "Delete account", after a confirmation: the server deletes the account
 /// and its data (`public.delete_my_account()`), then this device signs out,
-/// forgets its local copy and starts over at onboarding.
+/// forgets its local copy (and the AI key) and starts over at onboarding.
 class DeleteAccountButton extends ConsumerStatefulWidget {
   const DeleteAccountButton({super.key});
 
@@ -37,7 +39,9 @@ class _DeleteAccountButtonState extends ConsumerState<DeleteAccountButton> {
     if (ok != true || !mounted) return;
     // Signing out removes this button from the Account panel, so everything
     // needed afterwards is taken now.
+    final sync = ref.read(syncControlProvider);
     final data = ref.read(dataRepositoryProvider);
+    final ai = ref.read(aiSettingsRepositoryProvider);
     final messenger = ScaffoldMessenger.of(context);
     final router = GoRouter.of(context);
     setState(() => _busy = true);
@@ -54,7 +58,8 @@ class _DeleteAccountButtonState extends ConsumerState<DeleteAccountButton> {
       // The local session is dropped before the server is told; the server
       // one went with the account.
     }
-    await data.wipe();
+    // Stops sync first, so a download in progress cannot refill the device.
+    await clearDevice(sync: sync, data: data, ai: ai);
     messenger.showSnackBar(SnackBar(content: Text(l10n.accountDeleted)));
     router.go('/onboarding');
   }
