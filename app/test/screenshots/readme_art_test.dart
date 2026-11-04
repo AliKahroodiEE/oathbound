@@ -1,10 +1,12 @@
-// Renders the README banner and showcase art from the real app screens,
-// fonts and design tokens. Run after readme_screenshots_test.dart, which
-// produces the phone screenshots these images frame:
+// Renders the README banners (English and Persian, light and dark) and the
+// light/dark showcase from the real app screens, fonts and design tokens.
+// Run after readme_screenshots_test.dart, which produces the screens these
+// images frame:
 //
-//   flutter test --dart-define=SCREENSHOTS=true --update-goldens test/screenshots
+//   flutter test --dart-define=SCREENSHOTS=true --update-goldens test/screenshots/readme_art_test.dart
 //
-// Skipped in normal test runs. Output: docs/assets/*.png at the repo root.
+// Skipped in normal test runs. Output: raw PNGs in app/build/readme/, which
+// tool/readme_images.py turns into the WebP files under docs/.
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -15,18 +17,32 @@ import 'package:wyrd/design/tokens.dart';
 
 import 'support.dart';
 
-const _shots = '../docs/screenshots';
-const _out = '../../../docs/assets';
+const _shots = 'build/readme';
+const _out = '../../build/readme';
 const _dpr = 1.5;
 
 MemoryImage _shot(String name) => MemoryImage(File('$_shots/$name.png').readAsBytesSync());
 
-Future<void> _render(WidgetTester tester, Size size, Palette palette, Widget art, String name) async {
+Future<void> _render(
+  WidgetTester tester,
+  Size size,
+  Palette palette,
+  Widget art,
+  String name, {
+  Locale locale = const Locale('en'),
+}) async {
   tester.view.devicePixelRatio = _dpr;
   tester.view.physicalSize = size * _dpr;
   addTearDown(tester.view.reset);
   await tester.pumpWidget(
-    MaterialApp(debugShowCheckedModeBanner: false, theme: buildAppTheme(const Locale('en'), palette), home: art),
+    MaterialApp(
+      debugShowCheckedModeBanner: false,
+      theme: buildAppTheme(locale, palette),
+      home: Directionality(
+        textDirection: locale.languageCode == 'fa' ? TextDirection.rtl : TextDirection.ltr,
+        child: art,
+      ),
+    ),
   );
   // Decode every framed screenshot before capturing.
   await tester.runAsync(() async {
@@ -45,15 +61,23 @@ void main() {
 
   for (final dark in [true, false]) {
     final t = dark ? 'dark' : 'light';
-    testWidgets('banner ($t)', skip: !screenshotsEnabled, (tester) async {
-      await _render(
-        tester,
-        const Size(1280, 640),
-        dark ? Palette.dark : Palette.light,
-        _Banner(front: _shot('phone-character-$t-en'), back: _shot(dark ? 'phone-reward-$t-en' : 'phone-quests-$t-en')),
-        'banner-$t',
-      );
-    });
+    for (final copy in [_BannerCopy.en, _BannerCopy.fa]) {
+      final lang = copy.locale.languageCode;
+      testWidgets('banner ($t, $lang)', skip: !screenshotsEnabled, (tester) async {
+        await _render(
+          tester,
+          const Size(1280, 640),
+          dark ? Palette.dark : Palette.light,
+          _Banner(
+            copy: copy,
+            front: _shot('phone-character-$t-$lang'),
+            back: _shot(dark ? 'phone-reward-$t-$lang' : 'phone-quests-$t-$lang'),
+          ),
+          'banner-$t-$lang',
+          locale: copy.locale,
+        );
+      });
+    }
   }
 
   testWidgets('light and dark showcase', skip: !screenshotsEnabled, (tester) async {
@@ -67,10 +91,54 @@ void main() {
   });
 }
 
+/// Banner text in one language.
+class _BannerCopy {
+  const _BannerCopy({
+    required this.locale,
+    required this.label,
+    required this.wordmark,
+    required this.tagline,
+    required this.body,
+    required this.chips,
+  });
+
+  final Locale locale;
+  final String label;
+  final String wordmark;
+  final String tagline;
+  final String body;
+  final List<String> chips;
+
+  bool get rtl => locale.languageCode == 'fa';
+
+  static const en = _BannerCopy(
+    locale: Locale('en'),
+    label: 'A DARK-FANTASY RPG FOR REAL LIFE',
+    wordmark: 'Wyrd',
+    tagline: 'Your character is who you become.',
+    body:
+        'Quests and habits become XP, six attributes and a living chronicle. '
+        'AI proposes, honest rules decide, and every reward explains itself.',
+    chips: ['Android · iOS · Web', 'English · فارسی', 'Light & dark', 'Bring your own AI'],
+  );
+
+  static const fa = _BannerCopy(
+    locale: Locale('fa'),
+    label: 'یک نقش‌آفرینی فانتزی تاریک برای زندگی واقعی',
+    wordmark: 'سرنوشت‌ساز',
+    tagline: 'شخصیتت، همان کسی است که می‌شوی.',
+    body:
+        'مأموریت‌ها و عادت‌ها به تجربه، شش ویژگی و وقایع‌نامه‌ای زنده تبدیل می‌شوند. '
+        'هوش مصنوعی پیشنهاد می‌دهد، قوانینِ شفاف تصمیم می‌گیرند و هر پاداش دلیلش را می‌گوید.',
+    chips: ['اندروید · iOS · وب', 'فارسی · English', 'روشن و تیره', 'هوش مصنوعی خودت'],
+  );
+}
+
 /// Wordmark, promise and platforms on the start side; two phones on the end.
 class _Banner extends StatelessWidget {
-  const _Banner({required this.front, required this.back});
+  const _Banner({required this.copy, required this.front, required this.back});
 
+  final _BannerCopy copy;
   final ImageProvider front;
   final ImageProvider back;
 
@@ -78,6 +146,9 @@ class _Banner extends StatelessWidget {
   Widget build(BuildContext context) {
     final p = context.palette;
     final text = Theme.of(context).textTheme;
+    final rtl = copy.rtl;
+    // Arabic script must never be letter-spaced; Latin small caps breathe.
+    final tracking = rtl ? 0.0 : 3.2;
     return Scaffold(
       body: AppBackground(
         child: Stack(
@@ -92,42 +163,40 @@ class _Banner extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'A DARK-FANTASY RPG FOR REAL LIFE',
-                    style: text.labelSmall?.copyWith(fontSize: 15, letterSpacing: 3.2, color: p.accent),
+                    copy.label,
+                    style: text.labelSmall?.copyWith(fontSize: rtl ? 18 : 15, letterSpacing: tracking, color: p.accent),
                   ),
                   const SizedBox(height: 10),
-                  ShaderMask(
-                    shaderCallback: (r) => AppGradients.emberDiagonal.createShader(r, textDirection: TextDirection.ltr),
-                    child: Text(
-                      'Wyrd',
-                      style: text.displayLarge?.copyWith(
-                        fontSize: 136,
-                        height: 1.05,
-                        letterSpacing: 8,
-                        color: Colors.white,
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: AlignmentDirectional.centerStart,
+                    child: ShaderMask(
+                      shaderCallback: (r) =>
+                          AppGradients.emberDiagonal.createShader(r, textDirection: Directionality.of(context)),
+                      child: Text(
+                        copy.wordmark,
+                        style: text.displayLarge?.copyWith(
+                          fontSize: rtl ? 112 : 136,
+                          height: rtl ? 1.35 : 1.05,
+                          letterSpacing: rtl ? 0 : 8,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 14),
-                  Text(
-                    'Your character is who you become.',
-                    style: text.headlineSmall?.copyWith(fontSize: 30, height: 1.25),
-                  ),
+                  SizedBox(height: rtl ? 4 : 14),
+                  Text(copy.tagline, style: text.headlineSmall?.copyWith(fontSize: 30, height: rtl ? 1.6 : 1.25)),
                   const SizedBox(height: 16),
-                  Text(
-                    'Quests and habits become XP, six attributes and a living chronicle. '
-                    'AI proposes, honest rules decide, and every reward explains itself.',
-                    style: text.bodyLarge?.copyWith(fontSize: 19, height: 1.55),
-                  ),
+                  Text(copy.body, style: text.bodyLarge?.copyWith(fontSize: 19, height: rtl ? 1.85 : 1.55)),
                   const SizedBox(height: 30),
                   Wrap(
                     spacing: 10,
                     runSpacing: 10,
                     children: [
-                      _Chip('Android · iOS · Web', Icons.devices_rounded, p.accent),
-                      _Chip('English · فارسی', Icons.translate_rounded, p.arcane),
-                      _Chip('Light & dark', Icons.contrast_rounded, p.gold),
-                      _Chip('Bring your own AI', Icons.auto_awesome_rounded, p.success),
+                      _Chip(copy.chips[0], Icons.devices_rounded, p.accent),
+                      _Chip(copy.chips[1], Icons.translate_rounded, p.arcane),
+                      _Chip(copy.chips[2], Icons.contrast_rounded, p.gold),
+                      _Chip(copy.chips[3], Icons.auto_awesome_rounded, p.success),
                     ],
                   ),
                 ],
@@ -136,12 +205,12 @@ class _Banner extends StatelessWidget {
             PositionedDirectional(
               end: 262,
               top: 86,
-              child: Transform.rotate(angle: -0.11, child: _Phone(back, width: 236)),
+              child: Transform.rotate(angle: rtl ? 0.11 : -0.11, child: _Phone(back, width: 236)),
             ),
             PositionedDirectional(
               end: 64,
               top: 36,
-              child: Transform.rotate(angle: 0.05, child: _Phone(front, width: 268)),
+              child: Transform.rotate(angle: rtl ? -0.05 : 0.05, child: _Phone(front, width: 268)),
             ),
           ],
         ),
