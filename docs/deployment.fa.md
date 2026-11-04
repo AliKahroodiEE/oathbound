@@ -5,8 +5,9 @@
 [English](deployment.md)
 
 این فهرست کارهای صاحب پروژه است برای اجرای Wyrd برای کاربران واقعی با هزینه‌ی **صفر دلار در ماه**.
-مراحل را یک بار به ترتیب انجام بده؛ از آن به بعد هر push به شاخه‌ی `main` نسخه‌ی وب را دوباره منتشر
-می‌کند و هر تگ `v*` یک نسخه‌ی تازه‌ی اندروید می‌سازد.
+**هیچ مرحله‌ای کارت بانکی لازم ندارد**: همه‌ی سرویس‌های زیر پلن رایگانی دارند که اصلاً کارت نمی‌خواهد (فقط
+[دامنه‌ی شخصی](#custom-domain) که اختیاری است هزینه دارد). مراحل را یک بار به ترتیب انجام بده؛ از آن به بعد هر
+push به شاخه‌ی `main` نسخه‌ی وب را دوباره منتشر می‌کند و هر تگ `v*` یک نسخه‌ی تازه‌ی اندروید می‌سازد.
 
 | بخش | کجا اجرا می‌شود | چطور منتشر می‌شود |
 | --- | --- | --- |
@@ -15,6 +16,9 @@
 | برنامه‌ی اندروید | فایل APK امضاشده در GitHub Releases | [`release-android.yml`](../.github/workflows/release-android.yml) با هر تگ `v*` |
 | ایمیل‌های ورود | Brevo (یا Gmail) از راه SMTP | SMTP سفارشی Supabase |
 | اعلان‌ها (push) | Firebase Cloud Messaging | تابع `notify` در Edge Functions |
+
+کاربران با یک کد ۶ رقمی که برایشان ایمیل می‌شود، با ایمیل و رمز عبور (تأیید ثبت‌نام و بازیابی رمز هم با کد ۶ رقمی
+است) یا با گیت‌هاب وارد می‌شوند.
 
 نشانی عمومی سایت فقط در **یک** جا تعریف می‌شود: متغیر مخزن گیت‌هاب به نام `WYRD_SITE_URL`. هر
 چیزی که به این نشانی نیاز دارد (ساخت نسخه‌ی وب، فایل APK و تنظیمات بازگشت Supabase) آن را از همین
@@ -29,35 +33,45 @@
 | Brevo | ۳۰۰ ایمیل در روز | نشانی فرستنده باید تأیید شود؛ بدون دامنه‌ی شخصی بعضی ایمیل‌ها به هرزنامه می‌روند. |
 | Gmail (جایگزین) | حدود ۵۰۰ ایمیل در روز | تأیید دومرحله‌ای و یک app password لازم است. |
 | Resend (بعداً، با دامنه‌ی شخصی) | ۳٬۰۰۰ ایمیل در ماه، ۱۰۰ در روز | باید رکوردهای DNS دامنه‌ات را تنظیم کنی. |
-| Firebase Cloud Messaging | رایگان | — |
+| Firebase Cloud Messaging | رایگان در پلن Spark | روی Spark بمان: Blaze تنها پلن Firebase است که کارت می‌خواهد و اعلان‌ها به آن نیازی ندارند. |
 | GitHub | Actions برای مخزن عمومی رایگان است، Releases رایگان است | مخزن خصوصی ماهانه ۲٬۰۰۰ دقیقه Actions دارد. |
 
-## پیش‌نیازها
+## چه چیزهایی لازم داری
 
-- حساب گیت‌هاب با دسترسی مدیر روی این مخزن و [GitHub CLI](https://cli.github.com) که با
-  `gh auth login` وارد شده باشد.
-- یک JDK برای ابزار `keytool` (همراه Android Studio نصب می‌شود) تا کلید امضای اندروید ساخته شود.
-- ابزار [age](https://github.com/FiloSottile/age) برای پشتیبان‌های رمزشده (`brew install age`،
-  `sudo apt install age` یا `winget install FiloSottile.age`).
-- یک مدیر رمز عبور؛ بعضی از مقدارهای زیر فقط یک بار نشان داده می‌شوند.
+هفت چیز، همه رایگان و هیچ‌کدام کارت بانکی نمی‌خواهد:
 
-مقدارهای مرحله‌های ۱ تا ۷ را جمع کن و بعد `tool/setup_production.sh` را اجرا کن (مرحله‌ی ۹) تا همه
-را در گیت‌هاب ذخیره کند. نام‌هایی که به شکل `code` آمده‌اند، نام secret (خصوصی) یا variable (تنظیم
-عمومی برنامه) در گیت‌هاب هستند و اسکریپت تک‌تک‌شان را می‌پرسد.
+1. **Supabase**: حسابی برای پروژه‌ی بک‌اند (مرحله‌ی ۱).
+2. **Cloudflare**: حسابی برای میزبانی نسخه‌ی وب (مرحله‌ی ۲).
+3. **Brevo یا یک app password در Gmail**: فرستنده‌ی ایمیل‌های ورود (مرحله‌ی ۳).
+4. **Firebase**: پروژه‌ای برای اعلان‌ها (مرحله‌ی ۴).
+5. **یک OAuth app در گیت‌هاب**: برای دکمه‌ی «ورود با گیت‌هاب» (مرحله‌ی ۵).
+6. **یک keystore اندروید**: کلیدی که APK را امضا می‌کند (مرحله‌ی ۶). اسکریپت راه‌اندازی آن را با `keytool`
+   می‌سازد که همراه هر JDK هست (Android Studio هم یکی دارد).
+7. **age** برای پشتیبان‌گیری: پشتیبان‌های پایگاه داده را رمز می‌کند (مرحله‌ی ۷). نصبش: `brew install age`،
+   `sudo apt install age` یا `winget install FiloSottile.age`.
+
+مقدارهای مرحله‌های ۱ تا ۵ را جمع کن و بعد `tool/setup_production.sh` را اجرا کن (مرحله‌ی ۸): همه را در
+گیت‌هاب ذخیره می‌کند و اگر هنوز keystore اندروید و کلید age نداری، آن‌ها را هم می‌سازد. نام‌هایی که به شکل
+`code` آمده‌اند، نام secret (خصوصی) یا variable (تنظیم عمومی برنامه) در گیت‌هاب هستند و اسکریپت تک‌تک‌شان را
+می‌پرسد. یک مدیر رمز عبور دم دست داشته باش؛ بعضی از مقدارها فقط یک بار نشان داده می‌شوند.
 
 ## ۱. پروژه‌ی Supabase
 
-1. پروژه را در <https://supabase.com/dashboard/new> بساز: نام `wyrd`، یک **رمز پایگاه داده‌ی** بلند و
-   تصادفی (نگهش دار: `SUPABASE_DB_PASSWORD`) و **نزدیک‌ترین منطقه به بیشتر کاربرانت** (برای اروپا و
+1. پروژه را در <https://supabase.com/dashboard/new> با پلن **Free** بساز: نام `wyrd`، یک **رمز پایگاه داده‌ی**
+   بلند و تصادفی (نگهش دار: `SUPABASE_DB_PASSWORD`) و **نزدیک‌ترین منطقه به بیشتر کاربرانت** (برای اروپا و
    خاورمیانه، فرانکفورت انتخاب خوبی است). پلن رایگان دو پروژه‌ی فعال را اجازه می‌دهد.
 2. **شناسه‌ی پروژه (ref)** همان بخش آخر نشانی داشبورد است، یعنی
    `https://supabase.com/dashboard/project/<ref>`: این می‌شود `SUPABASE_PROJECT_ID`. **نشانی پروژه**
    `https://<ref>.supabase.co` است: `SUPABASE_URL`.
-3. کلیدهای API در <https://supabase.com/dashboard/project/_/settings/api-keys>: **کلید publishable**
-   (`sb_publishable_…`) را کپی کن: `SUPABASE_PUBLISHABLE_KEY`. پروژه‌های تازه دیگر کلیدهای قدیمی
-   `anon` و `service_role` ندارند؛ کلیدهای `sb_secret_…` هیچ‌وقت از Supabase بیرون نمی‌روند (Edge
-   Functions خودکار آن‌ها را می‌گیرند).
-4. توکن دسترسی شخصی برای گردش‌کار استقرار، در <https://supabase.com/dashboard/account/tokens>:
+3. کلیدهای API در <https://supabase.com/dashboard/project/_/settings/api-keys> (پروژه‌های تازه دیگر کلیدهای
+   قدیمی `anon` و `service_role` ندارند):
+   - **کلید publishable** (`sb_publishable_…`) داخل برنامه‌ها می‌رود: `SUPABASE_PUBLISHABLE_KEY`.
+   - در بخش **Secret keys** یک secret key تازه با نام `github-deploy` بساز و کپی‌اش کن (`sb_secret_…`):
+     `SUPABASE_SECRET_KEY`. استقرار بک‌اند آن را در Vault پایگاه داده نگه می‌دارد تا کارهای زمان‌بندی‌شده و
+     triggerهای پایگاه داده بتوانند Edge Functions را صدا بزنند. این کلید از row-level security رد می‌شود: مثل
+     رمز عبور با آن رفتار کن و هیچ‌وقت داخل build برنامه نگذارش. خود Edge Functions کلیدهایشان را خودکار از
+     Supabase می‌گیرند.
+4. توکن دسترسی شخصی برای استقرار بک‌اند، در <https://supabase.com/dashboard/account/tokens>:
    **Generate new token**، که می‌شود `SUPABASE_ACCESS_TOKEN`.
 5. اگر رمز پایگاه داده را گم کردی، در <https://supabase.com/dashboard/project/_/database/settings>
    عوضش کن.
@@ -82,9 +96,9 @@
 
 کدهای ورود، تأیید ثبت‌نام و بازیابی رمز همه کدهای ۶ رقمی‌اند که با ایمیل فرستاده می‌شوند. فرستنده‌ی
 داخلی Supabase فقط به اعضای تیم خودت در Supabase ایمیل می‌دهد (ساعتی ۲ تا)، پس برای کاربران واقعی یک
-حساب SMTP جدا لازم است. یکی را انتخاب کن:
+حساب SMTP جدا لازم است (SMTP سفارشی در پلن رایگان هم مجاز است). یکی را انتخاب کن:
 
-**Brevo (پیشنهاد فعلی).** رایگان، روزی ۳۰۰ ایمیل، بدون نیاز به دامنه.
+**Brevo (پیشنهاد فعلی).** رایگان، روزی ۳۰۰ ایمیل، بدون نیاز به دامنه و کارت بانکی.
 
 1. در <https://www.brevo.com> ثبت‌نام کن.
 2. نشانی فرستنده (صندوقی که مال خودت است) را اضافه و تأیید کن:
@@ -93,7 +107,7 @@
    (`SMTP_HOST`)، درگاه `587` (`SMTP_PORT`)، **login** که همان‌جا نشان داده می‌شود و شبیه
    `…@smtp-brevo.com` است (`SMTP_USER`) و یک **SMTP key** تازه (`SMTP_PASS`).
 
-**Gmail.** از حساب گوگل خودت استفاده می‌کند؛ حدود ۵۰۰ ایمیل در روز.
+**Gmail.** از یک نشانی Gmail که همین حالا داری استفاده می‌کند؛ حدود ۵۰۰ ایمیل در روز.
 
 1. تأیید دومرحله‌ای را روشن کن: <https://myaccount.google.com/signinoptions/twosv>.
 2. یک app password به نام `Wyrd` بساز: <https://myaccount.google.com/apppasswords> (۱۶ حرف،
@@ -104,37 +118,27 @@
 بخواه بار اول پوشه‌ی هرزنامه را هم نگاه کنند. وقتی دامنه گرفتی، به Resend برو
 ([دامنه‌ی شخصی در آینده](#custom-domain)).
 
-## ۴. ورود با گوگل
+## ۴. Firebase (اعلان‌ها)
 
-در کنسول Google Cloud، با حسابی که باید مالک برنامه باشد:
+1. در <https://console.firebase.google.com> روی **Create a project** بزن و نامش را `wyrd` بگذار. Google
+   Analytics لازم نیست. پروژه‌های تازه روی پلن رایگان **Spark** هستند که Cloud Messaging را دارد؛ به Blaze
+   ارتقا نده.
+2. **برنامه‌ی وب**: در Project settings بخش *Your apps* یک برنامه‌ی وب (`</>`) با نام `Wyrd` و بدون
+   Hosting اضافه کن. از تنظیماتی که نشان می‌دهد: `apiKey` می‌شود `FIREBASE_API_KEY`، `appId` می‌شود
+   `FIREBASE_APP_ID_WEB`، `messagingSenderId` می‌شود `FIREBASE_MESSAGING_SENDER_ID` و `projectId`
+   می‌شود `FIREBASE_PROJECT_ID`.
+3. **برنامه‌ی اندروید**: یک برنامه‌ی اندروید با package name برابر `app.wyrd` اضافه کن و فیلد اختیاری اثر
+   انگشت گواهی را خالی بگذار (اعلان‌ها به آن نیازی ندارند). App ID آن (`1:…:android:…`) می‌شود
+   `FIREBASE_APP_ID_ANDROID`. برنامه هنگام ساخت از همین مقدارها تنظیم می‌شود؛ فایل `google-services.json`
+   لازم نیست (و بیرون از git می‌ماند).
+4. **کلید web push**: در <https://console.firebase.google.com/project/_/settings/cloudmessaging>
+   بخش *Web configuration* روی **Generate key pair** بزن. کلید عمومی می‌شود `FIREBASE_VAPID_KEY`.
+5. **کلید سرور** برای تابع `notify`: در
+   <https://console.firebase.google.com/project/_/settings/serviceaccounts/adminsdk> روی
+   **Generate new private key** بزن. فایل JSON دانلودشده را بیرون از مخزن نگه دار؛ اسکریپت آن را در
+   `FCM_SERVICE_ACCOUNT` می‌ریزد و بعد می‌توانی پاکش کنی.
 
-1. یک پروژه بساز: <https://console.cloud.google.com/projectcreate> (در مرحله‌ی ۶ می‌توانی همین را
-   برای Firebase هم به کار ببری).
-2. **Branding** (صفحه‌ی رضایت) در <https://console.cloud.google.com/auth/branding>: نام برنامه
-   `Wyrd`، ایمیل پشتیبانی، صفحه‌ی اصلی `WYRD_SITE_URL` و دامنه‌های مجاز `wyrd-app.pages.dev` (بعداً
-   دامنه‌ی خودت) و `<ref>.supabase.co`. در **Audience**
-   (<https://console.cloud.google.com/auth/audience>) گزینه‌ی *External* را بزن و بعد
-   **Publish app**. در **Data access** (<https://console.cloud.google.com/auth/scopes>) فقط
-   `openid`، `…/auth/userinfo.email` و `…/auth/userinfo.profile`. این‌ها حساس نیستند، پس گوگل
-   برنامه را بازبینی نمی‌کند.
-3. **کلاینت وب**: در <https://console.cloud.google.com/auth/clients> روی **Create client** بزن و
-   *Web application* را انتخاب کن:
-   - Authorized JavaScript origins: `https://wyrd-app.pages.dev` (همان `WYRD_SITE_URL`).
-   - Authorized redirect URIs: `https://<ref>.supabase.co/auth/v1/callback`.
-   - **client ID** را (`GOOGLE_WEB_CLIENT_ID`) و **client secret** را (`GOOGLE_CLIENT_SECRET`) کپی کن.
-4. **کلاینت اندروید**: **Create client** و بعد *Android*، با package name برابر `app.wyrd` و
-   **SHA-1 کلید انتشار**. اسکریپت `tool/setup_production.sh` وقتی کلید را می‌سازد (مرحله‌ی ۸) این
-   مقدار را چاپ می‌کند، پس می‌توانی بعد از مرحله‌ی ۹ به این‌جا برگردی. هیچ مقداری از این کلاینت به
-   گیت‌هاب نمی‌رود؛ فقط باید وجود داشته باشد. برای ورود از نسخه‌های debug خودت، یک کلاینت اندروید دوم
-   با SHA-1 کلید debug بساز.
-
-<div dir="ltr">
-
-```bash
-keytool -list -v -alias androiddebugkey -keystore ~/.android/debug.keystore -storepass android
-```
-
-</div>
+مقدارهای تنظیم وب Firebase ذاتاً عمومی‌اند؛ فقط کلید service account محرمانه است.
 
 ## ۵. ورود با گیت‌هاب
 
@@ -146,34 +150,30 @@ keytool -list -v -alias androiddebugkey -keystore ~/.android/debug.keystore -sto
 
 گیت‌هاب اجازه نمی‌دهد نام secret یا variable با `GITHUB_` شروع شود، پس این‌ها با نام
 `GH_OAUTH_CLIENT_ID` (variable) و `GH_OAUTH_CLIENT_SECRET` (secret) ذخیره می‌شوند. مقدار
-`WYRD_AUTH_GITHUB=true` دکمه‌ی گیت‌هاب را در برنامه نشان می‌دهد. گوشی‌ها از راه
-`app.wyrd://auth-callback` به برنامه برمی‌گردند و تنظیمات بک‌اند این بازگشت را مجاز می‌کند.
+`WYRD_AUTH_GITHUB=true` دکمه‌ی گیت‌هاب را در برنامه نشان می‌دهد. در وب، ورود به `WYRD_SITE_URL` برمی‌گردد؛
+گوشی‌ها از راه `app.wyrd://auth-callback` به برنامه برمی‌گردند و تنظیمات بک‌اند هر دو بازگشت را مجاز می‌کند.
 
-## ۶. Firebase (اعلان‌ها)
+## ۶. کلید امضای اندروید
 
-1. در <https://console.firebase.google.com> روی **Create a project** بزن (یا Firebase را به پروژه‌ی
-   Google Cloud مرحله‌ی ۴ اضافه کن). Google Analytics لازم نیست.
-2. **برنامه‌ی وب**: در Project settings بخش *Your apps* یک برنامه‌ی وب (`</>`) با نام `Wyrd` و بدون
-   Hosting اضافه کن. از تنظیماتی که نشان می‌دهد: `apiKey` می‌شود `FIREBASE_API_KEY`، `appId` می‌شود
-   `FIREBASE_APP_ID_WEB`، `messagingSenderId` می‌شود `FIREBASE_MESSAGING_SENDER_ID` و `projectId`
-   می‌شود `FIREBASE_PROJECT_ID`.
-3. **برنامه‌ی اندروید**: یک برنامه‌ی اندروید با package name برابر `app.wyrd` اضافه کن. App ID آن
-   (`1:…:android:…`) می‌شود `FIREBASE_APP_ID_ANDROID`. برنامه هنگام ساخت از همین مقدارها تنظیم
-   می‌شود؛ فایل `google-services.json` لازم نیست (و بیرون از git می‌ماند).
-4. **کلید web push**: در <https://console.firebase.google.com/project/_/settings/cloudmessaging>
-   بخش *Web configuration* روی **Generate key pair** بزن. کلید عمومی می‌شود `FIREBASE_VAPID_KEY`.
-5. **کلید سرور** برای تابع `notify`: در
-   <https://console.firebase.google.com/project/_/settings/serviceaccounts/adminsdk> روی
-   **Generate new private key** بزن. فایل JSON دانلودشده را بیرون از مخزن نگه دار؛ اسکریپت آن را در
-   `FCM_SERVICE_ACCOUNT` می‌ریزد و بعد می‌توانی پاکش کنی.
+فایل APK باید برای همیشه با یک کلید امضا شود: اندروید فقط وقتی به‌روزرسانی را روی برنامه‌ی نصب‌شده
+می‌نشاند که امضاها یکی باشند. اسکریپت راه‌اندازی کلید را با `keytool` می‌سازد (RSA با طول ۴۰۹۶ بیت، معتبر
+برای ۲۷ سال)، اثر انگشت SHA-256 آن را چاپ می‌کند (یادداشت هر نسخه هم آن را نشان می‌دهد تا هر کسی بتواند ببیند
+APK مال توست) و آن را با نام‌های `ANDROID_KEYSTORE_BASE64`، `ANDROID_KEYSTORE_PASSWORD`، `ANDROID_KEY_ALIAS` و
+`ANDROID_KEY_PASSWORD` در گیت‌هاب ذخیره می‌کند.
 
-مقدارهای تنظیم وب Firebase ذاتاً عمومی‌اند؛ فقط کلید service account محرمانه است.
+**از فایل keystore و رمزش نسخه‌ی پشتیبان بگیر.** اگر گم شوند، کاربران فقط بعد از حذف نسخه‌ی قبلی
+می‌توانند نسخه‌ی تازه را نصب کنند و داده‌های محلی‌شان پاک می‌شود.
+
+برای امضای نسخه‌ی انتشار روی کامپیوتر خودت، `app/android/key.properties.example` را به
+`app/android/key.properties` کپی کن (در git نادیده گرفته می‌شود) و پرش کن. بدون آن، نسخه‌های انتشار
+محلی با کلید debug امضا می‌شوند.
 
 ## ۷. پشتیبان‌گیری
 
-پروژه‌های رایگان Supabase پشتیبان خودکار ندارند. پشتیبان‌ها برای یک کلید
-[age](https://github.com/FiloSottile/age) رمز می‌شوند، پس هر جایی می‌شود نگهشان داشت و فقط خودت
-می‌توانی بازشان کنی:
+پروژه‌های رایگان Supabase پشتیبان خودکار ندارند. یک پشتیبان کامل سه خروجی از پایگاه داده است: نقش‌ها
+(roles)، ساختار (schema) و داده‌ها. پشتیبان‌ها برای یک کلید [age](https://github.com/FiloSottile/age) رمز
+می‌شوند، پس هر جایی می‌شود نگهشان داشت و فقط خودت می‌توانی بازشان کنی. اسکریپت راه‌اندازی می‌تواند کلید را
+بسازد، یا خودت دستی:
 
 <div dir="ltr">
 
@@ -197,26 +197,9 @@ age --decrypt -i ~/.config/wyrd/wyrd-backup-key.txt <file>.age > <file>
 
 </div>
 
-اسکریپت راه‌اندازی می‌تواند `age-keygen` را برایت اجرا کند.
+## ۸. ذخیره‌ی همه‌چیز در گیت‌هاب
 
-## ۸. کلید امضای اندروید
-
-فایل APK باید برای همیشه با یک کلید امضا شود: اندروید فقط وقتی به‌روزرسانی را روی برنامه‌ی نصب‌شده
-می‌نشاند که امضاها یکی باشند. اسکریپت راه‌اندازی کلید را با `keytool` می‌سازد (RSA با طول ۴۰۹۶
-بیت، معتبر برای ۲۷ سال)، SHA-1 آن را برای مرحله‌ی ۴ چاپ می‌کند و آن را با نام‌های
-`ANDROID_KEYSTORE_BASE64`، `ANDROID_KEYSTORE_PASSWORD`، `ANDROID_KEY_ALIAS` و `ANDROID_KEY_PASSWORD`
-در گیت‌هاب ذخیره می‌کند.
-
-**از فایل keystore و رمزش نسخه‌ی پشتیبان بگیر.** اگر گم شوند، کاربران فقط بعد از حذف نسخه‌ی قبلی
-می‌توانند نسخه‌ی تازه را نصب کنند و داده‌های محلی‌شان پاک می‌شود.
-
-برای امضای نسخه‌ی انتشار روی کامپیوتر خودت، `app/android/key.properties.example` را به
-`app/android/key.properties` کپی کن (در git نادیده گرفته می‌شود) و پرش کن. بدون آن، نسخه‌های انتشار
-محلی با کلید debug امضا می‌شوند.
-
-## ۹. ذخیره‌ی همه‌چیز در گیت‌هاب
-
-از داخل مخزن:
+از داخل مخزن، با [GitHub CLI](https://cli.github.com) و دسترسی مدیر روی مخزن:
 
 <div dir="ltr">
 
@@ -227,29 +210,28 @@ tool/setup_production.sh         # or: tool/setup_production.sh --repo OWNER/REP
 
 </div>
 
-اسکریپت گروه‌های بالا را یکی‌یکی می‌پرسد، اجازه می‌دهد هر کدام را رد کنی و هر وقت خواستی می‌شود
-دوباره اجرایش کرد (Enter مقدار ذخیره‌شده را نگه می‌دارد). رمزها، توکن‌ها و کلیدها هنگام تایپ نمایش
+اسکریپت گروه‌های بالا را به همین ترتیب یکی‌یکی می‌پرسد، اجازه می‌دهد هر کدام را رد کنی و هر وقت خواستی
+می‌شود دوباره اجرایش کرد (Enter مقدار ذخیره‌شده را نگه می‌دارد). رمزها، توکن‌ها و کلیدها هنگام تایپ نمایش
 داده نمی‌شوند و از راه stdin به `gh` می‌رسند. نتیجه را در
 `https://github.com/OWNER/REPO/settings/secrets/actions` (زبانه‌های secrets و variables) ببین.
 
 | نام | نوع | چه کسی استفاده می‌کند |
 | --- | --- | --- |
 | `SUPABASE_URL`، `SUPABASE_PUBLISHABLE_KEY` | variable | ساخت نسخه‌ی وب و اندروید |
-| `SUPABASE_PROJECT_ID`، `SUPABASE_ACCESS_TOKEN`، `SUPABASE_DB_PASSWORD` | secret | استقرار بک‌اند |
+| `SUPABASE_PROJECT_ID`، `SUPABASE_ACCESS_TOKEN`، `SUPABASE_DB_PASSWORD` | secret | استقرار بک‌اند، پشتیبان‌گیری |
+| `SUPABASE_SECRET_KEY` | secret | استقرار بک‌اند (در Vault پایگاه داده نگه داشته می‌شود) |
 | `WYRD_SITE_URL` | variable | هر چیزی که نشانی عمومی را لازم دارد |
 | `CLOUDFLARE_API_TOKEN`، `CLOUDFLARE_ACCOUNT_ID` | secret | استقرار وب |
 | `CF_PAGES_PROJECT` | variable | استقرار وب (پیش‌فرض `wyrd-app`) |
 | `SMTP_HOST`، `SMTP_PORT`، `SMTP_USER`، `SMTP_PASS`، `SMTP_ADMIN_EMAIL`، `SMTP_SENDER_NAME` | secret | استقرار بک‌اند (SMTP سفارشی Supabase) |
-| `GOOGLE_WEB_CLIENT_ID` | variable | ساخت برنامه، استقرار بک‌اند |
-| `GOOGLE_CLIENT_SECRET` | secret | استقرار بک‌اند |
-| `GH_OAUTH_CLIENT_ID` / `GH_OAUTH_CLIENT_SECRET` | variable / secret | استقرار بک‌اند |
-| `WYRD_AUTH_GITHUB` | variable | ساخت برنامه (`true` دکمه‌ی گیت‌هاب را نشان می‌دهد) |
 | `FIREBASE_API_KEY`، `FIREBASE_APP_ID_WEB`، `FIREBASE_APP_ID_ANDROID`، `FIREBASE_MESSAGING_SENDER_ID`، `FIREBASE_PROJECT_ID`، `FIREBASE_VAPID_KEY` | variable | ساخت برنامه |
 | `FCM_SERVICE_ACCOUNT` | secret | استقرار بک‌اند (تابع `notify`) |
-| `BACKUP_AGE_RECIPIENT` | variable | پشتیبان‌گیری |
+| `GH_OAUTH_CLIENT_ID` / `GH_OAUTH_CLIENT_SECRET` | variable / secret | استقرار بک‌اند |
+| `WYRD_AUTH_GITHUB` | variable | ساخت برنامه و استقرار بک‌اند (`true` ورود با گیت‌هاب را روشن می‌کند) |
 | `ANDROID_KEYSTORE_BASE64`، `ANDROID_KEYSTORE_PASSWORD`، `ANDROID_KEY_ALIAS`، `ANDROID_KEY_PASSWORD` | secret | انتشار اندروید |
+| `BACKUP_AGE_RECIPIENT` | variable | پشتیبان‌گیری |
 
-## ۱۰. اولین استقرار
+## ۹. اولین استقرار
 
 ترتیب مهم است: برنامه‌ها به بک‌اند نیاز دارند.
 
@@ -259,7 +241,7 @@ tool/setup_production.sh         # or: tool/setup_production.sh --repo OWNER/REP
    `WYRD_SITE_URL` باشد و فهرست نشانی‌های بازگشت هم آن و هم `app.wyrd://auth-callback` را داشته باشد.
 2. **وب.** در **Actions** گردش‌کار **Deploy web (Cloudflare Pages)** را با **Run workflow** اجرا کن،
    یا `gh workflow run deploy-web.yml`. اجرای اول پروژه‌ی Pages را می‌سازد. `https://wyrd-app.pages.dev`
-   را باز کن، با کد ایمیلی حساب بساز و ورود با گوگل و گیت‌هاب را امتحان کن.
+   را باز کن، با کد ایمیلی حساب بساز و یک حساب با رمز عبور و ورود با گیت‌هاب را هم امتحان کن.
 3. **اندروید.** اولین نسخه را تگ بزن:
 
 <div dir="ltr">
@@ -283,11 +265,11 @@ git push origin v1.0.0
 
 - **هر مرورگری:** `https://wyrd-app.pages.dev` را باز کنند. Chrome و Edge روی دسکتاپ گزینه‌ی
   **Install** را در نوار نشانی نشان می‌دهند.
-- **آیفون و آیپد (iOS 16.4 یا جدیدتر):** سایت را در Safari باز کنند، **Share** را بزنند (در iOS 26
-  زیر دکمه‌ی **•••** است)، بعد **Add to Home Screen** را انتخاب کنند، گزینه‌ی **Open as Web App** را
+- **آیفون و آیپد (iOS 16.4 یا جدیدتر):** سایت را در Safari باز کنند، **Share** را بزنند (در iOS 26 ممکن است
+  زیر دکمه‌ی **•••** باشد)، بعد **Add to Home Screen** را انتخاب کنند، گزینه‌ی **Open as Web App** را
   روشن بگذارند و Wyrd را از صفحه‌ی اصلی باز کنند. اعلان‌ها فقط در همین برنامه‌ی صفحه‌ی اصلی کار
-  می‌کنند، بعد از این‌که وقتی برنامه اجازه خواست قبول کنند. برنامه این راهنما را یک بار در تنظیمات،
-  بخش ظاهر، نشان می‌دهد.
+  می‌کنند، بعد از این‌که وقتی برنامه اجازه خواست قبول کنند. تا آن موقع برنامه این راهنما را در تنظیمات، بخش
+  ظاهر، نشان می‌دهد (می‌شود بستش).
 - **اندروید:** [Obtainium](https://obtainium.imranr.dev) را نصب کنند و `https://github.com/OWNER/REPO`
   را اضافه کنند. Obtainium فایل APK را از GitHub Releases نصب می‌کند و هر به‌روزرسانی را پیشنهاد
   می‌دهد. یا فایل `wyrd-x.y.z.apk` را از صفحه‌ی Releases دانلود کنند، بازش کنند و به مرورگر اجازه‌ی نصب
@@ -302,34 +284,36 @@ git push origin v1.0.0
 
 ## دامنه‌ی شخصی در آینده
 
+نشانی `https://wyrd-app.pages.dev` می‌تواند برای همیشه بماند. دامنه‌ی شخصی اختیاری است و تنها چیزی در این
+راهنماست که هزینه دارد (یک دامنه‌ی `.com` حدود ۱۰ دلار در سال)؛ بقیه‌ی چیزها رایگان می‌مانند.
+
 1. یک دامنه بگیر (Cloudflare Registrar به قیمت تمام‌شده می‌فروشد:
    <https://dash.cloudflare.com/?to=/:account/domains/register>).
 2. در Cloudflare بخش Workers & Pages، پروژه‌ی `wyrd-app`، **Custom domains** و بعد **Set up a custom
    domain**. اگر دامنه روی Cloudflare باشد، رکورد DNS خودکار ساخته می‌شود.
-3. برنامه را به آن نشانی ببر: `gh variable set WYRD_SITE_URL --body https://your.domain` (یا گروه
-   *Site address* در اسکریپت راه‌اندازی).
-4. در Google Cloud، بخش Clients، کلاینت وب: `https://your.domain` را به JavaScript origins اضافه کن
-   (نشانی قبلی را تا جابه‌جا شدن کاربران نگه دار). در Branding هم دامنه را به دامنه‌های مجاز اضافه کن.
-   نشانی callback در Supabase عوض نمی‌شود.
-5. در OAuth app گیت‌هاب، homepage URL را عوض کن. نشانی callback عوض نمی‌شود.
-6. ایمیل: دامنه را در <https://resend.com/domains> اضافه کن، رکوردهای DNSی را که نشان می‌دهد در DNS
+3. همه‌چیز را با یک تغییر به آن نشانی ببر: `gh variable set WYRD_SITE_URL --body https://your.domain` (یا
+   گروه *Site address* در اسکریپت راه‌اندازی).
+4. در OAuth app گیت‌هاب، homepage URL را عوض کن. نشانی callback
+   (`https://<ref>.supabase.co/auth/v1/callback`) عوض نمی‌شود.
+5. ایمیل: دامنه را در <https://resend.com/domains> اضافه کن، رکوردهای DNSی را که نشان می‌دهد در DNS
    کلادفلر بساز و صبر کن تا *Verified* شود. در <https://resend.com/api-keys> یک API key بساز و بعد
    گروه ایمیل اسکریپت راه‌اندازی را با گزینه‌ی *Resend* دوباره اجرا کن: سرور `smtp.resend.com`، درگاه
    `587`، کاربر `resend`، API key به‌عنوان رمز و فرستنده `no-reply@your.domain`.
-7. همه‌چیز را دوباره منتشر کن: بک‌اند (Site URL، نشانی‌های بازگشت، SMTP)، نسخه‌ی وب (**Run
-   workflow**) و یک تگ تازه برای APK.
+6. دوباره منتشر کن: اول بک‌اند (Site URL، فهرست نشانی‌های بازگشت، SMTP)، بعد نسخه‌ی وب (**Run workflow**).
+   نسخه‌ی بعدی اندروید نشانی تازه را می‌گیرد؛ ورود در گوشی به آن وابسته نیست.
 
-نشانی `pages.dev` همچنان کار می‌کند. برنامه‌های صفحه‌ی اصلی آیفون به نشانی‌ای وابسته‌اند که از آن
-اضافه شده‌اند، پس از کاربران آیفون بخواه یک بار نشانی تازه را اضافه کنند (داده‌های همگام‌شده‌شان بعد
-از ورود برمی‌گردد).
+نشانی `pages.dev` همچنان کار می‌کند، اما ورود با گیت‌هاب فقط به نشانی تازه برمی‌گردد، پس همان را به بقیه بده.
+برنامه‌های صفحه‌ی اصلی آیفون به نشانی‌ای وابسته‌اند که از آن اضافه شده‌اند، پس از کاربران آیفون بخواه یک بار
+نشانی تازه را اضافه کنند (داده‌های همگام‌شده‌شان بعد از ورود برمی‌گردد).
 
 ## اگر چیزی درست کار نکرد
 
 - **گردش‌کار وب می‌گوید «skipped»:** `CLOUDFLARE_API_TOKEN` تنظیم نشده؛ اسکریپت راه‌اندازی را اجرا کن.
 - **ایمیلی نمی‌رسد:** ببین فرستنده نزد سرویس‌دهنده تأیید شده باشد، لاگ‌های Auth در Supabase و پوشه‌ی
   هرزنامه را نگاه کن.
-- **ورود با گوگل روی اندروید خطا می‌دهد:** SHA-1 کلاینت اندروید باید همانی باشد که اسکریپت چاپ کرد و
-  package name باید `app.wyrd` باشد.
+- **ورود با گیت‌هاب خطا می‌دهد:** callback URL در OAuth app باید
+  `https://<ref>.supabase.co/auth/v1/callback` باشد و استقرار بک‌اند باید بعد از ذخیره‌ی `GH_OAUTH_CLIENT_ID`،
+  `GH_OAUTH_CLIENT_SECRET` و `WYRD_AUTH_GITHUB=true` اجرا شده باشد.
 - **بعد از یک هفته‌ی بی‌فعالیت برنامه به بک‌اند وصل نمی‌شود:** پروژه‌ی رایگان متوقف شده؛ از داشبورد
   Supabase دوباره راهش بینداز.
 - **گردش‌کار انتشار در «Check signing secrets» شکست می‌خورد:** مرحله‌ی اندروید اسکریپت راه‌اندازی را

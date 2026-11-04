@@ -31,7 +31,6 @@ jobs:
     env:
       SUPABASE_URL: ${{ vars.SUPABASE_URL }}
       SUPABASE_PUBLISHABLE_KEY: ${{ vars.SUPABASE_PUBLISHABLE_KEY }}
-      GOOGLE_WEB_CLIENT_ID: ${{ vars.GOOGLE_WEB_CLIENT_ID }}
       WYRD_AUTH_GITHUB: ${{ vars.WYRD_AUTH_GITHUB }}
       FIREBASE_API_KEY: ${{ vars.FIREBASE_API_KEY }}
       FIREBASE_APP_ID_WEB: ${{ vars.FIREBASE_APP_ID_WEB }}
@@ -134,7 +133,6 @@ jobs:
           flutter build apk --release --build-name="$APP_VERSION" --build-number="$APP_VERSION_CODE" \
             --dart-define=SUPABASE_URL="$SUPABASE_URL" \
             --dart-define=SUPABASE_PUBLISHABLE_KEY="$SUPABASE_PUBLISHABLE_KEY" \
-            --dart-define=GOOGLE_WEB_CLIENT_ID="$GOOGLE_WEB_CLIENT_ID" \
             --dart-define=WYRD_AUTH_GITHUB="$WYRD_AUTH_GITHUB" \
             --dart-define=WYRD_SITE_URL="$WYRD_SITE_URL" \
             --dart-define=FIREBASE_API_KEY="$FIREBASE_API_KEY" \

@@ -2,9 +2,10 @@
 
 [فارسی](deployment.fa.md)
 
-The owner's checklist for running Wyrd for real users at **$0 a month**. Do the steps in
-order once; afterwards every push to `main` redeploys the web app and every `v*` tag publishes
-a new Android release.
+The owner's checklist for running Wyrd for real users at **$0 a month**. **No step needs a credit
+card**: every service below is a free plan that never asks for one (only the optional
+[custom domain](#custom-domain-later) costs money). Do the steps in order once; afterwards every
+push to `main` redeploys the web app and every `v*` tag publishes a new Android release.
 
 | Piece | Where it runs | How it ships |
 | --- | --- | --- |
@@ -13,6 +14,9 @@ a new Android release.
 | Android app | Signed APK on GitHub Releases | [`release-android.yml`](../.github/workflows/release-android.yml) on a `v*` tag |
 | Sign-in e-mails | Brevo (or Gmail) over SMTP | Supabase custom SMTP |
 | Push notifications | Firebase Cloud Messaging | the `notify` Edge Function |
+
+People sign in with a 6-digit code sent by e-mail, with e-mail and password (the sign-up
+confirmation and password resets also use 6-digit codes) or with GitHub.
 
 The public address lives in **one** place: the GitHub repository variable `WYRD_SITE_URL`.
 Everything that needs it (the web build, the APK, Supabase's redirect settings) reads that
@@ -28,41 +32,52 @@ variable, so moving to your own domain later is a short procedure
 | Brevo | 300 e-mails a day | Sender address must be verified; without your own domain some mail lands in spam. |
 | Gmail (alternative) | About 500 e-mails a day | Needs 2-Step Verification and an app password. |
 | Resend (later, own domain) | 3,000 e-mails a month, 100 a day | Needs DNS records on your domain. |
-| Firebase Cloud Messaging | Free | — |
+| Firebase Cloud Messaging | Free on the Spark plan | Stay on Spark: Blaze is the only Firebase plan that wants a card, and push does not need it. |
 | GitHub | Actions free for public repositories, Releases free | Private repositories get 2,000 Actions minutes a month. |
 
 ## What you need
 
-- A GitHub account with admin rights on this repository, and the [GitHub CLI](https://cli.github.com)
-  signed in: `gh auth login`.
-- A JDK for `keytool` (Android Studio ships one) to create the Android signing key.
-- [age](https://github.com/FiloSottile/age) for encrypted backups (`brew install age`,
-  `sudo apt install age` or `winget install FiloSottile.age`).
-- A password manager. Several values below are shown only once.
+Seven things, all free, none of which asks for a credit card:
 
-Collect the values in steps 1–7, then run `tool/setup_production.sh` (step 9), which stores
-them in GitHub. Names in `code` are the GitHub secrets (private) and variables (public client
-configuration) they end up in; the script asks for each one.
+1. **Supabase**: an account for the backend project (step 1).
+2. **Cloudflare**: an account for the web hosting (step 2).
+3. **Brevo or a Gmail app password**: the sender of sign-in e-mails (step 3).
+4. **Firebase**: a project for push notifications (step 4).
+5. **A GitHub OAuth app**: the "Continue with GitHub" button (step 5).
+6. **An Android keystore**: the key that signs the APK (step 6). The setup script creates it with
+   `keytool`, which comes with every JDK (Android Studio includes one).
+7. **age** for backups: encrypts the database backups (step 7). Install it with
+   `brew install age`, `sudo apt install age` or `winget install FiloSottile.age`.
+
+Collect the values in steps 1–5, then run `tool/setup_production.sh` (step 8): it stores them in
+GitHub and creates the Android keystore and the age key if you do not have them yet. Names in
+`code` are the GitHub secrets (private) and variables (public client configuration) the values
+end up in; the script asks for each one. Keep a password manager at hand: several values are
+shown only once.
 
 ## 1. Supabase project
 
-1. Create the project at <https://supabase.com/dashboard/new>: name `wyrd`, a long generated
-   **database password** (save it: `SUPABASE_DB_PASSWORD`) and the **region closest to most
-   of your users** (for Europe and the Middle East, Frankfurt is a good default). The Free plan
-   allows two active projects.
+1. Create the project at <https://supabase.com/dashboard/new> on the **Free** plan: name `wyrd`, a
+   long generated **database password** (save it: `SUPABASE_DB_PASSWORD`) and the **region
+   closest to most of your users** (for Europe and the Middle East, Frankfurt is a good default).
+   The Free plan allows two active projects.
 2. The **project ref** is the id in the dashboard URL,
-   `https://supabase.com/dashboard/project/<ref>`: `SUPABASE_PROJECT_ID`. The **project URL**
-   is `https://<ref>.supabase.co`: `SUPABASE_URL`.
-3. API keys, <https://supabase.com/dashboard/project/_/settings/api-keys>: copy the
-   **publishable key** (`sb_publishable_…`): `SUPABASE_PUBLISHABLE_KEY`. New projects have no
-   legacy `anon`/`service_role` keys; the `sb_secret_…` keys never leave Supabase (Edge
-   Functions receive them automatically).
-4. Personal access token for the deploy workflow, <https://supabase.com/dashboard/account/tokens>:
+   `https://supabase.com/dashboard/project/<ref>`: `SUPABASE_PROJECT_ID`. The **project URL** is
+   `https://<ref>.supabase.co`: `SUPABASE_URL`.
+3. API keys, <https://supabase.com/dashboard/project/_/settings/api-keys> (new projects have no
+   legacy `anon`/`service_role` keys):
+   - The **publishable key** (`sb_publishable_…`) goes into the apps: `SUPABASE_PUBLISHABLE_KEY`.
+   - Under **Secret keys**, create a new secret key named `github-deploy` and copy it
+     (`sb_secret_…`): `SUPABASE_SECRET_KEY`. The backend deploy keeps it in the database's Vault,
+     so scheduled jobs and database triggers can call the Edge Functions. It bypasses row-level
+     security: treat it like a password and never put it in an app build. The Edge Functions get
+     their own keys from Supabase automatically.
+4. Personal access token for the backend deploy, <https://supabase.com/dashboard/account/tokens>:
    **Generate new token**: `SUPABASE_ACCESS_TOKEN`.
 5. Lost the database password? Reset it at
    <https://supabase.com/dashboard/project/_/database/settings>.
 
-Nothing else is clicked in the dashboard: sign-in providers, redirect URLs, SMTP and e-mail
+Nothing else is clicked in the dashboard: sign-in methods, redirect URLs, SMTP and e-mail
 templates come from `backend/supabase/config.toml` and are applied by the backend deploy.
 Tables are not exposed to the Data API automatically on new projects; the migrations grant
 exactly what the app uses.
@@ -82,9 +97,9 @@ exactly what the app uses.
 
 Sign-in codes, sign-up confirmations and password resets are 6-digit codes sent by e-mail.
 Supabase's built-in mailer only reaches members of your Supabase team (2 an hour), so
-production needs its own SMTP account. Pick one:
+production needs its own SMTP account (custom SMTP is allowed on the Free plan). Pick one:
 
-**Brevo (recommended for now).** Free, 300 e-mails a day, no domain needed.
+**Brevo (recommended for now).** Free, 300 e-mails a day, no domain and no card needed.
 
 1. Sign up at <https://www.brevo.com>.
 2. Add and verify the sender address you will send from (a mailbox you own):
@@ -93,7 +108,7 @@ production needs its own SMTP account. Pick one:
    (`SMTP_HOST`), port `587` (`SMTP_PORT`), the **login** shown there, which looks like
    `…@smtp-brevo.com` (`SMTP_USER`), and a new **SMTP key** (`SMTP_PASS`).
 
-**Gmail.** Uses your Google account; about 500 e-mails a day.
+**Gmail.** Uses a Gmail address you already have; about 500 e-mails a day.
 
 1. Turn on 2-Step Verification: <https://myaccount.google.com/signinoptions/twosv>.
 2. Create an app password named `Wyrd`: <https://myaccount.google.com/apppasswords> (16
@@ -104,30 +119,27 @@ The sender name (`SMTP_SENDER_NAME`) is `Wyrd`. Without your own domain, ask tes
 their spam folder the first time. Once you have a domain, switch to Resend
 ([Custom domain later](#custom-domain-later)).
 
-## 4. Google sign-in
+## 4. Firebase (push notifications)
 
-Google Cloud console, signed in with the account that should own the app:
+1. <https://console.firebase.google.com> → **Create a project**, name `wyrd`. Google Analytics is
+   not needed. New projects are on the free **Spark** plan, which includes Cloud Messaging; do
+   not upgrade to Blaze.
+2. **Web app**: Project settings → *Your apps* → add a web app (`</>`), name `Wyrd`, no
+   Hosting. From the config it shows: `apiKey` → `FIREBASE_API_KEY`, `appId` →
+   `FIREBASE_APP_ID_WEB`, `messagingSenderId` → `FIREBASE_MESSAGING_SENDER_ID`, `projectId` →
+   `FIREBASE_PROJECT_ID`.
+3. **Android app**: add an Android app with package name `app.wyrd` and leave the optional
+   certificate fingerprint empty (push does not need it). Its App ID (`1:…:android:…`) →
+   `FIREBASE_APP_ID_ANDROID`. The app is configured from these values at build time;
+   `google-services.json` is not needed (and stays out of git).
+4. **Web push key**: <https://console.firebase.google.com/project/_/settings/cloudmessaging> →
+   *Web configuration* → **Generate key pair**. The public key → `FIREBASE_VAPID_KEY`.
+5. **Server key** for the `notify` function:
+   <https://console.firebase.google.com/project/_/settings/serviceaccounts/adminsdk> →
+   **Generate new private key**. Keep the downloaded JSON file outside the repository; the
+   setup script reads it into `FCM_SERVICE_ACCOUNT`, then you can delete it.
 
-1. Create a project: <https://console.cloud.google.com/projectcreate> (you can reuse it for
-   Firebase in step 6).
-2. **Branding** (consent screen), <https://console.cloud.google.com/auth/branding>: app name
-   `Wyrd`, support e-mail, home page `WYRD_SITE_URL`, authorized domains `wyrd-app.pages.dev`
-   (later your own domain) and `<ref>.supabase.co`. **Audience**, <https://console.cloud.google.com/auth/audience>: *External*,
-   then **Publish app**. **Data access**, <https://console.cloud.google.com/auth/scopes>: only
-   `openid`, `…/auth/userinfo.email` and `…/auth/userinfo.profile`. These are non-sensitive,
-   so Google does not review the app.
-3. **Web client**, <https://console.cloud.google.com/auth/clients> → **Create client** →
-   *Web application*:
-   - Authorized JavaScript origins: `https://wyrd-app.pages.dev` (your `WYRD_SITE_URL`).
-   - Authorized redirect URIs: `https://<ref>.supabase.co/auth/v1/callback`.
-   - Copy the **client ID** (`GOOGLE_WEB_CLIENT_ID`) and **client secret**
-     (`GOOGLE_CLIENT_SECRET`).
-4. **Android client**: **Create client** → *Android*, package name `app.wyrd`, and the
-   **SHA-1 of the release key**. `tool/setup_production.sh` prints it when it creates the key
-   (step 8), so you can come back to this after step 9. No value from this client goes into
-   GitHub; it only has to exist. For signing in from your own debug builds, add a second
-   Android client with the debug key's SHA-1
-   (`keytool -list -v -alias androiddebugkey -keystore ~/.android/debug.keystore -storepass android`).
+Firebase web config values are public by design; only the service-account key is secret.
 
 ## 5. GitHub sign-in
 
@@ -139,34 +151,32 @@ Google Cloud console, signed in with the account that should own the app:
 
 GitHub does not allow secret or variable names that start with `GITHUB_`, so they are stored
 as `GH_OAUTH_CLIENT_ID` (variable) and `GH_OAUTH_CLIENT_SECRET` (secret).
-`WYRD_AUTH_GITHUB=true` shows the GitHub button in the app. Phones come back to the app
-through `app.wyrd://auth-callback`; the backend configuration allows that redirect.
+`WYRD_AUTH_GITHUB=true` shows the GitHub button in the app. On the web, sign-in returns to
+`WYRD_SITE_URL`; phones come back to the app through `app.wyrd://auth-callback`. The backend
+configuration allows both redirects.
 
-## 6. Firebase (push notifications)
+## 6. Android signing key
 
-1. <https://console.firebase.google.com> → **Create a project** (or add Firebase to the Google
-   Cloud project from step 4). Google Analytics is not needed.
-2. **Web app**: Project settings → *Your apps* → add a web app (`</>`), name `Wyrd`, no
-   Hosting. From the config it shows: `apiKey` → `FIREBASE_API_KEY`, `appId` →
-   `FIREBASE_APP_ID_WEB`, `messagingSenderId` → `FIREBASE_MESSAGING_SENDER_ID`, `projectId` →
-   `FIREBASE_PROJECT_ID`.
-3. **Android app**: add an Android app with package name `app.wyrd`. Its App ID
-   (`1:…:android:…`) → `FIREBASE_APP_ID_ANDROID`. The app is configured from these values at
-   build time; `google-services.json` is not needed (and stays out of git).
-4. **Web push key**: <https://console.firebase.google.com/project/_/settings/cloudmessaging> →
-   *Web configuration* → **Generate key pair**. The public key → `FIREBASE_VAPID_KEY`.
-5. **Server key** for the `notify` function:
-   <https://console.firebase.google.com/project/_/settings/serviceaccounts/adminsdk> →
-   **Generate new private key**. Keep the downloaded JSON file outside the repository; the
-   setup script reads it into `FCM_SERVICE_ACCOUNT`, then you can delete it.
+The APK must be signed with the same key forever: Android only installs an update over an
+existing app when the signatures match. The setup script creates the key with `keytool`
+(4096-bit RSA, valid for 27 years), prints its SHA-256 fingerprint (every release's notes show
+it too, so people can check an APK is yours) and stores it in GitHub as
+`ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS` and
+`ANDROID_KEY_PASSWORD`.
 
-Firebase web config values are public by design; only the service-account key is secret.
+**Back up the keystore file and its password.** If they are lost, users can only install a
+newer Wyrd after uninstalling the old one, which deletes its local data.
+
+To sign release builds on your own machine, copy `app/android/key.properties.example` to
+`app/android/key.properties` (gitignored) and fill it in. Without it, local release builds
+are signed with the debug key.
 
 ## 7. Backups
 
-Free Supabase projects have no automatic backups. Backups are encrypted to an
+Free Supabase projects have no automatic backups. A complete backup is three database dumps:
+the roles, the schema and the data. Backups are encrypted to an
 [age](https://github.com/FiloSottile/age) key, so they can be stored anywhere and only you can
-read them:
+read them. The setup script can create the key, or by hand:
 
 ```bash
 mkdir -p ~/.config/wyrd
@@ -178,55 +188,38 @@ age-keygen -o ~/.config/wyrd/wyrd-backup-key.txt   # prints "Public key: age1…
   offline place. Never commit it or store it in GitHub.
 - To read a backup: `age --decrypt -i ~/.config/wyrd/wyrd-backup-key.txt <file>.age > <file>`.
 
-The setup script can run `age-keygen` for you.
+## 8. Store everything in GitHub
 
-## 8. Android signing key
-
-The APK must be signed with the same key forever: Android only installs an update over an
-existing app when the signatures match. The setup script creates the key with `keytool`
-(4096-bit RSA, valid for 27 years), prints its SHA-1 for step 4 and stores it in GitHub as
-`ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS` and
-`ANDROID_KEY_PASSWORD`.
-
-**Back up the keystore file and its password.** If they are lost, users can only install a
-newer Wyrd after uninstalling the old one, which deletes its local data.
-
-To sign release builds on your own machine, copy `app/android/key.properties.example` to
-`app/android/key.properties` (gitignored) and fill it in. Without it, local release builds
-are signed with the debug key.
-
-## 9. Store everything in GitHub
-
-From the repository:
+From the repository, with the [GitHub CLI](https://cli.github.com) and admin rights on the
+repository:
 
 ```bash
 gh auth login                    # once
 tool/setup_production.sh         # or: tool/setup_production.sh --repo OWNER/REPO
 ```
 
-The script walks through the groups above, lets you skip any of them and can be re-run at any
-time (Enter keeps a stored value). Passwords, tokens and keys are typed without echo and
-handed to `gh` on stdin. You can check the result at
+The script walks through the groups above in the same order, lets you skip any of them and can
+be re-run at any time (Enter keeps a stored value). Passwords, tokens and keys are typed without
+echo and handed to `gh` on stdin. You can check the result at
 `https://github.com/OWNER/REPO/settings/secrets/actions` (secrets and variables tabs).
 
 | Name | Kind | Used by |
 | --- | --- | --- |
 | `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY` | variables | web and Android builds |
-| `SUPABASE_PROJECT_ID`, `SUPABASE_ACCESS_TOKEN`, `SUPABASE_DB_PASSWORD` | secrets | backend deploy |
+| `SUPABASE_PROJECT_ID`, `SUPABASE_ACCESS_TOKEN`, `SUPABASE_DB_PASSWORD` | secrets | backend deploy, backups |
+| `SUPABASE_SECRET_KEY` | secret | backend deploy (stored in the database's Vault) |
 | `WYRD_SITE_URL` | variable | everything that needs the public address |
 | `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` | secrets | web deploy |
 | `CF_PAGES_PROJECT` | variable | web deploy (default `wyrd-app`) |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_ADMIN_EMAIL`, `SMTP_SENDER_NAME` | secrets | backend deploy (Supabase custom SMTP) |
-| `GOOGLE_WEB_CLIENT_ID` | variable | builds, backend deploy |
-| `GOOGLE_CLIENT_SECRET` | secret | backend deploy |
-| `GH_OAUTH_CLIENT_ID` / `GH_OAUTH_CLIENT_SECRET` | variable / secret | backend deploy |
-| `WYRD_AUTH_GITHUB` | variable | builds (`true` shows the GitHub button) |
 | `FIREBASE_API_KEY`, `FIREBASE_APP_ID_WEB`, `FIREBASE_APP_ID_ANDROID`, `FIREBASE_MESSAGING_SENDER_ID`, `FIREBASE_PROJECT_ID`, `FIREBASE_VAPID_KEY` | variables | builds |
 | `FCM_SERVICE_ACCOUNT` | secret | backend deploy (`notify` function) |
-| `BACKUP_AGE_RECIPIENT` | variable | backups |
+| `GH_OAUTH_CLIENT_ID` / `GH_OAUTH_CLIENT_SECRET` | variable / secret | backend deploy |
+| `WYRD_AUTH_GITHUB` | variable | builds and backend deploy (`true` turns GitHub sign-in on) |
 | `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD` | secrets | Android release |
+| `BACKUP_AGE_RECIPIENT` | variable | backups |
 
-## 10. First deploy
+## 9. First deploy
 
 Order matters: the apps need a backend to talk to.
 
@@ -236,8 +229,8 @@ Order matters: the apps need a backend to talk to.
    your `WYRD_SITE_URL` and the redirect list contains it and `app.wyrd://auth-callback`.
 2. **Web.** **Actions** → **Deploy web (Cloudflare Pages)** → **Run workflow**, or
    `gh workflow run deploy-web.yml`. The first run creates the Pages project. Open
-   `https://wyrd-app.pages.dev`, create an account with an e-mail code and try Google and
-   GitHub sign-in.
+   `https://wyrd-app.pages.dev`, create an account with an e-mail code, try a password account
+   and GitHub sign-in.
 3. **Android.** Tag the first release:
 
    ```bash
@@ -257,10 +250,11 @@ notice instead of failing.
 
 - **Any browser:** open `https://wyrd-app.pages.dev`. Chrome and Edge on desktop offer
   **Install** in the address bar.
-- **iPhone and iPad (iOS 16.4 or newer):** open the site in Safari, tap **Share** (on iOS 26
-  it is under the **•••** button), then **Add to Home Screen**, keep **Open as Web App** on and
+- **iPhone and iPad (iOS 16.4 or newer):** open the site in Safari, tap **Share** (on iOS 26 it
+  can be under the **•••** button), then **Add to Home Screen**, keep **Open as Web App** on and
   open Wyrd from the Home Screen. Notifications only work in this Home Screen app, after
-  allowing them when the app asks. The app shows this tip once under Settings → Appearance.
+  allowing them when the app asks. Until then the app shows this tip under Settings →
+  Appearance (it can be dismissed).
 - **Android:** install [Obtainium](https://obtainium.imranr.dev), then add
   `https://github.com/OWNER/REPO`. Obtainium installs the APK from GitHub Releases and offers
   each update. Or download `wyrd-x.y.z.apk` from the Releases page, open it and allow the
@@ -274,34 +268,37 @@ users' countries.
 
 ## Custom domain later
 
+`https://wyrd-app.pages.dev` can stay the address for good. A domain of your own is optional and
+the only thing in this guide that costs money (a `.com` is about $10 a year); everything else
+stays free.
+
 1. Get a domain (Cloudflare Registrar sells at cost:
    <https://dash.cloudflare.com/?to=/:account/domains/register>).
 2. Cloudflare → Workers & Pages → `wyrd-app` → **Custom domains** → **Set up a custom
    domain**. With the domain on Cloudflare, the DNS record is created for you.
-3. Point the app at it: `gh variable set WYRD_SITE_URL --body https://your.domain` (or the
-   *Site address* group of the setup script).
-4. Google Cloud → Clients → the web client: add `https://your.domain` to the JavaScript
-   origins (keep the old one until people have moved). Branding: add the domain to the
-   authorized domains. The Supabase callback URL does not change.
-5. GitHub OAuth app: change the homepage URL. The callback URL does not change.
-6. E-mail: add the domain at <https://resend.com/domains>, create the DNS records it lists in
+3. Point everything at it with one change: `gh variable set WYRD_SITE_URL --body https://your.domain`
+   (or the *Site address* group of the setup script).
+4. GitHub OAuth app: change the homepage URL. The callback URL
+   (`https://<ref>.supabase.co/auth/v1/callback`) does not change.
+5. E-mail: add the domain at <https://resend.com/domains>, create the DNS records it lists in
    Cloudflare DNS and wait for *Verified*. Create an API key at <https://resend.com/api-keys>,
    then re-run the setup script's e-mail group with *Resend*: host `smtp.resend.com`, port
    `587`, user `resend`, the API key as password, sender `no-reply@your.domain`.
-7. Redeploy everything: the backend (Site URL, redirects, SMTP), the web app (**Run
-   workflow**) and a new APK tag.
+6. Redeploy: the backend (Site URL, redirect list, SMTP), then the web app (**Run workflow**).
+   The next Android release picks up the new address; phone sign-in does not depend on it.
 
-The `pages.dev` address keeps working. Home Screen apps on iPhone belong to the address they
-were added from, so ask iPhone users to add the new address once (their synced data comes back
-after signing in).
+The `pages.dev` address keeps working, but GitHub sign-in only returns to the new address, so
+share that one. Home Screen apps on iPhone belong to the address they were added from, so ask
+iPhone users to add the new address once (their synced data comes back after signing in).
 
 ## If something goes wrong
 
 - **Web workflow says "skipped":** `CLOUDFLARE_API_TOKEN` is not set; run the setup script.
 - **No e-mails:** check the sender is verified at the provider, look at the Auth logs in
   Supabase, and the spam folder.
-- **Google sign-in fails on Android:** the Android OAuth client's SHA-1 must be the one the
-  setup script printed, and package name `app.wyrd`.
+- **GitHub sign-in fails:** the OAuth app's callback URL must be
+  `https://<ref>.supabase.co/auth/v1/callback`, and the backend deploy must have run after
+  `GH_OAUTH_CLIENT_ID`, `GH_OAUTH_CLIENT_SECRET` and `WYRD_AUTH_GITHUB=true` were stored.
 - **The app cannot reach the backend after a quiet week:** the Free project paused; restore it
   from the Supabase dashboard.
 - **Release workflow fails at "Check signing secrets":** run the setup script's Android step.

@@ -144,6 +144,73 @@ warn_unless() { # warn_unless VALUE REGEX "message"
   if [ -n "$1" ] && ! [[ "$1" =~ $2 ]]; then note "  ! $3"; fi
 }
 
+# Creates (or reuses) the APK upload key and stores it. Anything missing skips
+# the rest of this group instead of ending the script.
+setup_android_key() {
+  local keystore="" alias_name="" store_pass="" key_pass="" repeat="" owner_name="" fingerprints=""
+  if ! command -v keytool >/dev/null 2>&1; then
+    say "  ! keytool not found: install a JDK (Android Studio ships one), then run the script again"
+    return 0
+  fi
+  if confirm "Create a new upload keystore with keytool?" Y; then
+    keystore="$(ask "Save it as" "${XDG_CONFIG_HOME:-$HOME/.config}/wyrd/wyrd-upload.jks")"
+    keystore="${keystore/#\~/$HOME}"
+    if [ -e "$keystore" ]; then
+      say "  ! $keystore already exists: run again and answer n to use it"
+      return 0
+    fi
+    alias_name="$(ask "Key alias" upload)"
+    while :; do
+      store_pass="$(ask_secret "Keystore password (6+ characters)")"
+      if [ "${#store_pass}" -lt 6 ]; then
+        say "  too short"
+        continue
+      fi
+      repeat="$(ask_secret "Repeat the password")"
+      if [ "$repeat" != "$store_pass" ]; then
+        say "  the passwords differ"
+        continue
+      fi
+      break
+    done
+    key_pass="$store_pass" # PKCS12 keystores use one password for both
+    owner_name="$(ask "Name on the certificate" Wyrd)"
+    mkdir -p "$(dirname "$keystore")"
+    WYRD_KEYSTORE_PASS="$store_pass" keytool -genkeypair -keystore "$keystore" -storetype PKCS12 \
+      -alias "$alias_name" -keyalg RSA -keysize 4096 -validity 10000 -dname "CN=$owner_name" \
+      -storepass:env WYRD_KEYSTORE_PASS -keypass:env WYRD_KEYSTORE_PASS >/dev/null
+    chmod 600 "$keystore"
+    say "  Created $keystore"
+  else
+    keystore="$(ask "Existing keystore file")"
+    keystore="${keystore/#\~/$HOME}"
+    if [ ! -f "$keystore" ]; then
+      say "  ! $keystore not found"
+      return 0
+    fi
+    alias_name="$(ask "Key alias" upload)"
+    store_pass="$(ask_secret "Keystore password")"
+    key_pass="$(ask_secret "Key password (Enter if the same)")"
+    key_pass="${key_pass:-$store_pass}"
+  fi
+  if ! fingerprints="$(WYRD_KEYSTORE_PASS="$store_pass" keytool -list -v -keystore "$keystore" \
+    -alias "$alias_name" -storepass:env WYRD_KEYSTORE_PASS 2>/dev/null)"; then
+    say "  ! the keystore does not open with that password or has no key named $alias_name; nothing stored"
+    return 0
+  fi
+  say
+  say "  ${bold}Signing certificate SHA-256${reset} (every release's notes show it, so people can check an APK is yours):"
+  printf '%s\n' "$fingerprints" | grep -E '^[[:space:]]*SHA256:' | sed 's/^[[:space:]]*/    /' || true
+  say
+  base64 <"$keystore" | tr -d '\n' | gh secret set ANDROID_KEYSTORE_BASE64 --repo "$repo" >/dev/null
+  say "  ✓ secret ANDROID_KEYSTORE_BASE64"
+  set_secret ANDROID_KEYSTORE_PASSWORD "$store_pass"
+  set_secret ANDROID_KEY_ALIAS "$alias_name"
+  set_secret ANDROID_KEY_PASSWORD "$key_pass"
+  note "  Back up $keystore and its password. If they are lost, phones can only"
+  note "  install a newer Wyrd after uninstalling the old one (and losing local data)."
+}
+
 # --- Preconditions ------------------------------------------------------------
 
 cd "$(dirname "${BASH_SOURCE[0]}")/.." || die "cannot find the repository root"
@@ -160,9 +227,9 @@ note "Values go to Settings > Secrets and variables > Actions of this repository
 confirm "Continue with $repo?" Y || exit 0
 stored_secrets="$(gh secret list --repo "$repo" 2>/dev/null | cut -f1 || true)"
 
-# --- Supabase -------------------------------------------------------------------
+# --- 1. Supabase ----------------------------------------------------------------
 
-if group "Supabase" "Backend project, its API keys and the CLI token the deploy workflow uses (docs/deployment.md, step 1)."; then
+if group "Supabase" "Backend project, its API keys and the CLI token the backend deploy uses (docs/deployment.md, step 1)."; then
   ref="$(ask "Project ref (from https://supabase.com/dashboard/project/<ref>)")"
   warn_unless "$ref" '^[a-z0-9]{20}$' "a project ref is usually 20 lowercase letters"
   set_secret SUPABASE_PROJECT_ID "$ref"
@@ -171,13 +238,26 @@ if group "Supabase" "Backend project, its API keys and the CLI token the deploy 
   url="$(variable_prompt SUPABASE_URL "Project URL" "$default_url")"
   set_variable SUPABASE_URL "${url%/}"
   key="$(variable_prompt SUPABASE_PUBLISHABLE_KEY "Publishable key (sb_publishable_...)")"
-  warn_unless "$key" '^sb_publishable_' "that does not look like a publishable key; never use an sb_secret_ key here"
-  set_variable SUPABASE_PUBLISHABLE_KEY "$key"
-  set_secret SUPABASE_ACCESS_TOKEN "$(secret_prompt SUPABASE_ACCESS_TOKEN "Personal access token (sbp_..., https://supabase.com/dashboard/account/tokens)")"
+  case "$key" in
+    sb_secret_*)
+      # Variables are public: never store a secret key as one.
+      say "  ! that is a secret key, not the publishable one; SUPABASE_PUBLISHABLE_KEY not changed"
+      ;;
+    *)
+      warn_unless "$key" '^sb_publishable_' "that does not look like a publishable key"
+      set_variable SUPABASE_PUBLISHABLE_KEY "$key"
+      ;;
+  esac
+  secret_key="$(secret_prompt SUPABASE_SECRET_KEY "Secret key (sb_secret_...; the backend deploy keeps it in the database Vault)")"
+  warn_unless "$secret_key" '^sb_secret_' "secret keys start with sb_secret_"
+  set_secret SUPABASE_SECRET_KEY "$secret_key"
+  token="$(secret_prompt SUPABASE_ACCESS_TOKEN "Personal access token (sbp_..., https://supabase.com/dashboard/account/tokens)")"
+  warn_unless "$token" '^sbp_' "personal access tokens start with sbp_"
+  set_secret SUPABASE_ACCESS_TOKEN "$token"
   set_secret SUPABASE_DB_PASSWORD "$(secret_prompt SUPABASE_DB_PASSWORD "Database password")"
 fi
 
-# --- Cloudflare -----------------------------------------------------------------
+# --- 2. Cloudflare --------------------------------------------------------------
 
 pages_project="$(current_variable CF_PAGES_PROJECT)"
 pages_project="${pages_project:-wyrd-app}"
@@ -193,14 +273,14 @@ fi
 
 # --- Site address ---------------------------------------------------------------
 
-if group "Site address" "The one public URL everything else uses (OAuth redirects, e-mail links, release notes). Change it here when you move to your own domain."; then
+if group "Site address" "The one public URL everything else uses (sign-in redirects, the backend's Site URL, release notes). Change it here when you move to your own domain."; then
   site="$(variable_prompt WYRD_SITE_URL "Site URL" "https://$pages_project.pages.dev")"
   site="${site%/}"
   warn_unless "$site" '^https://' "the site must be served over https"
   set_variable WYRD_SITE_URL "$site"
 fi
 
-# --- E-mail ---------------------------------------------------------------------
+# --- 3. E-mail ------------------------------------------------------------------
 
 if group "E-mail sender (SMTP)" "Sign-in codes and password resets. Supabase's built-in mailer only reaches your team (step 3)."; then
   say "  1) Brevo (free, 300 e-mails a day, verified sender address)"
@@ -232,30 +312,9 @@ if group "E-mail sender (SMTP)" "Sign-in codes and password resets. Supabase's b
   set_secret SMTP_SENDER_NAME "$sender_name"
 fi
 
-# --- Google ---------------------------------------------------------------------
+# --- 4. Firebase ----------------------------------------------------------------
 
-if group "Google sign-in" "OAuth web client from Google Cloud; the Android client needs no value here (step 4)."; then
-  client="$(variable_prompt GOOGLE_WEB_CLIENT_ID "Web client ID (....apps.googleusercontent.com)")"
-  warn_unless "$client" '\.apps\.googleusercontent\.com$' "web client IDs end in .apps.googleusercontent.com"
-  set_variable GOOGLE_WEB_CLIENT_ID "$client"
-  set_secret GOOGLE_CLIENT_SECRET "$(secret_prompt GOOGLE_CLIENT_SECRET "Web client secret (GOCSPX-...)")"
-fi
-
-# --- GitHub ---------------------------------------------------------------------
-
-if group "GitHub sign-in" "OAuth app from GitHub developer settings (step 5). GitHub reserves names starting with GITHUB_, so these are stored as GH_OAUTH_*."; then
-  set_variable GH_OAUTH_CLIENT_ID "$(variable_prompt GH_OAUTH_CLIENT_ID "Client ID")"
-  set_secret GH_OAUTH_CLIENT_SECRET "$(secret_prompt GH_OAUTH_CLIENT_SECRET "Client secret")"
-  if confirm "Show the GitHub button in the app?" Y; then
-    set_variable WYRD_AUTH_GITHUB true
-  else
-    set_variable WYRD_AUTH_GITHUB false
-  fi
-fi
-
-# --- Firebase -------------------------------------------------------------------
-
-if group "Firebase Cloud Messaging" "Push notifications: the web and Android app config, the web push key and the server's service account (step 6)."; then
+if group "Firebase Cloud Messaging" "Push notifications: the web and Android app config, the web push key and the server's service account (step 4)."; then
   set_variable FIREBASE_PROJECT_ID "$(variable_prompt FIREBASE_PROJECT_ID "Project ID")"
   set_variable FIREBASE_API_KEY "$(variable_prompt FIREBASE_API_KEY "Web API key (apiKey, AIza...)")"
   set_variable FIREBASE_MESSAGING_SENDER_ID "$(variable_prompt FIREBASE_MESSAGING_SENDER_ID "Sender ID (messagingSenderId)")"
@@ -277,7 +336,25 @@ if group "Firebase Cloud Messaging" "Push notifications: the web and Android app
   fi
 fi
 
-# --- Backups --------------------------------------------------------------------
+# --- 5. GitHub sign-in ----------------------------------------------------------
+
+if group "GitHub sign-in" "OAuth app from GitHub developer settings (step 5). GitHub reserves names starting with GITHUB_, so these are stored as GH_OAUTH_*."; then
+  set_variable GH_OAUTH_CLIENT_ID "$(variable_prompt GH_OAUTH_CLIENT_ID "Client ID")"
+  set_secret GH_OAUTH_CLIENT_SECRET "$(secret_prompt GH_OAUTH_CLIENT_SECRET "Client secret")"
+  if confirm "Show the GitHub button in the app?" Y; then
+    set_variable WYRD_AUTH_GITHUB true
+  else
+    set_variable WYRD_AUTH_GITHUB false
+  fi
+fi
+
+# --- 6. Android -----------------------------------------------------------------
+
+if group "Android release key" "Signs the APK on GitHub Releases. Every update must be signed with the same key: back it up (step 6)."; then
+  setup_android_key
+fi
+
+# --- 7. Backups -----------------------------------------------------------------
 
 if group "Encrypted backups" "Database dumps are encrypted to an age public key; only you keep the private key (step 7)."; then
   recipient="$(current_variable BACKUP_AGE_RECIPIENT)"
@@ -306,60 +383,6 @@ if group "Encrypted backups" "Database dumps are encrypted to an age public key;
   fi
   warn_unless "$recipient" '^age1' "age public keys start with age1"
   set_variable BACKUP_AGE_RECIPIENT "$recipient"
-fi
-
-# --- Android --------------------------------------------------------------------
-
-if group "Android release key" "Signs the APK on GitHub Releases. Every update must be signed with the same key: back it up (step 8)."; then
-  command -v keytool >/dev/null 2>&1 || die "keytool not found; install a JDK (Android Studio ships one) and run the script again"
-  keystore="" alias_name="" store_pass="" key_pass=""
-  if confirm "Create a new upload keystore with keytool?" Y; then
-    keystore="$(ask "Save it as" "${XDG_CONFIG_HOME:-$HOME/.config}/wyrd/wyrd-upload.jks")"
-    keystore="${keystore/#\~/$HOME}"
-    [ ! -e "$keystore" ] || die "$keystore already exists; run again and answer n to use it"
-    alias_name="$(ask "Key alias" upload)"
-    while :; do
-      store_pass="$(ask_secret "Keystore password (6+ characters)")"
-      if [ "${#store_pass}" -lt 6 ]; then
-        say "  too short"
-      elif [ "$(ask_secret "Repeat the password")" != "$store_pass" ]; then
-        say "  the passwords differ"
-      else
-        break
-      fi
-    done
-    key_pass="$store_pass" # PKCS12 keystores use one password for both
-    owner_name="$(ask "Name on the certificate" Wyrd)"
-    mkdir -p "$(dirname "$keystore")"
-    WYRD_KEYSTORE_PASS="$store_pass" keytool -genkeypair -keystore "$keystore" -storetype PKCS12 \
-      -alias "$alias_name" -keyalg RSA -keysize 4096 -validity 10000 -dname "CN=$owner_name" \
-      -storepass:env WYRD_KEYSTORE_PASS -keypass:env WYRD_KEYSTORE_PASS >/dev/null
-    chmod 600 "$keystore"
-    say "  Created $keystore"
-  else
-    keystore="$(ask "Existing keystore file")"
-    keystore="${keystore/#\~/$HOME}"
-    [ -f "$keystore" ] || die "$keystore not found"
-    alias_name="$(ask "Key alias" upload)"
-    store_pass="$(ask_secret "Keystore password")"
-    key_pass="$(ask_secret "Key password (Enter if the same)")"
-    key_pass="${key_pass:-$store_pass}"
-  fi
-  if ! fingerprints="$(WYRD_KEYSTORE_PASS="$store_pass" keytool -list -v -keystore "$keystore" \
-    -alias "$alias_name" -storepass:env WYRD_KEYSTORE_PASS 2>/dev/null)"; then
-    die "the keystore does not open with that password or has no key named $alias_name"
-  fi
-  say
-  say "  ${bold}Certificate fingerprints${reset} (Google Cloud > Android OAuth client needs the SHA-1):"
-  printf '%s\n' "$fingerprints" | grep -E '^[[:space:]]*SHA(1|256):' | sed 's/^[[:space:]]*/    /' || true
-  say
-  printf '%s' "$(base64 <"$keystore" | tr -d '\n')" | gh secret set ANDROID_KEYSTORE_BASE64 --repo "$repo" >/dev/null
-  say "  ✓ secret ANDROID_KEYSTORE_BASE64"
-  set_secret ANDROID_KEYSTORE_PASSWORD "$store_pass"
-  set_secret ANDROID_KEY_ALIAS "$alias_name"
-  set_secret ANDROID_KEY_PASSWORD "$key_pass"
-  note "  Back up $keystore and its password. If they are lost, phones can only"
-  note "  install a newer Wyrd after uninstalling the old one (and losing local data)."
 fi
 
 # --- Done -----------------------------------------------------------------------
