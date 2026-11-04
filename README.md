@@ -34,38 +34,66 @@ exactly why you grew.
 
 ## Status
 
-Early development. The work is organised in phases (see [`docs/`](docs/)):
+Milestones **M0 Foundation** and **M1 Connected** are implemented; M2–M4 (public guilds,
+premium, store releases) are next.
 
-1. Research — behavioural science foundations
-2. Product specification — requirements, progression and AI rules
-3. UX/UI — information architecture and design system
-4. Technical architecture — backend, sync, AI, notifications
-5. Implementation
-6. Testing across platforms and locales
+| Area | State |
+| --- | --- |
+| Research, product spec, progression rules, design system, UX, architecture + ADRs | ✅ [`docs/`](docs/) |
+| Progression engine in Dart (103 tests) and TypeScript (46 tests), bound by shared conformance vectors | ✅ |
+| Local-first app: character sheet, quests (daily/contracts/objectives, recurrence, subtasks, timer, reminders), reward reveal with explanations, ledger, week/month/year chronicle, settings, onboarding | ✅ [`app/`](app/) |
+| English + Persian, full RTL, Jalali/Gregorian, native/Latin digits, auto-direction for user text | ✅ |
+| Adaptive layouts: phone (bottom bar), tablet (rail), desktop/web (sidebar, multi-column) | ✅ |
+| Backend: schema, row-level security, sync and progression RPCs, Claude evaluation and chronicle functions, push notifications | ✅ [`backend/`](backend/) |
+| Client accounts, sync, server evaluation, guilds (feed, reactions, comments, challenges) | ✅ |
+
+**Verified here:** all engine, app and backend test suites; static analysis; all migrations and
+73 security/behaviour checks against an offline Postgres (PGlite); type-checks of every Edge
+Function; the web build exercised in a browser in English and Persian at phone, tablet and
+desktop widths.
+
+**Not yet verified:** a live Supabase project, real Claude and FCM calls, and native builds for
+Android, iOS, macOS and Windows (they need the Android SDK, Xcode and Visual Studio).
+Persian copy needs review by a native speaker before release.
 
 ## Repository layout
 
 ```
 .
 ├── app/            Flutter client (Android, iOS, macOS, Windows, Web)
-├── packages/       Shared pure-Dart packages (e.g. the progression engine)
-├── backend/        Database schema, row-level security, server functions
+├── packages/       Shared pure-Dart packages (the progression engine)
+├── backend/        Supabase schema, row-level security, Edge Functions
 └── docs/           Research, product spec, design system, architecture, ADRs
 ```
 
 ## Getting started
 
-Prerequisites: Flutter (stable, 3.47+), Dart 3.13+. Platform toolchains as needed
-(Xcode for iOS/macOS, Android SDK for Android, Visual Studio for Windows).
+Prerequisites: Flutter 3.47+ (stable), Dart 3.13+, plus the toolchain for each target platform.
 
 ```bash
 cd app
 flutter pub get
-flutter run -d chrome
+flutter run -d chrome          # or: -d macos, -d windows, an Android device or iOS simulator
 ```
 
-Backend setup and environment variables are documented in [`backend/README.md`](backend/README.md)
-once that phase lands.
+Without backend configuration the app runs fully on the device (guest mode): every feature
+except accounts, sync and guilds works offline. To connect a Supabase backend:
+
+```bash
+flutter run --dart-define=SUPABASE_URL=https://<project>.supabase.co --dart-define=SUPABASE_PUBLISHABLE_KEY=<publishable-key>
+```
+
+Backend setup is documented in [`backend/README.md`](backend/README.md).
+
+## Tests
+
+```bash
+cd packages/oathbound_engine && dart test     # rules, caps, curves, consistency, vectors
+cd app && flutter test                        # data layer, l10n gates, RTL lint, smoke tests
+cd app && flutter analyze --fatal-infos
+```
+
+CI runs all of these plus the web build on every push ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)).
 
 ## Localization
 

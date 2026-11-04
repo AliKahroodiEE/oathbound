@@ -1,0 +1,2468 @@
+{
+  "ruleVersion": "2026.11.1",
+  "cases": [
+    {
+      "name": "worked_example",
+      "proposal": {
+        "category": "study",
+        "similarityKey": "study.electronics",
+        "difficulty": 3,
+        "estimatedMinutes": 90,
+        "attributes": [
+          {
+            "attribute": "intelligence",
+            "weight": 0.75,
+            "reason": ""
+          },
+          {
+            "attribute": "discipline",
+            "weight": 0.25,
+            "reason": ""
+          }
+        ],
+        "trivial": false,
+        "confidence": 0.9,
+        "summary": "",
+        "source": "ai"
+      },
+      "facts": {
+        "tier": "daily",
+        "createdAt": "2026-11-04T08:00:00.000Z",
+        "completedAt": "2026-11-04T19:00:00.000Z",
+        "declaredMinutes": 90,
+        "trackedMinutes": null,
+        "dueAt": null,
+        "isRecurringOccurrence": false,
+        "hasImplementationIntention": false
+      },
+      "day": {},
+      "expected": {
+        "grants": [
+          {
+            "attribute": "intelligence",
+            "amount": 31,
+            "rawAmount": 31
+          },
+          {
+            "attribute": "discipline",
+            "amount": 14,
+            "rawAmount": 14
+          }
+        ],
+        "totalXp": 45,
+        "effectiveMinutes": 90,
+        "trivial": false,
+        "similarityKey": "study.electronics",
+        "adjustments": [
+          {
+            "code": "follow_through",
+            "params": {
+              "rate": 0.1,
+              "intention": false
+            }
+          }
+        ],
+        "ruleVersion": "2026.11.1",
+        "source": "ai"
+      }
+    },
+    {
+      "name": "unplanned_no_bonus",
+      "proposal": {
+        "category": "study",
+        "similarityKey": "study.electronics",
+        "difficulty": 3,
+        "estimatedMinutes": 90,
+        "attributes": [
+          {
+            "attribute": "intelligence",
+            "weight": 0.75,
+            "reason": ""
+          },
+          {
+            "attribute": "discipline",
+            "weight": 0.25,
+            "reason": ""
+          }
+        ],
+        "trivial": false,
+        "confidence": 0.9,
+        "summary": "",
+        "source": "ai"
+      },
+      "facts": {
+        "tier": "daily",
+        "createdAt": "2026-11-04T19:00:00.000Z",
+        "completedAt": "2026-11-04T19:00:00.000Z",
+        "declaredMinutes": 90,
+        "trackedMinutes": null,
+        "dueAt": null,
+        "isRecurringOccurrence": false,
+        "hasImplementationIntention": false
+      },
+      "day": {},
+      "expected": {
+        "grants": [
+          {
+            "attribute": "intelligence",
+            "amount": 31,
+            "rawAmount": 31
+          },
+          {
+            "attribute": "discipline",
+            "amount": 10,
+            "rawAmount": 10
+          }
+        ],
+        "totalXp": 41,
+        "effectiveMinutes": 90,
+        "trivial": false,
+        "similarityKey": "study.electronics",
+        "adjustments": [],
+        "ruleVersion": "2026.11.1",
+        "source": "ai"
+      }
+    },
+    {
+      "name": "recurring_counts_as_planned",
+      "proposal": {
+        "category": "study",
+        "similarityKey": "study.electronics",
+        "difficulty": 3,
+        "estimatedMinutes": 90,
+        "attributes": [
+          {
+            "attribute": "intelligence",
+            "weight": 0.75,
+            "reason": ""
+          },
+          {
+            "attribute": "discipline",
+            "weight": 0.25,
+            "reason": ""
+          }
+        ],
+        "trivial": false,
+        "confidence": 0.9,
+        "summary": "",
+        "source": "ai"
+      },
+      "facts": {
+        "tier": "daily",
+        "createdAt": "2026-11-04T19:00:00.000Z",
+        "completedAt": "2026-11-04T19:00:00.000Z",
+        "declaredMinutes": 90,
+        "trackedMinutes": null,
+        "dueAt": null,
+        "isRecurringOccurrence": true,
+        "hasImplementationIntention": false
+      },
+      "day": {},
+      "expected": {
+        "grants": [
+          {
+            "attribute": "intelligence",
+            "amount": 31,
+            "rawAmount": 31
+          },
+          {
+            "attribute": "discipline",
+            "amount": 14,
+            "rawAmount": 14
+          }
+        ],
+        "totalXp": 45,
+        "effectiveMinutes": 90,
+        "trivial": false,
+        "similarityKey": "study.electronics",
+        "adjustments": [
+          {
+            "code": "follow_through",
+            "params": {
+              "rate": 0.1,
+              "intention": false
+            }
+          }
+        ],
+        "ruleVersion": "2026.11.1",
+        "source": "ai"
+      }
+    },
+    {
+      "name": "intention_bonus",
+      "proposal": {
+        "category": "study",
+        "similarityKey": "study.electronics",
+        "difficulty": 3,
+        "estimatedMinutes": 90,
+        "attributes": [
+          {
+            "attribute": "intelligence",
+            "weight": 0.75,
+            "reason": ""
+          },
+          {
+            "attribute": "discipline",
+            "weight": 0.25,
+            "reason": ""
+          }
+        ],
+        "trivial": false,
+        "confidence": 0.9,
+        "summary": "",
+        "source": "ai"
+      },
+      "facts": {
+        "tier": "daily",
+        "createdAt": "2026-11-04T08:00:00.000Z",
+        "completedAt": "2026-11-04T19:00:00.000Z",
+        "declaredMinutes": 90,
+        "trackedMinutes": null,
+        "dueAt": null,
+        "isRecurringOccurrence": false,
+        "hasImplementationIntention": true
+      },
+      "day": {},
+      "expected": {
+        "grants": [
+          {
+            "attribute": "intelligence",
+            "amount": 31,
+            "rawAmount": 31
+          },
+          {
+            "attribute": "discipline",
+            "amount": 16,
+            "rawAmount": 16
+          }
+        ],
+        "totalXp": 47,
+        "effectiveMinutes": 90,
+        "trivial": false,
+        "similarityKey": "study.electronics",
+        "adjustments": [
+          {
+            "code": "follow_through",
+            "params": {
+              "rate": 0.15000000000000002,
+              "intention": true
+            }
+          }
+        ],
+        "ruleVersion": "2026.11.1",
+        "source": "ai"
+      }
+    },
+    {
+      "name": "late_no_bonus",
+      "proposal": {
+        "category": "study",
+        "similarityKey": "study.electronics",
+        "difficulty": 3,
+        "estimatedMinutes": 90,
+        "attributes": [
+          {
+            "attribute": "intelligence",
+            "weight": 0.75,
+            "reason": ""
+          },
+          {
+            "attribute": "discipline",
+            "weight": 0.25,
+            "reason": ""
+          }
+        ],
+        "trivial": false,
+        "confidence": 0.9,
+        "summary": "",
+        "source": "ai"
+      },
+      "facts": {
+        "tier": "daily",
+        "createdAt": "2026-11-04T08:00:00.000Z",
+        "completedAt": "2026-11-04T19:00:00.000Z",
+        "declaredMinutes": 90,
+        "trackedMinutes": null,
+        "dueAt": "2026-11-04T12:00:00.000Z",
+        "isRecurringOccurrence": false,
+        "hasImplementationIntention": false
+      },
+      "day": {},
+      "expected": {
+        "grants": [
+          {
+            "attribute": "intelligence",
+            "amount": 31,
+            "rawAmount": 31
+          },
+          {
+            "attribute": "discipline",
+            "amount": 10,
+            "rawAmount": 10
+          }
+        ],
+        "totalXp": 41,
+        "effectiveMinutes": 90,
+        "trivial": false,
+        "similarityKey": "study.electronics",
+        "adjustments": [],
+        "ruleVersion": "2026.11.1",
+        "source": "ai"
+      }
+    },
+    {
+      "name": "tracked_beats_declared",
+      "proposal": {
+        "category": "study",
+        "similarityKey": "study.electronics",
+        "difficulty": 3,
+        "estimatedMinutes": 90,
+        "attributes": [
+          {
+            "attribute": "intelligence",
+            "weight": 0.75,
+            "reason": ""
+          },
+          {
+            "attribute": "discipline",
+            "weight": 0.25,
+            "reason": ""
+          }
+        ],
+        "trivial": false,
+        "confidence": 0.9,
+        "summary": "",
+        "source": "ai"
+      },
+      "facts": {
+        "tier": "daily",
+        "createdAt": "2026-11-04T08:00:00.000Z",
+        "completedAt": "2026-11-04T19:00:00.000Z",
+        "declaredMinutes": 300,
+        "trackedMinutes": 45,
+        "dueAt": null,
+        "isRecurringOccurrence": false,
+        "hasImplementationIntention": false
+      },
+      "day": {},
+      "expected": {
+        "grants": [
+          {
+            "attribute": "intelligence",
+            "amount": 20,
+            "rawAmount": 20
+          },
+          {
+            "attribute": "discipline",
+            "amount": 9,
+            "rawAmount": 9
+          }
+        ],
+        "totalXp": 29,
+        "effectiveMinutes": 45,
+        "trivial": false,
+        "similarityKey": "study.electronics",
+        "adjustments": [
+          {
+            "code": "follow_through",
+            "params": {
+              "rate": 0.1,
+              "intention": false
+            }
+          }
+        ],
+        "ruleVersion": "2026.11.1",
+        "source": "ai"
+      }
+    },
+    {
+      "name": "implausible_declared",
+      "proposal": {
+        "category": "study",
+        "similarityKey": "study.electronics",
+        "difficulty": 3,
+        "estimatedMinutes": 20,
+        "attributes": [
+          {
+            "attribute": "intelligence",
+            "weight": 0.75,
+            "reason": ""
+          },
+          {
+            "attribute": "discipline",
+            "weight": 0.25,
+            "reason": ""
+          }
+        ],
+        "trivial": false,
+        "confidence": 0.9,
+        "summary": "",
+        "source": "ai"
+      },
+      "facts": {
+        "tier": "daily",
+        "createdAt": "2026-11-04T08:00:00.000Z",
+        "completedAt": "2026-11-04T19:00:00.000Z",
+        "declaredMinutes": 180,
+        "trackedMinutes": null,
+        "dueAt": null,
+        "isRecurringOccurrence": false,
+        "hasImplementationIntention": false
+      },
+      "day": {},
+      "expected": {
+        "grants": [
+          {
+            "attribute": "intelligence",
+            "amount": 18,
+            "rawAmount": 18
+          },
+          {
+            "attribute": "discipline",
+            "amount": 8,
+            "rawAmount": 8
+          }
+        ],
+        "totalXp": 26,
+        "effectiveMinutes": 40,
+        "trivial": false,
+        "similarityKey": "study.electronics",
+        "adjustments": [
+          {
+            "code": "duration_plausibility",
+            "params": {
+              "declared": 180,
+              "credited": 40
+            }
+          },
+          {
+            "code": "follow_through",
+            "params": {
+              "rate": 0.1,
+              "intention": false
+            }
+          }
+        ],
+        "ruleVersion": "2026.11.1",
+        "source": "ai"
+      }
+    },
+    {
+      "name": "plausibility_floor",
+      "proposal": {
+        "category": "study",
+        "similarityKey": "study.electronics",
+        "difficulty": 3,
+        "estimatedMinutes": 3,
+        "attributes": [
+          {
+            "attribute": "intelligence",
+            "weight": 0.75,
+            "reason": ""
+          },
+          {
+            "attribute": "discipline",
+            "weight": 0.25,
+            "reason": ""
+          }
+        ],
+        "trivial": false,
+        "confidence": 0.9,
+        "summary": "",
+        "source": "ai"
+      },
+      "facts": {
+        "tier": "daily",
+        "createdAt": "2026-11-04T08:00:00.000Z",
+        "completedAt": "2026-11-04T19:00:00.000Z",
+        "declaredMinutes": 15,
+        "trackedMinutes": null,
+        "dueAt": null,
+        "isRecurringOccurrence": false,
+        "hasImplementationIntention": false
+      },
+      "day": {},
+      "expected": {
+        "grants": [
+          {
+            "attribute": "intelligence",
+            "amount": 10,
+            "rawAmount": 10
+          },
+          {
+            "attribute": "discipline",
+            "amount": 4,
+            "rawAmount": 4
+          }
+        ],
+        "totalXp": 14,
+        "effectiveMinutes": 15,
+        "trivial": false,
+        "similarityKey": "study.electronics",
+        "adjustments": [
+          {
+            "code": "follow_through",
+            "params": {
+              "rate": 0.1,
+              "intention": false
+            }
+          }
+        ],
+        "ruleVersion": "2026.11.1",
+        "source": "ai"
+      }
+    },
+    {
+      "name": "estimate_only",
+      "proposal": {
+        "category": "study",
+        "similarityKey": "study.electronics",
+        "difficulty": 3,
+        "estimatedMinutes": 50,
+        "attributes": [
+          {
+            "attribute": "intelligence",
+            "weight": 0.75,
+            "reason": ""
+          },
+          {
+            "attribute": "discipline",
+            "weight": 0.25,
+            "reason": ""
+          }
+        ],
+        "trivial": false,
+        "confidence": 0.9,
+        "summary": "",
+        "source": "ai"
+      },
+      "facts": {
+        "tier": "daily",
+        "createdAt": "2026-11-04T08:00:00.000Z",
+        "completedAt": "2026-11-04T19:00:00.000Z",
+        "declaredMinutes": null,
+        "trackedMinutes": null,
+        "dueAt": null,
+        "isRecurringOccurrence": false,
+        "hasImplementationIntention": false
+      },
+      "day": {},
+      "expected": {
+        "grants": [
+          {
+            "attribute": "intelligence",
+            "amount": 21,
+            "rawAmount": 21
+          },
+          {
+            "attribute": "discipline",
+            "amount": 10,
+            "rawAmount": 10
+          }
+        ],
+        "totalXp": 31,
+        "effectiveMinutes": 50,
+        "trivial": false,
+        "similarityKey": "study.electronics",
+        "adjustments": [
+          {
+            "code": "follow_through",
+            "params": {
+              "rate": 0.1,
+              "intention": false
+            }
+          }
+        ],
+        "ruleVersion": "2026.11.1",
+        "source": "ai"
+      }
+    },
+    {
+      "name": "daily_tier_cap",
+      "proposal": {
+        "category": "study",
+        "similarityKey": "study.electronics",
+        "difficulty": 3,
+        "estimatedMinutes": 600,
+        "attributes": [
+          {
+            "attribute": "intelligence",
+            "weight": 0.75,
+            "reason": ""
+          },
+          {
+            "attribute": "discipline",
+            "weight": 0.25,
+            "reason": ""
+          }
+        ],
+        "trivial": false,
+        "confidence": 0.9,
+        "summary": "",
+        "source": "ai"
+      },
+      "facts": {
+        "tier": "daily",
+        "createdAt": "2026-11-04T08:00:00.000Z",
+        "completedAt": "2026-11-04T19:00:00.000Z",
+        "declaredMinutes": 600,
+        "trackedMinutes": null,
+        "dueAt": null,
+        "isRecurringOccurrence": false,
+        "hasImplementationIntention": false
+      },
+      "day": {},
+      "expected": {
+        "grants": [
+          {
+            "attribute": "intelligence",
+            "amount": 58,
+            "rawAmount": 58
+          },
+          {
+            "attribute": "discipline",
+            "amount": 27,
+            "rawAmount": 27
+          }
+        ],
+        "totalXp": 85,
+        "effectiveMinutes": 240,
+        "trivial": false,
+        "similarityKey": "study.electronics",
+        "adjustments": [
+          {
+            "code": "tier_minutes_cap",
+            "params": {
+              "cap": 240
+            }
+          },
+          {
+            "code": "follow_through",
+            "params": {
+              "rate": 0.1,
+              "intention": false
+            }
+          }
+        ],
+        "ruleVersion": "2026.11.1",
+        "source": "ai"
+      }
+    },
+    {
+      "name": "contract_tier",
+      "proposal": {
+        "category": "study",
+        "similarityKey": "study.electronics",
+        "difficulty": 3,
+        "estimatedMinutes": 300,
+        "attributes": [
+          {
+            "attribute": "intelligence",
+            "weight": 0.75,
+            "reason": ""
+          },
+          {
+            "attribute": "discipline",
+            "weight": 0.25,
+            "reason": ""
+          }
+        ],
+        "trivial": false,
+        "confidence": 0.9,
+        "summary": "",
+        "source": "ai"
+      },
+      "facts": {
+        "tier": "contract",
+        "createdAt": "2026-11-04T08:00:00.000Z",
+        "completedAt": "2026-11-04T19:00:00.000Z",
+        "declaredMinutes": 300,
+        "trackedMinutes": null,
+        "dueAt": null,
+        "isRecurringOccurrence": false,
+        "hasImplementationIntention": false
+      },
+      "day": {},
+      "expected": {
+        "grants": [
+          {
+            "attribute": "intelligence",
+            "amount": 84,
+            "rawAmount": 84
+          },
+          {
+            "attribute": "discipline",
+            "amount": 39,
+            "rawAmount": 39
+          }
+        ],
+        "totalXp": 123,
+        "effectiveMinutes": 300,
+        "trivial": false,
+        "similarityKey": "study.electronics",
+        "adjustments": [
+          {
+            "code": "tier_bonus",
+            "params": {
+              "tier": "contract",
+              "multiplier": 1.25
+            }
+          },
+          {
+            "code": "follow_through",
+            "params": {
+              "rate": 0.1,
+              "intention": false
+            }
+          }
+        ],
+        "ruleVersion": "2026.11.1",
+        "source": "ai"
+      }
+    },
+    {
+      "name": "objective_tier",
+      "proposal": {
+        "category": "study",
+        "similarityKey": "study.electronics",
+        "difficulty": 5,
+        "estimatedMinutes": 120,
+        "attributes": [
+          {
+            "attribute": "intelligence",
+            "weight": 0.75,
+            "reason": ""
+          },
+          {
+            "attribute": "discipline",
+            "weight": 0.25,
+            "reason": ""
+          }
+        ],
+        "trivial": false,
+        "confidence": 0.9,
+        "summary": "",
+        "source": "ai"
+      },
+      "facts": {
+        "tier": "objective",
+        "createdAt": "2026-11-04T08:00:00.000Z",
+        "completedAt": "2026-11-04T19:00:00.000Z",
+        "declaredMinutes": 120,
+        "trackedMinutes": null,
+        "dueAt": null,
+        "isRecurringOccurrence": false,
+        "hasImplementationIntention": false
+      },
+      "day": {},
+      "expected": {
+        "grants": [
+          {
+            "attribute": "intelligence",
+            "amount": 89,
+            "rawAmount": 89
+          },
+          {
+            "attribute": "discipline",
+            "amount": 41,
+            "rawAmount": 41
+          }
+        ],
+        "totalXp": 130,
+        "effectiveMinutes": 120,
+        "trivial": false,
+        "similarityKey": "study.electronics",
+        "adjustments": [
+          {
+            "code": "tier_bonus",
+            "params": {
+              "tier": "objective",
+              "multiplier": 1.5
+            }
+          },
+          {
+            "code": "follow_through",
+            "params": {
+              "rate": 0.1,
+              "intention": false
+            }
+          }
+        ],
+        "ruleVersion": "2026.11.1",
+        "source": "ai"
+      }
+    },
+    {
+      "name": "daily_budget",
+      "proposal": {
+        "category": "study",
+        "similarityKey": "study.electronics",
+        "difficulty": 3,
+        "estimatedMinutes": 90,
+        "attributes": [
+          {
+            "attribute": "intelligence",
+            "weight": 0.75,
+            "reason": ""
+          },
+          {
+            "attribute": "discipline",
+            "weight": 0.25,
+            "reason": ""
+          }
+        ],
+        "trivial": false,
+        "confidence": 0.9,
+        "summary": "",
+        "source": "ai"
+      },
+      "facts": {
+        "tier": "daily",
+        "createdAt": "2026-11-04T08:00:00.000Z",
+        "completedAt": "2026-11-04T19:00:00.000Z",
+        "declaredMinutes": 90,
+        "trackedMinutes": null,
+        "dueAt": null,
+        "isRecurringOccurrence": false,
+        "hasImplementationIntention": false
+      },
+      "day": {
+        "creditedMinutes": 930
+      },
+      "expected": {
+        "grants": [
+          {
+            "attribute": "intelligence",
+            "amount": 15,
+            "rawAmount": 15
+          },
+          {
+            "attribute": "discipline",
+            "amount": 7,
+            "rawAmount": 7
+          }
+        ],
+        "totalXp": 22,
+        "effectiveMinutes": 30,
+        "trivial": false,
+        "similarityKey": "study.electronics",
+        "adjustments": [
+          {
+            "code": "daily_budget",
+            "params": {
+              "budget": 960
+            }
+          },
+          {
+            "code": "follow_through",
+            "params": {
+              "rate": 0.1,
+              "intention": false
+            }
+          }
+        ],
+        "ruleVersion": "2026.11.1",
+        "source": "ai"
+      }
+    },
+    {
+      "name": "budget_exhausted",
+      "proposal": {
+        "category": "study",
+        "similarityKey": "study.electronics",
+        "difficulty": 3,
+        "estimatedMinutes": 90,
+        "attributes": [
+          {
+            "attribute": "intelligence",
+            "weight": 0.75,
+            "reason": ""
+          },
+          {
+            "attribute": "discipline",
+            "weight": 0.25,
+            "reason": ""
+          }
+        ],
+        "trivial": false,
+        "confidence": 0.9,
+        "summary": "",
+        "source": "ai"
+      },
+      "facts": {
+        "tier": "daily",
+        "createdAt": "2026-11-04T08:00:00.000Z",
+        "completedAt": "2026-11-04T19:00:00.000Z",
+        "declaredMinutes": 90,
+        "trackedMinutes": null,
+        "dueAt": null,
+        "isRecurringOccurrence": false,
+        "hasImplementationIntention": false
+      },
+      "day": {
+        "creditedMinutes": 960
+      },
+      "expected": {
+        "grants": [],
+        "totalXp": 0,
+        "effectiveMinutes": 0,
+        "trivial": true,
+        "similarityKey": "study.electronics",
+        "adjustments": [
+          {
+            "code": "daily_budget",
+            "params": {
+              "budget": 960
+            }
+          }
+        ],
+        "ruleVersion": "2026.11.1",
+        "source": "ai"
+      }
+    },
+    {
+      "name": "trivial_floor",
+      "proposal": {
+        "category": "other",
+        "similarityKey": "other.tea",
+        "difficulty": 3,
+        "estimatedMinutes": 2,
+        "attributes": [
+          {
+            "attribute": "intelligence",
+            "weight": 0.75,
+            "reason": ""
+          },
+          {
+            "attribute": "discipline",
+            "weight": 0.25,
+            "reason": ""
+          }
+        ],
+        "trivial": true,
+        "confidence": 0.9,
+        "summary": "",
+        "source": "ai"
+      },
+      "facts": {
+        "tier": "daily",
+        "createdAt": "2026-11-04T08:00:00.000Z",
+        "completedAt": "2026-11-04T19:00:00.000Z",
+        "declaredMinutes": 2,
+        "trackedMinutes": null,
+        "dueAt": null,
+        "isRecurringOccurrence": false,
+        "hasImplementationIntention": false
+      },
+      "day": {},
+      "expected": {
+        "grants": [
+          {
+            "attribute": "intelligence",
+            "amount": 2,
+            "rawAmount": 2
+          },
+          {
+            "attribute": "discipline",
+            "amount": 1,
+            "rawAmount": 1
+          }
+        ],
+        "totalXp": 3,
+        "effectiveMinutes": 2,
+        "trivial": true,
+        "similarityKey": "other.tea",
+        "adjustments": [
+          {
+            "code": "trivial_floor",
+            "params": {
+              "max": 3.0
+            }
+          }
+        ],
+        "ruleVersion": "2026.11.1",
+        "source": "ai"
+      }
+    },
+    {
+      "name": "trivial_limit",
+      "proposal": {
+        "category": "other",
+        "similarityKey": "other.tea",
+        "difficulty": 3,
+        "estimatedMinutes": 2,
+        "attributes": [
+          {
+            "attribute": "intelligence",
+            "weight": 0.75,
+            "reason": ""
+          },
+          {
+            "attribute": "discipline",
+            "weight": 0.25,
+            "reason": ""
+          }
+        ],
+        "trivial": true,
+        "confidence": 0.9,
+        "summary": "",
+        "source": "ai"
+      },
+      "facts": {
+        "tier": "daily",
+        "createdAt": "2026-11-04T08:00:00.000Z",
+        "completedAt": "2026-11-04T19:00:00.000Z",
+        "declaredMinutes": 2,
+        "trackedMinutes": null,
+        "dueAt": null,
+        "isRecurringOccurrence": false,
+        "hasImplementationIntention": false
+      },
+      "day": {
+        "trivialCount": 10
+      },
+      "expected": {
+        "grants": [],
+        "totalXp": 0,
+        "effectiveMinutes": 2,
+        "trivial": true,
+        "similarityKey": "other.tea",
+        "adjustments": [
+          {
+            "code": "trivial_limit",
+            "params": {
+              "limit": 10
+            }
+          }
+        ],
+        "ruleVersion": "2026.11.1",
+        "source": "ai"
+      }
+    },
+    {
+      "name": "short_is_trivial",
+      "proposal": {
+        "category": "study",
+        "similarityKey": "study.electronics",
+        "difficulty": 3,
+        "estimatedMinutes": 4,
+        "attributes": [
+          {
+            "attribute": "intelligence",
+            "weight": 0.75,
+            "reason": ""
+          },
+          {
+            "attribute": "discipline",
+            "weight": 0.25,
+            "reason": ""
+          }
+        ],
+        "trivial": false,
+        "confidence": 0.9,
+        "summary": "",
+        "source": "ai"
+      },
+      "facts": {
+        "tier": "daily",
+        "createdAt": "2026-11-04T08:00:00.000Z",
+        "completedAt": "2026-11-04T19:00:00.000Z",
+        "declaredMinutes": 4,
+        "trackedMinutes": null,
+        "dueAt": null,
+        "isRecurringOccurrence": false,
+        "hasImplementationIntention": false
+      },
+      "day": {},
+      "expected": {
+        "grants": [
+          {
+            "attribute": "intelligence",
+            "amount": 2,
+            "rawAmount": 2
+          },
+          {
+            "attribute": "discipline",
+            "amount": 1,
+            "rawAmount": 1
+          }
+        ],
+        "totalXp": 3,
+        "effectiveMinutes": 4,
+        "trivial": true,
+        "similarityKey": "study.electronics",
+        "adjustments": [
+          {
+            "code": "trivial_floor",
+            "params": {
+              "max": 3.0
+            }
+          }
+        ],
+        "ruleVersion": "2026.11.1",
+        "source": "ai"
+      }
+    },
+    {
+      "name": "repetition_second",
+      "proposal": {
+        "category": "study",
+        "similarityKey": "study.electronics",
+        "difficulty": 3,
+        "estimatedMinutes": 90,
+        "attributes": [
+          {
+            "attribute": "intelligence",
+            "weight": 0.75,
+            "reason": ""
+          },
+          {
+            "attribute": "discipline",
+            "weight": 0.25,
+            "reason": ""
+          }
+        ],
+        "trivial": false,
+        "confidence": 0.9,
+        "summary": "",
+        "source": "ai"
+      },
+      "facts": {
+        "tier": "daily",
+        "createdAt": "2026-11-04T08:00:00.000Z",
+        "completedAt": "2026-11-04T19:00:00.000Z",
+        "declaredMinutes": 90,
+        "trackedMinutes": null,
+        "dueAt": null,
+        "isRecurringOccurrence": false,
+        "hasImplementationIntention": false
+      },
+      "day": {
+        "similarityCounts": {
+          "study.electronics": 1
+        }
+      },
+      "expected": {
+        "grants": [
+          {
+            "attribute": "intelligence",
+            "amount": 25,
+            "rawAmount": 25
+          },
+          {
+            "attribute": "discipline",
+            "amount": 11,
+            "rawAmount": 11
+          }
+        ],
+        "totalXp": 36,
+        "effectiveMinutes": 90,
+        "trivial": false,
+        "similarityKey": "study.electronics",
+        "adjustments": [
+          {
+            "code": "repetition",
+            "params": {
+              "count": 2,
+              "multiplier": 0.8
+            }
+          },
+          {
+            "code": "follow_through",
+            "params": {
+              "rate": 0.1,
+              "intention": false
+            }
+          }
+        ],
+        "ruleVersion": "2026.11.1",
+        "source": "ai"
+      }
+    },
+    {
+      "name": "repetition_fifth",
+      "proposal": {
+        "category": "study",
+        "similarityKey": "study.electronics",
+        "difficulty": 3,
+        "estimatedMinutes": 90,
+        "attributes": [
+          {
+            "attribute": "intelligence",
+            "weight": 0.75,
+            "reason": ""
+          },
+          {
+            "attribute": "discipline",
+            "weight": 0.25,
+            "reason": ""
+          }
+        ],
+        "trivial": false,
+        "confidence": 0.9,
+        "summary": "",
+        "source": "ai"
+      },
+      "facts": {
+        "tier": "daily",
+        "createdAt": "2026-11-04T08:00:00.000Z",
+        "completedAt": "2026-11-04T19:00:00.000Z",
+        "declaredMinutes": 90,
+        "trackedMinutes": null,
+        "dueAt": null,
+        "isRecurringOccurrence": false,
+        "hasImplementationIntention": false
+      },
+      "day": {
+        "similarityCounts": {
+          "study.electronics": 4
+        }
+      },
+      "expected": {
+        "grants": [
+          {
+            "attribute": "intelligence",
+            "amount": 8,
+            "rawAmount": 8
+          },
+          {
+            "attribute": "discipline",
+            "amount": 4,
+            "rawAmount": 4
+          }
+        ],
+        "totalXp": 12,
+        "effectiveMinutes": 90,
+        "trivial": false,
+        "similarityKey": "study.electronics",
+        "adjustments": [
+          {
+            "code": "repetition",
+            "params": {
+              "count": 5,
+              "multiplier": 0.25
+            }
+          },
+          {
+            "code": "follow_through",
+            "params": {
+              "rate": 0.1,
+              "intention": false
+            }
+          }
+        ],
+        "ruleVersion": "2026.11.1",
+        "source": "ai"
+      }
+    },
+    {
+      "name": "repetition_floor",
+      "proposal": {
+        "category": "study",
+        "similarityKey": "study.electronics",
+        "difficulty": 3,
+        "estimatedMinutes": 90,
+        "attributes": [
+          {
+            "attribute": "intelligence",
+            "weight": 0.75,
+            "reason": ""
+          },
+          {
+            "attribute": "discipline",
+            "weight": 0.25,
+            "reason": ""
+          }
+        ],
+        "trivial": false,
+        "confidence": 0.9,
+        "summary": "",
+        "source": "ai"
+      },
+      "facts": {
+        "tier": "daily",
+        "createdAt": "2026-11-04T08:00:00.000Z",
+        "completedAt": "2026-11-04T19:00:00.000Z",
+        "declaredMinutes": 90,
+        "trackedMinutes": null,
+        "dueAt": null,
+        "isRecurringOccurrence": false,
+        "hasImplementationIntention": false
+      },
+      "day": {
+        "similarityCounts": {
+          "study.electronics": 9
+        }
+      },
+      "expected": {
+        "grants": [
+          {
+            "attribute": "intelligence",
+            "amount": 3,
+            "rawAmount": 3
+          },
+          {
+            "attribute": "discipline",
+            "amount": 2,
+            "rawAmount": 2
+          }
+        ],
+        "totalXp": 5,
+        "effectiveMinutes": 90,
+        "trivial": false,
+        "similarityKey": "study.electronics",
+        "adjustments": [
+          {
+            "code": "repetition",
+            "params": {
+              "count": 10,
+              "multiplier": 0.1
+            }
+          },
+          {
+            "code": "follow_through",
+            "params": {
+              "rate": 0.1,
+              "intention": false
+            }
+          }
+        ],
+        "ruleVersion": "2026.11.1",
+        "source": "ai"
+      }
+    },
+    {
+      "name": "low_confidence_ai",
+      "proposal": {
+        "category": "study",
+        "similarityKey": "study.electronics",
+        "difficulty": 3,
+        "estimatedMinutes": 90,
+        "attributes": [
+          {
+            "attribute": "intelligence",
+            "weight": 0.75,
+            "reason": ""
+          },
+          {
+            "attribute": "discipline",
+            "weight": 0.25,
+            "reason": ""
+          }
+        ],
+        "trivial": false,
+        "confidence": 0.3,
+        "summary": "",
+        "source": "ai"
+      },
+      "facts": {
+        "tier": "daily",
+        "createdAt": "2026-11-04T08:00:00.000Z",
+        "completedAt": "2026-11-04T19:00:00.000Z",
+        "declaredMinutes": 90,
+        "trackedMinutes": null,
+        "dueAt": null,
+        "isRecurringOccurrence": false,
+        "hasImplementationIntention": false
+      },
+      "day": {},
+      "expected": {
+        "grants": [
+          {
+            "attribute": "intelligence",
+            "amount": 23,
+            "rawAmount": 23
+          },
+          {
+            "attribute": "discipline",
+            "amount": 11,
+            "rawAmount": 11
+          }
+        ],
+        "totalXp": 34,
+        "effectiveMinutes": 90,
+        "trivial": false,
+        "similarityKey": "study.electronics",
+        "adjustments": [
+          {
+            "code": "low_confidence",
+            "params": {
+              "multiplier": 0.75
+            }
+          },
+          {
+            "code": "follow_through",
+            "params": {
+              "rate": 0.1,
+              "intention": false
+            }
+          }
+        ],
+        "ruleVersion": "2026.11.1",
+        "source": "ai"
+      }
+    },
+    {
+      "name": "low_confidence_heuristic",
+      "proposal": {
+        "category": "study",
+        "similarityKey": "study.electronics",
+        "difficulty": 3,
+        "estimatedMinutes": 90,
+        "attributes": [
+          {
+            "attribute": "intelligence",
+            "weight": 0.75,
+            "reason": ""
+          },
+          {
+            "attribute": "discipline",
+            "weight": 0.25,
+            "reason": ""
+          }
+        ],
+        "trivial": false,
+        "confidence": 0.3,
+        "summary": "",
+        "source": "heuristic"
+      },
+      "facts": {
+        "tier": "daily",
+        "createdAt": "2026-11-04T08:00:00.000Z",
+        "completedAt": "2026-11-04T19:00:00.000Z",
+        "declaredMinutes": 90,
+        "trackedMinutes": null,
+        "dueAt": null,
+        "isRecurringOccurrence": false,
+        "hasImplementationIntention": false
+      },
+      "day": {},
+      "expected": {
+        "grants": [
+          {
+            "attribute": "intelligence",
+            "amount": 31,
+            "rawAmount": 31
+          },
+          {
+            "attribute": "discipline",
+            "amount": 14,
+            "rawAmount": 14
+          }
+        ],
+        "totalXp": 45,
+        "effectiveMinutes": 90,
+        "trivial": false,
+        "similarityKey": "study.electronics",
+        "adjustments": [
+          {
+            "code": "follow_through",
+            "params": {
+              "rate": 0.1,
+              "intention": false
+            }
+          }
+        ],
+        "ruleVersion": "2026.11.1",
+        "source": "heuristic"
+      }
+    },
+    {
+      "name": "soft_cap",
+      "proposal": {
+        "category": "study",
+        "similarityKey": "study.electronics",
+        "difficulty": 3,
+        "estimatedMinutes": 90,
+        "attributes": [
+          {
+            "attribute": "intelligence",
+            "weight": 1.0,
+            "reason": ""
+          }
+        ],
+        "trivial": false,
+        "confidence": 0.9,
+        "summary": "",
+        "source": "ai"
+      },
+      "facts": {
+        "tier": "daily",
+        "createdAt": "2026-11-04T19:00:00.000Z",
+        "completedAt": "2026-11-04T19:00:00.000Z",
+        "declaredMinutes": 90,
+        "trackedMinutes": null,
+        "dueAt": null,
+        "isRecurringOccurrence": false,
+        "hasImplementationIntention": false
+      },
+      "day": {
+        "rawXp": {
+          "intelligence": 200
+        }
+      },
+      "expected": {
+        "grants": [
+          {
+            "attribute": "intelligence",
+            "amount": 21,
+            "rawAmount": 41
+          }
+        ],
+        "totalXp": 21,
+        "effectiveMinutes": 90,
+        "trivial": false,
+        "similarityKey": "study.electronics",
+        "adjustments": [
+          {
+            "code": "soft_cap",
+            "params": {
+              "attribute": "intelligence"
+            }
+          }
+        ],
+        "ruleVersion": "2026.11.1",
+        "source": "ai"
+      }
+    },
+    {
+      "name": "straddle_soft_cap",
+      "proposal": {
+        "category": "study",
+        "similarityKey": "study.electronics",
+        "difficulty": 3,
+        "estimatedMinutes": 90,
+        "attributes": [
+          {
+            "attribute": "intelligence",
+            "weight": 1.0,
+            "reason": ""
+          }
+        ],
+        "trivial": false,
+        "confidence": 0.9,
+        "summary": "",
+        "source": "ai"
+      },
+      "facts": {
+        "tier": "daily",
+        "createdAt": "2026-11-04T19:00:00.000Z",
+        "completedAt": "2026-11-04T19:00:00.000Z",
+        "declaredMinutes": 90,
+        "trackedMinutes": null,
+        "dueAt": null,
+        "isRecurringOccurrence": false,
+        "hasImplementationIntention": false
+      },
+      "day": {
+        "rawXp": {
+          "intelligence": 180
+        }
+      },
+      "expected": {
+        "grants": [
+          {
+            "attribute": "intelligence",
+            "amount": 31,
+            "rawAmount": 41
+          }
+        ],
+        "totalXp": 31,
+        "effectiveMinutes": 90,
+        "trivial": false,
+        "similarityKey": "study.electronics",
+        "adjustments": [
+          {
+            "code": "soft_cap",
+            "params": {
+              "attribute": "intelligence"
+            }
+          }
+        ],
+        "ruleVersion": "2026.11.1",
+        "source": "ai"
+      }
+    },
+    {
+      "name": "hard_cap",
+      "proposal": {
+        "category": "study",
+        "similarityKey": "study.electronics",
+        "difficulty": 3,
+        "estimatedMinutes": 90,
+        "attributes": [
+          {
+            "attribute": "intelligence",
+            "weight": 1.0,
+            "reason": ""
+          }
+        ],
+        "trivial": false,
+        "confidence": 0.9,
+        "summary": "",
+        "source": "ai"
+      },
+      "facts": {
+        "tier": "daily",
+        "createdAt": "2026-11-04T19:00:00.000Z",
+        "completedAt": "2026-11-04T19:00:00.000Z",
+        "declaredMinutes": 90,
+        "trackedMinutes": null,
+        "dueAt": null,
+        "isRecurringOccurrence": false,
+        "hasImplementationIntention": false
+      },
+      "day": {
+        "rawXp": {
+          "intelligence": 600
+        }
+      },
+      "expected": {
+        "grants": [],
+        "totalXp": 0,
+        "effectiveMinutes": 90,
+        "trivial": false,
+        "similarityKey": "study.electronics",
+        "adjustments": [
+          {
+            "code": "hard_cap",
+            "params": {
+              "attribute": "intelligence"
+            }
+          }
+        ],
+        "ruleVersion": "2026.11.1",
+        "source": "ai"
+      }
+    },
+    {
+      "name": "discipline_cap_with_bonus",
+      "proposal": {
+        "category": "study",
+        "similarityKey": "study.electronics",
+        "difficulty": 3,
+        "estimatedMinutes": 90,
+        "attributes": [
+          {
+            "attribute": "intelligence",
+            "weight": 0.75,
+            "reason": ""
+          },
+          {
+            "attribute": "discipline",
+            "weight": 0.25,
+            "reason": ""
+          }
+        ],
+        "trivial": false,
+        "confidence": 0.9,
+        "summary": "",
+        "source": "ai"
+      },
+      "facts": {
+        "tier": "daily",
+        "createdAt": "2026-11-04T08:00:00.000Z",
+        "completedAt": "2026-11-04T19:00:00.000Z",
+        "declaredMinutes": 90,
+        "trackedMinutes": null,
+        "dueAt": null,
+        "isRecurringOccurrence": false,
+        "hasImplementationIntention": false
+      },
+      "day": {
+        "rawXp": {
+          "discipline": 395
+        }
+      },
+      "expected": {
+        "grants": [
+          {
+            "attribute": "intelligence",
+            "amount": 31,
+            "rawAmount": 31
+          },
+          {
+            "attribute": "discipline",
+            "amount": 7,
+            "rawAmount": 14
+          }
+        ],
+        "totalXp": 38,
+        "effectiveMinutes": 90,
+        "trivial": false,
+        "similarityKey": "study.electronics",
+        "adjustments": [
+          {
+            "code": "follow_through",
+            "params": {
+              "rate": 0.1,
+              "intention": false
+            }
+          },
+          {
+            "code": "soft_cap",
+            "params": {
+              "attribute": "discipline"
+            }
+          }
+        ],
+        "ruleVersion": "2026.11.1",
+        "source": "ai"
+      }
+    },
+    {
+      "name": "weights_dedupe",
+      "proposal": {
+        "category": "fitness",
+        "similarityKey": "fitness.run",
+        "difficulty": 3,
+        "estimatedMinutes": 90,
+        "attributes": [
+          {
+            "attribute": "strength",
+            "weight": 0.2,
+            "reason": ""
+          },
+          {
+            "attribute": "strength",
+            "weight": 0.6,
+            "reason": ""
+          },
+          {
+            "attribute": "vitality",
+            "weight": 0.2,
+            "reason": ""
+          }
+        ],
+        "trivial": false,
+        "confidence": 0.9,
+        "summary": "",
+        "source": "ai"
+      },
+      "facts": {
+        "tier": "daily",
+        "createdAt": "2026-11-04T08:00:00.000Z",
+        "completedAt": "2026-11-04T19:00:00.000Z",
+        "declaredMinutes": 40,
+        "trackedMinutes": null,
+        "dueAt": null,
+        "isRecurringOccurrence": false,
+        "hasImplementationIntention": false
+      },
+      "day": {},
+      "expected": {
+        "grants": [
+          {
+            "attribute": "strength",
+            "amount": 18,
+            "rawAmount": 18
+          },
+          {
+            "attribute": "discipline",
+            "amount": 2,
+            "rawAmount": 2
+          },
+          {
+            "attribute": "vitality",
+            "amount": 6,
+            "rawAmount": 6
+          }
+        ],
+        "totalXp": 26,
+        "effectiveMinutes": 40,
+        "trivial": false,
+        "similarityKey": "fitness.run",
+        "adjustments": [
+          {
+            "code": "follow_through",
+            "params": {
+              "rate": 0.1,
+              "intention": false
+            }
+          }
+        ],
+        "ruleVersion": "2026.11.1",
+        "source": "ai"
+      }
+    },
+    {
+      "name": "weights_top_three",
+      "proposal": {
+        "category": "fitness",
+        "similarityKey": "fitness.match",
+        "difficulty": 3,
+        "estimatedMinutes": 90,
+        "attributes": [
+          {
+            "attribute": "strength",
+            "weight": 0.3,
+            "reason": ""
+          },
+          {
+            "attribute": "vitality",
+            "weight": 0.25,
+            "reason": ""
+          },
+          {
+            "attribute": "discipline",
+            "weight": 0.2,
+            "reason": ""
+          },
+          {
+            "attribute": "social",
+            "weight": 0.15,
+            "reason": ""
+          },
+          {
+            "attribute": "creativity",
+            "weight": 0.1,
+            "reason": ""
+          }
+        ],
+        "trivial": false,
+        "confidence": 0.9,
+        "summary": "",
+        "source": "ai"
+      },
+      "facts": {
+        "tier": "daily",
+        "createdAt": "2026-11-04T08:00:00.000Z",
+        "completedAt": "2026-11-04T19:00:00.000Z",
+        "declaredMinutes": 60,
+        "trackedMinutes": null,
+        "dueAt": null,
+        "isRecurringOccurrence": false,
+        "hasImplementationIntention": false
+      },
+      "day": {},
+      "expected": {
+        "grants": [
+          {
+            "attribute": "strength",
+            "amount": 13,
+            "rawAmount": 13
+          },
+          {
+            "attribute": "discipline",
+            "amount": 12,
+            "rawAmount": 12
+          },
+          {
+            "attribute": "vitality",
+            "amount": 10,
+            "rawAmount": 10
+          }
+        ],
+        "totalXp": 35,
+        "effectiveMinutes": 60,
+        "trivial": false,
+        "similarityKey": "fitness.match",
+        "adjustments": [
+          {
+            "code": "follow_through",
+            "params": {
+              "rate": 0.1,
+              "intention": false
+            }
+          }
+        ],
+        "ruleVersion": "2026.11.1",
+        "source": "ai"
+      }
+    },
+    {
+      "name": "weights_drop_small",
+      "proposal": {
+        "category": "creative",
+        "similarityKey": "creative.sketch",
+        "difficulty": 3,
+        "estimatedMinutes": 90,
+        "attributes": [
+          {
+            "attribute": "creativity",
+            "weight": 0.95,
+            "reason": ""
+          },
+          {
+            "attribute": "social",
+            "weight": 0.05,
+            "reason": ""
+          }
+        ],
+        "trivial": false,
+        "confidence": 0.9,
+        "summary": "",
+        "source": "ai"
+      },
+      "facts": {
+        "tier": "daily",
+        "createdAt": "2026-11-04T08:00:00.000Z",
+        "completedAt": "2026-11-04T19:00:00.000Z",
+        "declaredMinutes": 45,
+        "trackedMinutes": null,
+        "dueAt": null,
+        "isRecurringOccurrence": false,
+        "hasImplementationIntention": false
+      },
+      "day": {},
+      "expected": {
+        "grants": [
+          {
+            "attribute": "discipline",
+            "amount": 3,
+            "rawAmount": 3
+          },
+          {
+            "attribute": "creativity",
+            "amount": 26,
+            "rawAmount": 26
+          }
+        ],
+        "totalXp": 29,
+        "effectiveMinutes": 45,
+        "trivial": false,
+        "similarityKey": "creative.sketch",
+        "adjustments": [
+          {
+            "code": "follow_through",
+            "params": {
+              "rate": 0.1,
+              "intention": false
+            }
+          }
+        ],
+        "ruleVersion": "2026.11.1",
+        "source": "ai"
+      }
+    },
+    {
+      "name": "weights_unnormalised",
+      "proposal": {
+        "category": "social",
+        "similarityKey": "social.dinner",
+        "difficulty": 3,
+        "estimatedMinutes": 90,
+        "attributes": [
+          {
+            "attribute": "social",
+            "weight": 3,
+            "reason": ""
+          },
+          {
+            "attribute": "vitality",
+            "weight": 1,
+            "reason": ""
+          }
+        ],
+        "trivial": false,
+        "confidence": 0.9,
+        "summary": "",
+        "source": "ai"
+      },
+      "facts": {
+        "tier": "daily",
+        "createdAt": "2026-11-04T08:00:00.000Z",
+        "completedAt": "2026-11-04T19:00:00.000Z",
+        "declaredMinutes": 120,
+        "trackedMinutes": null,
+        "dueAt": null,
+        "isRecurringOccurrence": false,
+        "hasImplementationIntention": false
+      },
+      "day": {},
+      "expected": {
+        "grants": [
+          {
+            "attribute": "discipline",
+            "amount": 5,
+            "rawAmount": 5
+          },
+          {
+            "attribute": "vitality",
+            "amount": 12,
+            "rawAmount": 12
+          },
+          {
+            "attribute": "social",
+            "amount": 37,
+            "rawAmount": 37
+          }
+        ],
+        "totalXp": 54,
+        "effectiveMinutes": 120,
+        "trivial": false,
+        "similarityKey": "social.dinner",
+        "adjustments": [
+          {
+            "code": "follow_through",
+            "params": {
+              "rate": 0.1,
+              "intention": false
+            }
+          }
+        ],
+        "ruleVersion": "2026.11.1",
+        "source": "ai"
+      }
+    },
+    {
+      "name": "weights_defaulted",
+      "proposal": {
+        "category": "fitness",
+        "similarityKey": "fitness.gym",
+        "difficulty": 3,
+        "estimatedMinutes": 90,
+        "attributes": [
+          {
+            "attribute": "strength",
+            "weight": -1,
+            "reason": ""
+          }
+        ],
+        "trivial": false,
+        "confidence": 0.9,
+        "summary": "",
+        "source": "ai"
+      },
+      "facts": {
+        "tier": "daily",
+        "createdAt": "2026-11-04T08:00:00.000Z",
+        "completedAt": "2026-11-04T19:00:00.000Z",
+        "declaredMinutes": 60,
+        "trackedMinutes": null,
+        "dueAt": null,
+        "isRecurringOccurrence": false,
+        "hasImplementationIntention": false
+      },
+      "day": {},
+      "expected": {
+        "grants": [
+          {
+            "attribute": "strength",
+            "amount": 22,
+            "rawAmount": 22
+          },
+          {
+            "attribute": "discipline",
+            "amount": 3,
+            "rawAmount": 3
+          },
+          {
+            "attribute": "vitality",
+            "amount": 9,
+            "rawAmount": 9
+          }
+        ],
+        "totalXp": 34,
+        "effectiveMinutes": 60,
+        "trivial": false,
+        "similarityKey": "fitness.gym",
+        "adjustments": [
+          {
+            "code": "weights_defaulted",
+            "params": {}
+          },
+          {
+            "code": "follow_through",
+            "params": {
+              "rate": 0.1,
+              "intention": false
+            }
+          }
+        ],
+        "ruleVersion": "2026.11.1",
+        "source": "ai"
+      }
+    },
+    {
+      "name": "difficulty_clamped_high",
+      "proposal": {
+        "category": "study",
+        "similarityKey": "study.electronics",
+        "difficulty": 99,
+        "estimatedMinutes": 90,
+        "attributes": [
+          {
+            "attribute": "intelligence",
+            "weight": 0.75,
+            "reason": ""
+          },
+          {
+            "attribute": "discipline",
+            "weight": 0.25,
+            "reason": ""
+          }
+        ],
+        "trivial": false,
+        "confidence": 0.9,
+        "summary": "",
+        "source": "ai"
+      },
+      "facts": {
+        "tier": "daily",
+        "createdAt": "2026-11-04T08:00:00.000Z",
+        "completedAt": "2026-11-04T19:00:00.000Z",
+        "declaredMinutes": 90,
+        "trackedMinutes": null,
+        "dueAt": null,
+        "isRecurringOccurrence": false,
+        "hasImplementationIntention": false
+      },
+      "day": {},
+      "expected": {
+        "grants": [
+          {
+            "attribute": "intelligence",
+            "amount": 49,
+            "rawAmount": 49
+          },
+          {
+            "attribute": "discipline",
+            "amount": 23,
+            "rawAmount": 23
+          }
+        ],
+        "totalXp": 72,
+        "effectiveMinutes": 90,
+        "trivial": false,
+        "similarityKey": "study.electronics",
+        "adjustments": [
+          {
+            "code": "follow_through",
+            "params": {
+              "rate": 0.1,
+              "intention": false
+            }
+          }
+        ],
+        "ruleVersion": "2026.11.1",
+        "source": "ai"
+      }
+    },
+    {
+      "name": "difficulty_clamped_low",
+      "proposal": {
+        "category": "study",
+        "similarityKey": "study.electronics",
+        "difficulty": 0,
+        "estimatedMinutes": 90,
+        "attributes": [
+          {
+            "attribute": "intelligence",
+            "weight": 0.75,
+            "reason": ""
+          },
+          {
+            "attribute": "discipline",
+            "weight": 0.25,
+            "reason": ""
+          }
+        ],
+        "trivial": false,
+        "confidence": 0.9,
+        "summary": "",
+        "source": "ai"
+      },
+      "facts": {
+        "tier": "daily",
+        "createdAt": "2026-11-04T08:00:00.000Z",
+        "completedAt": "2026-11-04T19:00:00.000Z",
+        "declaredMinutes": 90,
+        "trackedMinutes": null,
+        "dueAt": null,
+        "isRecurringOccurrence": false,
+        "hasImplementationIntention": false
+      },
+      "day": {},
+      "expected": {
+        "grants": [
+          {
+            "attribute": "intelligence",
+            "amount": 15,
+            "rawAmount": 15
+          },
+          {
+            "attribute": "discipline",
+            "amount": 7,
+            "rawAmount": 7
+          }
+        ],
+        "totalXp": 22,
+        "effectiveMinutes": 90,
+        "trivial": false,
+        "similarityKey": "study.electronics",
+        "adjustments": [
+          {
+            "code": "follow_through",
+            "params": {
+              "rate": 0.1,
+              "intention": false
+            }
+          }
+        ],
+        "ruleVersion": "2026.11.1",
+        "source": "ai"
+      }
+    },
+    {
+      "name": "difficulty_1",
+      "proposal": {
+        "category": "study",
+        "similarityKey": "study.electronics",
+        "difficulty": 1,
+        "estimatedMinutes": 15,
+        "attributes": [
+          {
+            "attribute": "intelligence",
+            "weight": 0.75,
+            "reason": ""
+          },
+          {
+            "attribute": "discipline",
+            "weight": 0.25,
+            "reason": ""
+          }
+        ],
+        "trivial": false,
+        "confidence": 0.9,
+        "summary": "",
+        "source": "ai"
+      },
+      "facts": {
+        "tier": "daily",
+        "createdAt": "2026-11-04T08:00:00.000Z",
+        "completedAt": "2026-11-04T19:00:00.000Z",
+        "declaredMinutes": 15,
+        "trackedMinutes": null,
+        "dueAt": null,
+        "isRecurringOccurrence": false,
+        "hasImplementationIntention": false
+      },
+      "day": {},
+      "expected": {
+        "grants": [
+          {
+            "attribute": "intelligence",
+            "amount": 5,
+            "rawAmount": 5
+          },
+          {
+            "attribute": "discipline",
+            "amount": 3,
+            "rawAmount": 3
+          }
+        ],
+        "totalXp": 8,
+        "effectiveMinutes": 15,
+        "trivial": false,
+        "similarityKey": "study.electronics",
+        "adjustments": [
+          {
+            "code": "follow_through",
+            "params": {
+              "rate": 0.1,
+              "intention": false
+            }
+          }
+        ],
+        "ruleVersion": "2026.11.1",
+        "source": "ai"
+      }
+    },
+    {
+      "name": "difficulty_4",
+      "proposal": {
+        "category": "study",
+        "similarityKey": "study.electronics",
+        "difficulty": 4,
+        "estimatedMinutes": 60,
+        "attributes": [
+          {
+            "attribute": "intelligence",
+            "weight": 0.75,
+            "reason": ""
+          },
+          {
+            "attribute": "discipline",
+            "weight": 0.25,
+            "reason": ""
+          }
+        ],
+        "trivial": false,
+        "confidence": 0.9,
+        "summary": "",
+        "source": "ai"
+      },
+      "facts": {
+        "tier": "daily",
+        "createdAt": "2026-11-04T08:00:00.000Z",
+        "completedAt": "2026-11-04T19:00:00.000Z",
+        "declaredMinutes": 60,
+        "trackedMinutes": null,
+        "dueAt": null,
+        "isRecurringOccurrence": false,
+        "hasImplementationIntention": false
+      },
+      "day": {},
+      "expected": {
+        "grants": [
+          {
+            "attribute": "intelligence",
+            "amount": 31,
+            "rawAmount": 31
+          },
+          {
+            "attribute": "discipline",
+            "amount": 14,
+            "rawAmount": 14
+          }
+        ],
+        "totalXp": 45,
+        "effectiveMinutes": 60,
+        "trivial": false,
+        "similarityKey": "study.electronics",
+        "adjustments": [
+          {
+            "code": "follow_through",
+            "params": {
+              "rate": 0.1,
+              "intention": false
+            }
+          }
+        ],
+        "ruleVersion": "2026.11.1",
+        "source": "ai"
+      }
+    },
+    {
+      "name": "key_normalised",
+      "proposal": {
+        "category": "study",
+        "similarityKey": "  Study  Electronics!! ",
+        "difficulty": 3,
+        "estimatedMinutes": 90,
+        "attributes": [
+          {
+            "attribute": "intelligence",
+            "weight": 0.75,
+            "reason": ""
+          },
+          {
+            "attribute": "discipline",
+            "weight": 0.25,
+            "reason": ""
+          }
+        ],
+        "trivial": false,
+        "confidence": 0.9,
+        "summary": "",
+        "source": "ai"
+      },
+      "facts": {
+        "tier": "daily",
+        "createdAt": "2026-11-04T08:00:00.000Z",
+        "completedAt": "2026-11-04T19:00:00.000Z",
+        "declaredMinutes": 90,
+        "trackedMinutes": null,
+        "dueAt": null,
+        "isRecurringOccurrence": false,
+        "hasImplementationIntention": false
+      },
+      "day": {},
+      "expected": {
+        "grants": [
+          {
+            "attribute": "intelligence",
+            "amount": 31,
+            "rawAmount": 31
+          },
+          {
+            "attribute": "discipline",
+            "amount": 14,
+            "rawAmount": 14
+          }
+        ],
+        "totalXp": 45,
+        "effectiveMinutes": 90,
+        "trivial": false,
+        "similarityKey": "study.study-electronics",
+        "adjustments": [
+          {
+            "code": "follow_through",
+            "params": {
+              "rate": 0.1,
+              "intention": false
+            }
+          }
+        ],
+        "ruleVersion": "2026.11.1",
+        "source": "ai"
+      }
+    },
+    {
+      "name": "key_missing_prefix",
+      "proposal": {
+        "category": "study",
+        "similarityKey": "electronics",
+        "difficulty": 3,
+        "estimatedMinutes": 90,
+        "attributes": [
+          {
+            "attribute": "intelligence",
+            "weight": 0.75,
+            "reason": ""
+          },
+          {
+            "attribute": "discipline",
+            "weight": 0.25,
+            "reason": ""
+          }
+        ],
+        "trivial": false,
+        "confidence": 0.9,
+        "summary": "",
+        "source": "ai"
+      },
+      "facts": {
+        "tier": "daily",
+        "createdAt": "2026-11-04T08:00:00.000Z",
+        "completedAt": "2026-11-04T19:00:00.000Z",
+        "declaredMinutes": 90,
+        "trackedMinutes": null,
+        "dueAt": null,
+        "isRecurringOccurrence": false,
+        "hasImplementationIntention": false
+      },
+      "day": {},
+      "expected": {
+        "grants": [
+          {
+            "attribute": "intelligence",
+            "amount": 31,
+            "rawAmount": 31
+          },
+          {
+            "attribute": "discipline",
+            "amount": 14,
+            "rawAmount": 14
+          }
+        ],
+        "totalXp": 45,
+        "effectiveMinutes": 90,
+        "trivial": false,
+        "similarityKey": "study.electronics",
+        "adjustments": [
+          {
+            "code": "follow_through",
+            "params": {
+              "rate": 0.1,
+              "intention": false
+            }
+          }
+        ],
+        "ruleVersion": "2026.11.1",
+        "source": "ai"
+      }
+    }
+  ]
+}

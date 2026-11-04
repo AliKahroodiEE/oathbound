@@ -1,0 +1,67 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  engine:
+    name: Progression engine (Dart)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/oathbound_engine
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+      - run: dart pub get
+      - run: dart format --output=none --set-exit-if-changed lib test tool
+      - run: dart analyze --fatal-infos
+      - run: dart test
+
+  backend:
+    name: Backend (TypeScript engine conformance, SQL migrations)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: npm ci
+      - name: Engine conformance vectors and shared modules
+        run: npm test
+      - name: Migrations and RLS checks (PGlite)
+        run: npm run validate:sql
+
+  app:
+    name: Flutter app
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Localizations are up to date
+        run: |
+          flutter gen-l10n
+          git diff --exit-code -- lib/l10n/generated
+      - name: Formatting
+        run: dart format --output=none --set-exit-if-changed $(find lib test -name '*.dart' ! -name '*.g.dart' ! -path '*/generated/*')
+      - run: flutter analyze --fatal-infos
+      - run: flutter test
+      - run: flutter build web --release

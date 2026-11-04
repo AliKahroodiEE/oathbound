@@ -48,3 +48,9 @@ GoogleService-Info.plist
 
 # Node / Deno tooling
 node_modules/
+
+# Library packages do not pin dependencies
+packages/*/pubspec.lock
+
+# Local agent tooling
+.claude/
