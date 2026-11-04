@@ -1255,6 +1255,102 @@ class AppLocalizationsEn extends AppLocalizations {
       'Only the completed quest\'s title, notes, kind, category, minutes and parent objective, plus how often you did similar things this week. Never your guilds, other people, or account details. The AI suggests; fixed rules decide and cap every reward.';
 
   @override
+  String get aiProvider => 'Your own AI';
+
+  @override
+  String get aiProviderSummaryNone =>
+      'Not set — the built-in rules are used (or the server\'s AI when you\'re signed in).';
+
+  @override
+  String get aiProviderHelp =>
+      'Connect your own Anthropic, OpenAI, Google Gemini or compatible account. Your key stays on this device and is sent only to the provider you choose, which bills you directly.';
+
+  @override
+  String get aiProviderKind => 'Provider';
+
+  @override
+  String get aiProviderAnthropic => 'Anthropic (Claude)';
+
+  @override
+  String get aiProviderOpenai => 'OpenAI';
+
+  @override
+  String get aiProviderGemini => 'Google Gemini';
+
+  @override
+  String get aiProviderAnthropicCompatible => 'Anthropic-compatible service';
+
+  @override
+  String get aiProviderOpenaiCompatible => 'OpenAI-compatible service (OpenRouter, Groq, Ollama…)';
+
+  @override
+  String get aiBaseUrl => 'API base URL';
+
+  @override
+  String get aiBaseUrlHint => 'e.g. https://openrouter.ai/api/v1';
+
+  @override
+  String get aiModel => 'Model';
+
+  @override
+  String get aiModelHint => 'The model name exactly as your provider lists it';
+
+  @override
+  String get aiApiKey => 'API key';
+
+  @override
+  String get aiApiKeySaved => 'A key is saved on this device. Leave this empty to keep it.';
+
+  @override
+  String get aiWebKeyNote =>
+      'In the browser, the key is kept in this browser\'s encrypted storage. Prefer a key with a spending limit.';
+
+  @override
+  String get aiTest => 'Test connection';
+
+  @override
+  String aiTestOk(String category) {
+    return 'Connected — your AI read a sample quest as $category.';
+  }
+
+  @override
+  String aiTestFailed(String reason) {
+    return 'Couldn\'t connect: $reason';
+  }
+
+  @override
+  String get aiErrAuth => 'the key was rejected';
+
+  @override
+  String get aiErrRate => 'too many requests — try again shortly';
+
+  @override
+  String get aiErrNetwork => 'no connection, or the provider blocks requests from browsers';
+
+  @override
+  String get aiErrRefused => 'the model declined to answer';
+
+  @override
+  String get aiErrBadResponse => 'the reply wasn\'t a valid evaluation';
+
+  @override
+  String aiErrHttp(String status) {
+    return 'the provider returned an error ($status)';
+  }
+
+  @override
+  String get aiRemove => 'Remove provider and key';
+
+  @override
+  String get aiSaved => 'Saved';
+
+  @override
+  String get aiInterpreting => 'Your AI is interpreting this deed…';
+
+  @override
+  String get aiFallbackUsed => 'Your AI couldn\'t be reached, so the built-in rules were used.';
+
+  @override
   String get sectionNotifications => 'Notifications';
 
   @override

@@ -2354,6 +2354,180 @@ abstract class AppLocalizations {
   /// **'Only the completed quest\'s title, notes, kind, category, minutes and parent objective, plus how often you did similar things this week. Never your guilds, other people, or account details. The AI suggests; fixed rules decide and cap every reward.'**
   String get aiTransparencyBody;
 
+  /// No description provided for @aiProvider.
+  ///
+  /// In en, this message translates to:
+  /// **'Your own AI'**
+  String get aiProvider;
+
+  /// No description provided for @aiProviderSummaryNone.
+  ///
+  /// In en, this message translates to:
+  /// **'Not set — the built-in rules are used (or the server\'s AI when you\'re signed in).'**
+  String get aiProviderSummaryNone;
+
+  /// No description provided for @aiProviderHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect your own Anthropic, OpenAI, Google Gemini or compatible account. Your key stays on this device and is sent only to the provider you choose, which bills you directly.'**
+  String get aiProviderHelp;
+
+  /// No description provided for @aiProviderKind.
+  ///
+  /// In en, this message translates to:
+  /// **'Provider'**
+  String get aiProviderKind;
+
+  /// No description provided for @aiProviderAnthropic.
+  ///
+  /// In en, this message translates to:
+  /// **'Anthropic (Claude)'**
+  String get aiProviderAnthropic;
+
+  /// No description provided for @aiProviderOpenai.
+  ///
+  /// In en, this message translates to:
+  /// **'OpenAI'**
+  String get aiProviderOpenai;
+
+  /// No description provided for @aiProviderGemini.
+  ///
+  /// In en, this message translates to:
+  /// **'Google Gemini'**
+  String get aiProviderGemini;
+
+  /// No description provided for @aiProviderAnthropicCompatible.
+  ///
+  /// In en, this message translates to:
+  /// **'Anthropic-compatible service'**
+  String get aiProviderAnthropicCompatible;
+
+  /// No description provided for @aiProviderOpenaiCompatible.
+  ///
+  /// In en, this message translates to:
+  /// **'OpenAI-compatible service (OpenRouter, Groq, Ollama…)'**
+  String get aiProviderOpenaiCompatible;
+
+  /// No description provided for @aiBaseUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'API base URL'**
+  String get aiBaseUrl;
+
+  /// No description provided for @aiBaseUrlHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. https://openrouter.ai/api/v1'**
+  String get aiBaseUrlHint;
+
+  /// No description provided for @aiModel.
+  ///
+  /// In en, this message translates to:
+  /// **'Model'**
+  String get aiModel;
+
+  /// No description provided for @aiModelHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The model name exactly as your provider lists it'**
+  String get aiModelHint;
+
+  /// No description provided for @aiApiKey.
+  ///
+  /// In en, this message translates to:
+  /// **'API key'**
+  String get aiApiKey;
+
+  /// No description provided for @aiApiKeySaved.
+  ///
+  /// In en, this message translates to:
+  /// **'A key is saved on this device. Leave this empty to keep it.'**
+  String get aiApiKeySaved;
+
+  /// No description provided for @aiWebKeyNote.
+  ///
+  /// In en, this message translates to:
+  /// **'In the browser, the key is kept in this browser\'s encrypted storage. Prefer a key with a spending limit.'**
+  String get aiWebKeyNote;
+
+  /// No description provided for @aiTest.
+  ///
+  /// In en, this message translates to:
+  /// **'Test connection'**
+  String get aiTest;
+
+  /// No description provided for @aiTestOk.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected — your AI read a sample quest as {category}.'**
+  String aiTestOk(String category);
+
+  /// No description provided for @aiTestFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t connect: {reason}'**
+  String aiTestFailed(String reason);
+
+  /// No description provided for @aiErrAuth.
+  ///
+  /// In en, this message translates to:
+  /// **'the key was rejected'**
+  String get aiErrAuth;
+
+  /// No description provided for @aiErrRate.
+  ///
+  /// In en, this message translates to:
+  /// **'too many requests — try again shortly'**
+  String get aiErrRate;
+
+  /// No description provided for @aiErrNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'no connection, or the provider blocks requests from browsers'**
+  String get aiErrNetwork;
+
+  /// No description provided for @aiErrRefused.
+  ///
+  /// In en, this message translates to:
+  /// **'the model declined to answer'**
+  String get aiErrRefused;
+
+  /// No description provided for @aiErrBadResponse.
+  ///
+  /// In en, this message translates to:
+  /// **'the reply wasn\'t a valid evaluation'**
+  String get aiErrBadResponse;
+
+  /// No description provided for @aiErrHttp.
+  ///
+  /// In en, this message translates to:
+  /// **'the provider returned an error ({status})'**
+  String aiErrHttp(String status);
+
+  /// No description provided for @aiRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove provider and key'**
+  String get aiRemove;
+
+  /// No description provided for @aiSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved'**
+  String get aiSaved;
+
+  /// No description provided for @aiInterpreting.
+  ///
+  /// In en, this message translates to:
+  /// **'Your AI is interpreting this deed…'**
+  String get aiInterpreting;
+
+  /// No description provided for @aiFallbackUsed.
+  ///
+  /// In en, this message translates to:
+  /// **'Your AI couldn\'t be reached, so the built-in rules were used.'**
+  String get aiFallbackUsed;
+
   /// No description provided for @sectionNotifications.
   ///
   /// In en, this message translates to:

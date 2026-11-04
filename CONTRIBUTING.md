@@ -9,8 +9,7 @@ contributor agreement with the author.
 
 ## What you can do
 
-- **Report a bug.** Open an issue with steps to reproduce, platform (Android / iOS / macOS /
-  Windows / Web), app language (English / Persian), and expected versus actual behaviour.
+- **Report a bug.** Open an issue with steps to reproduce, platform (Android / iOS / Web, with browser and OS), app language (English / Persian), and expected versus actual behaviour.
 - **Suggest a feature.** Open an issue describing the problem it solves, not only the solution.
 - **Report a translation problem.** Persian and English copy are reviewed by humans; tell us
   where a string reads wrong, is truncated, or breaks right-to-left layout.

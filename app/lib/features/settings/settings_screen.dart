@@ -15,6 +15,7 @@ import '../../data/remote/backend.dart';
 import '../../data/repositories/settings_repository.dart';
 import '../../design/components/panel.dart';
 import '../../design/tokens.dart';
+import 'ai_provider_screen.dart';
 
 /// Settings (requirements §4.10).
 class SettingsScreen extends ConsumerWidget {
@@ -244,6 +245,24 @@ class SettingsScreen extends ConsumerWidget {
                       subtitle: Text(l10n.aiEvaluationHelp),
                       value: profile.aiEnabled,
                       onChanged: (v) => setProfile((p) => p.copyWith(aiEnabled: v)),
+                    ),
+                    Builder(
+                      builder: (context) {
+                        final config = ref.watch(aiProviderConfigProvider).value;
+                        return ListTile(
+                          contentPadding: EdgeInsetsDirectional.zero,
+                          leading: const Icon(Icons.key_outlined),
+                          title: Text(l10n.aiProvider),
+                          subtitle: Text(
+                            config == null
+                                ? l10n.aiProviderSummaryNone
+                                : '${aiProviderLabel(l10n, config.kind)} · ${config.model}',
+                          ),
+                          trailing: const Icon(Icons.chevron_right),
+                          enabled: profile.aiEnabled,
+                          onTap: () => context.push('/settings/ai'),
+                        );
+                      },
                     ),
                     const SizedBox(height: AppSpace.sm),
                     DropdownButtonFormField<String?>(

@@ -23,8 +23,6 @@ pubspec_overrides.yaml
 **/ios/Pods/
 **/ios/.symlinks/
 **/ios/Flutter/ephemeral/
-**/macos/Flutter/ephemeral/
-**/windows/flutter/ephemeral/
 **/linux/flutter/ephemeral/
 **/android/.gradle/
 **/android/local.properties

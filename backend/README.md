@@ -255,7 +255,11 @@ Service-role only: `apply_progression`, `get_day_state`, `consume_ai_quota`,
 
 ### `evaluate-completion`
 
-`POST { "completion_id": "<uuid>" }` with the user's access token.
+`POST { "completion_id": "<uuid>", "client_proposal"?: {…}, "client_model"?: "<name>" }`
+with the user's access token. `client_proposal` is a proposal the app obtained from the
+user's own AI provider (bring your own key; the server never sees that key). It is validated
+like model output and bounded by the server heuristic (difficulty ±1, estimate ≤ 2× the
+heuristic's, min 15 min); it needs no server AI key and uses no server quota.
 Returns `{ status, result, proposal, source, character, achievements }`
 (`result` is the engine's RewardResult JSON, identical in shape to the Dart
 engine's). Steps: ownership check → minimised inputs (title, notes ≤ 1 000

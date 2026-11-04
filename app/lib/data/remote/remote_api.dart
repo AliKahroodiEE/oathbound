@@ -13,7 +13,11 @@ abstract class RemoteApi {
   /// Authoritative evaluation: `{status, result, proposal, source, …}`, or
   /// null when the server could not evaluate yet (retried on next sync).
   /// Whether AI is used follows the synced profile setting.
-  Future<Map<String, Object?>?> evaluate(String completionId);
+  Future<Map<String, Object?>?> evaluate(
+    String completionId, {
+    Map<String, Object?>? clientProposal,
+    String? clientModel,
+  });
 
   /// Updates the caller's server profile (language, AI language and
   /// opt-in, time zone, calendar, week start, weekly target, motivation).
@@ -38,8 +42,15 @@ class SupabaseRemoteApi implements RemoteApi {
   }
 
   @override
-  Future<Map<String, Object?>?> evaluate(String completionId) async {
-    final res = await _client.functions.invoke('evaluate-completion', body: {'completion_id': completionId});
+  Future<Map<String, Object?>?> evaluate(
+    String completionId, {
+    Map<String, Object?>? clientProposal,
+    String? clientModel,
+  }) async {
+    final res = await _client.functions.invoke(
+      'evaluate-completion',
+      body: {'completion_id': completionId, 'client_proposal': ?clientProposal, 'client_model': ?clientModel},
+    );
     final data = res.data;
     return data is Map ? Map<String, Object?>.from(data) : null;
   }

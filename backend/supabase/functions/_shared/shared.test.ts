@@ -266,3 +266,36 @@ describe('notification policy', () => {
     assert.equal(excerpt('a'.repeat(100), 10), `${'a'.repeat(9)}…`);
   });
 });
+
+// --- bring-your-own-key proposals ------------------------------------------
+import { clientModelLabel, guardClientProposal } from './ai/evaluation.ts';
+
+describe('guardClientProposal', () => {
+  const heuristic = {
+    category: 'study', similarityKey: 'study.electronics', difficulty: 2, estimatedMinutes: 30,
+    attributes: [], trivial: false, confidence: 0.7, summary: '', source: 'heuristic',
+  } as const;
+  const valid = {
+    category: 'study', similarityKey: 'study.electronics', difficulty: 5, estimatedMinutes: 600,
+    attributes: [{ attribute: 'intelligence', weight: 1, reason: 'Studying circuits.' }],
+    trivial: false, confidence: 0.9, summary: 'Electronics study',
+  };
+
+  test('bounds difficulty and estimate by the server heuristic', () => {
+    const g = guardClientProposal(valid, heuristic as never);
+    assert.ok(g);
+    assert.equal(g.difficulty, 3);
+    assert.equal(g.estimatedMinutes, 60);
+    assert.equal(g.source, 'ai');
+  });
+
+  test('rejects structurally invalid proposals', () => {
+    assert.equal(guardClientProposal({ ...valid, extra: 1 }, heuristic as never), null);
+    assert.equal(guardClientProposal('nope', heuristic as never), null);
+  });
+
+  test('labels the model safely', () => {
+    assert.equal(clientModelLabel('gpt-x <script>'), 'byo:gpt-xscript');
+    assert.equal(clientModelLabel(null), 'byo:unknown');
+  });
+});

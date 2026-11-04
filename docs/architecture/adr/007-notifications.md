@@ -8,8 +8,7 @@ Status: Accepted · 2026-11-04
   while a tab is open (Notification API); the settings screen says so.
 - **Social and summary notifications** (reactions, comments, milestones, weekly summary,
   briefing) are sent by the `notify` Edge Function through FCM (Android, iOS via APNs, Web
-  Push). Windows has no FCM support; desktop clients show these as in-app toasts and local
-  notifications while running.
+  Push). Desktop users run the web app, which shows these while it is open.
 - The server enforces, per user: category toggles, per-guild mute, block list, quiet hours
   in the user's time zone (default 22:00–08:00), and a daily cap on non-reminder
   notifications (default 5). Reactions are batched ("Arin and 3 others honoured your deed").

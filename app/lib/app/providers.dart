@@ -5,6 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:wyrd_engine/wyrd_engine.dart';
 
 import '../core/format/formatters.dart';
+import '../data/ai/ai_client.dart';
+import '../data/ai/ai_settings_repository.dart';
 import '../core/locale/locale_registry.dart';
 import '../core/locale/regional_settings.dart';
 import '../data/db/database.dart';
@@ -89,3 +91,11 @@ extension FormattersRef on WidgetRef {
 }
 
 final dataRepositoryProvider = Provider((ref) => DataRepository(ref.watch(databaseProvider)));
+
+final aiSettingsRepositoryProvider = Provider(
+  (ref) => AiSettingsRepository(ref.watch(databaseProvider), SecureKeyStore()),
+);
+
+final aiProviderConfigProvider = StreamProvider<AiProviderConfig?>(
+  (ref) => ref.watch(aiSettingsRepositoryProvider).watchConfig(),
+);

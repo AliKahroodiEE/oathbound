@@ -1,0 +1,83 @@
+import 'dart:convert';
+
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:http/http.dart' as http;
+
+import '../db/database.dart';
+import 'ai_client.dart';
+
+/// Where the API key lives: the platform's secure storage (Keychain on
+/// iOS, Keystore-backed storage on Android, encrypted browser storage on
+/// the web). Abstracted for tests.
+abstract class KeyStore {
+  Future<String?> read();
+  Future<void> write(String value);
+  Future<void> delete();
+}
+
+class SecureKeyStore implements KeyStore {
+  SecureKeyStore([FlutterSecureStorage? storage]) : _s = storage ?? const FlutterSecureStorage();
+  final FlutterSecureStorage _s;
+  static const _key = 'wyrd.ai.api_key';
+
+  @override
+  Future<String?> read() => _s.read(key: _key);
+  @override
+  Future<void> write(String value) => _s.write(key: _key, value: value);
+  @override
+  Future<void> delete() => _s.delete(key: _key);
+}
+
+class MemoryKeyStore implements KeyStore {
+  String? value;
+  @override
+  Future<String?> read() async => value;
+  @override
+  Future<void> write(String v) async => value = v;
+  @override
+  Future<void> delete() async => value = null;
+}
+
+/// The user's own AI provider. Settings are stored locally, the key in
+/// secure storage; neither is synced to the server.
+class AiSettingsRepository {
+  AiSettingsRepository(this._db, this._keys, {http.Client? httpClient}) : _http = httpClient;
+
+  final AppDatabase _db;
+  final KeyStore _keys;
+  final http.Client? _http;
+  static const _configKey = 'ai_provider';
+
+  Future<AiProviderConfig?> config() async {
+    final row = await (_db.select(_db.keyValues)..where((k) => k.key.equals(_configKey))).getSingleOrNull();
+    if (row == null) return null;
+    return AiProviderConfig.fromJson(jsonDecode(row.value) as Map<String, Object?>);
+  }
+
+  Stream<AiProviderConfig?> watchConfig() => (_db.select(_db.keyValues)..where((k) => k.key.equals(_configKey)))
+      .watchSingleOrNull()
+      .map((row) => row == null ? null : AiProviderConfig.fromJson(jsonDecode(row.value) as Map<String, Object?>));
+
+  Future<bool> hasKey() async => ((await _keys.read()) ?? '').isNotEmpty;
+
+  /// Saves the provider; a null or empty [apiKey] keeps the stored key.
+  Future<void> save(AiProviderConfig config, {String? apiKey}) async {
+    await _db
+        .into(_db.keyValues)
+        .insertOnConflictUpdate(KeyValuesCompanion.insert(key: _configKey, value: jsonEncode(config.toJson())));
+    if (apiKey != null && apiKey.trim().isNotEmpty) await _keys.write(apiKey.trim());
+  }
+
+  Future<void> clear() async {
+    await (_db.delete(_db.keyValues)..where((k) => k.key.equals(_configKey))).go();
+    await _keys.delete();
+  }
+
+  /// A ready client, or null when no complete provider and key are set.
+  Future<AiClient?> client() async {
+    final c = await config();
+    final key = await _keys.read();
+    if (c == null || !c.isComplete || key == null || key.isEmpty) return null;
+    return AiClient(c, key, httpClient: _http);
+  }
+}

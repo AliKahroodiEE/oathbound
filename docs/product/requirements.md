@@ -47,7 +47,7 @@ private guild with three classmates. Needs: RTL done right, Jalali dates, gentle
 exam weeks, AI explanations in Persian.
 
 **Daniel, 31 — software engineer, Toronto (English).** Long-term objective: ship a side
-business. Lives in desktop apps; wants keyboard-driven task entry, multi-column dashboard and
+business. Lives in desktop browsers; wants keyboard-driven task entry, multi-column dashboard and
 detailed analytics. Sceptical of gamification; will leave the moment rewards feel arbitrary.
 
 **Maryam, 27 — designer, Berlin (bilingual; UI in English, AI in Persian).** Creative practice
@@ -55,7 +55,7 @@ and fitness routines. Motivated by visible progress and customisation. Member of
 for illustrators. Wants granular sharing: show that she trained, not what she trained.
 
 **Reza & friends — a five-person accountability pact.** Mixed platforms (Android, iOS,
-Windows). Run a monthly "100-hour study" challenge. Need: invitations, reactions, a feed that
+the web app on laptops). Run a monthly "100-hour study" challenge. Need: invitations, reactions, a feed that
 does not overwhelm, no punishment when one member disappears for a week.
 
 ## 3. Product principles
@@ -211,9 +211,9 @@ Open → character sheet shows today's quests and condition → complete quest �
 (2 s, dismissible, skippable animation) → optional share to guild → back to real life.
 
 ### J3 — Cross-device
-Create a quest on Windows → complete it on Android (offline on a train) → provisional reward
+Create a quest in the web app on a laptop → complete it on Android (offline on a train) → provisional reward
 shown with "will confirm when online" → reconnect → server evaluates → ledger reconciles →
-macOS client receives realtime update within seconds.
+web app on another computer receives the realtime update within seconds.
 
 ### J4 — Guild challenge
 Guild Master creates "The Iron Pact — 100-Hour Study Challenge" (metric: minutes in category

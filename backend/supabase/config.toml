@@ -88,7 +88,7 @@ otp_expiry = 3600
 [auth.sms]
 enable_signup = false
 
-# Sign in with Apple — disabled until credentials exist. For native iOS/macOS
+# Sign in with Apple — disabled until credentials exist. For native iOS
 # sign-in set client_id to the app bundle ID(s); for web, the Services ID and
 # the generated secret (env var below).
 [auth.external.apple]

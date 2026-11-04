@@ -7,7 +7,7 @@
 A dark-fantasy RPG productivity ecosystem in which real-life effort shapes a persistent character,
 its history, and the guilds it belongs to.
 
-Android · iOS · macOS · Windows · Web — English & فارسی (full RTL) from day one
+Android · iOS · Web (desktop browsers) — English & فارسی (full RTL) from day one
 
 [![License: PolyForm Strict 1.0.0](https://img.shields.io/badge/license-PolyForm%20Strict%201.0.0-A71924)](LICENSE.md)
 
@@ -66,6 +66,7 @@ premium, store releases) are next.
 | Adaptive layouts: phone (bottom bar), tablet (rail), desktop/web (sidebar, multi-column) | ✅ |
 | Backend: schema, row-level security, sync and progression RPCs, Claude evaluation and chronicle functions, push notifications | ✅ [`backend/`](backend/) |
 | Client accounts, sync, server evaluation, guilds (feed, reactions, comments, challenges) | ✅ |
+| Bring your own AI: Anthropic, OpenAI, Google Gemini, or any Anthropic/OpenAI-compatible service (OpenRouter, Groq, Ollama…) | ✅ |
 
 **Verified here:** all engine, app and backend test suites; static analysis; all migrations and
 73 security/behaviour checks against an offline Postgres (PGlite); type-checks of every Edge
@@ -73,14 +74,15 @@ Function; the web build exercised in a browser in English and Persian at phone, 
 desktop widths.
 
 **Not yet verified:** a live Supabase project, real Claude and FCM calls, and native builds for
-Android, iOS, macOS and Windows (they need the Android SDK, Xcode and Visual Studio).
+Android and iOS (they need the Android SDK and Xcode). On desktop, Wyrd runs as a web app
+in the browser and can be installed from it.
 Persian copy needs review by a native speaker before release.
 
 ## Repository layout
 
 ```
 .
-├── app/            Flutter client (Android, iOS, macOS, Windows, Web)
+├── app/            Flutter client (Android, iOS, Web)
 ├── packages/       Shared pure-Dart packages (the progression engine)
 ├── backend/        Supabase schema, row-level security, Edge Functions
 └── docs/           Research, product spec, design system, architecture, ADRs
@@ -93,7 +95,7 @@ Prerequisites: Flutter 3.47+ (stable), Dart 3.13+, plus the toolchain for each t
 ```bash
 cd app
 flutter pub get
-flutter run -d chrome          # or: -d macos, -d windows, an Android device or iOS simulator
+flutter run -d chrome          # or an Android device / iOS simulator
 ```
 
 Without backend configuration the app runs fully on the device (guest mode): every feature
@@ -109,6 +111,22 @@ flutter run --dart-define=SUPABASE_URL=https://<project>.supabase.co --dart-defi
 ```
 
 Backend setup is documented in [`backend/README.md`](backend/README.md).
+
+## Hosting
+
+| You want | You host |
+| --- | --- |
+| The app on phones, everything local (guest mode) | Nothing |
+| The web app (desktop and mobile browsers) | Static files only: `flutter build web` → GitHub Pages, Cloudflare Pages, Netlify or Vercel |
+| Accounts, sync across devices, guilds, push | The Supabase backend in [`backend/`](backend/) (Supabase Cloud or self-hosted) — see its README |
+
+**AI is optional and can cost the operator nothing.** Each user can connect their own Anthropic,
+OpenAI, Google Gemini or compatible account under *Settings → AI → Your own AI*. The key stays
+on the user's device (platform secure storage) and goes only to that provider. Signed-in users'
+AI proposals are sent to the server, which validates them and bounds difficulty and duration by
+its own estimate before the rules engine grants anything. A server-side key
+(`ANTHROPIC_API_KEY`) remains possible but is not required; without any AI, the built-in rules
+evaluate every quest.
 
 ## Tests
 

@@ -17,7 +17,13 @@ void main() {
   Iterable<String> messageKeys(Map<String, Object?> c) => c.keys.where((k) => !k.startsWith('@'));
 
   // Values allowed to be identical to English (brand names, examples).
-  const sameAsEnglish = {'appName', 'digitsLatin', 'inviteCodeHint'};
+  const sameAsEnglish = {
+    'digitsLatin',
+    'inviteCodeHint',
+    'aiProviderAnthropic',
+    'aiProviderOpenai',
+    'aiProviderGemini',
+  };
 
   Set<String> placeholders(String message) => {
     // A placeholder is `{name}` or `{name, …}`; ICU branch bodies such as

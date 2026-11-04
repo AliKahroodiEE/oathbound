@@ -1244,6 +1244,101 @@ class AppLocalizationsFa extends AppLocalizations {
       'فقط عنوان، یادداشت، نوع، دسته، دقیقه‌ها و هدف والای مأموریت انجام‌شده، به‌علاوه‌ی این‌که این هفته چند بار کارهای مشابه انجام داده‌ای. هرگز انجمن‌ها، دیگران یا اطلاعات حسابت را نمی‌بیند. هوش مصنوعی پیشنهاد می‌دهد؛ قواعد ثابت درباره‌ی هر پاداش تصمیم می‌گیرند و سقفش را تعیین می‌کنند.';
 
   @override
+  String get aiProvider => 'هوش مصنوعی خودت';
+
+  @override
+  String get aiProviderSummaryNone => 'تنظیم نشده — قواعد داخلی به کار می‌روند (یا هوش مصنوعی سرور، وقتی وارد شده‌ای).';
+
+  @override
+  String get aiProviderHelp =>
+      'حساب Anthropic، OpenAI، Google Gemini یا یک سرویس سازگار را وصل کن. کلیدت روی همین دستگاه می‌ماند و فقط برای سرویسی که انتخاب می‌کنی فرستاده می‌شود؛ هزینه را همان سرویس مستقیم از تو می‌گیرد.';
+
+  @override
+  String get aiProviderKind => 'سرویس‌دهنده';
+
+  @override
+  String get aiProviderAnthropic => 'Anthropic (Claude)';
+
+  @override
+  String get aiProviderOpenai => 'OpenAI';
+
+  @override
+  String get aiProviderGemini => 'Google Gemini';
+
+  @override
+  String get aiProviderAnthropicCompatible => 'سرویس سازگار با Anthropic';
+
+  @override
+  String get aiProviderOpenaiCompatible => 'سرویس سازگار با OpenAI (OpenRouter، Groq، Ollama…)';
+
+  @override
+  String get aiBaseUrl => 'نشانی پایه‌ی API';
+
+  @override
+  String get aiBaseUrlHint => 'مثلاً https://openrouter.ai/api/v1';
+
+  @override
+  String get aiModel => 'مدل';
+
+  @override
+  String get aiModelHint => 'نام مدل، دقیقاً همان‌طور که سرویس‌دهنده‌ات نوشته است';
+
+  @override
+  String get aiApiKey => 'کلید API';
+
+  @override
+  String get aiApiKeySaved => 'یک کلید روی این دستگاه ذخیره شده است. برای نگه داشتنش، این بخش را خالی بگذار.';
+
+  @override
+  String get aiWebKeyNote =>
+      'در مرورگر، کلید در فضای رمزگذاری‌شده‌ی همین مرورگر نگه داشته می‌شود. بهتر است از کلیدی با سقف هزینه استفاده کنی.';
+
+  @override
+  String get aiTest => 'آزمایش اتصال';
+
+  @override
+  String aiTestOk(String category) {
+    return 'متصل شد — هوش مصنوعی‌ات یک مأموریت نمونه را «$category» تشخیص داد.';
+  }
+
+  @override
+  String aiTestFailed(String reason) {
+    return 'اتصال برقرار نشد: $reason';
+  }
+
+  @override
+  String get aiErrAuth => 'کلید پذیرفته نشد';
+
+  @override
+  String get aiErrRate => 'درخواست‌ها زیاد است — کمی بعد دوباره امتحان کن';
+
+  @override
+  String get aiErrNetwork => 'اتصالی برقرار نیست، یا سرویس‌دهنده درخواست‌های مرورگر را مسدود می‌کند';
+
+  @override
+  String get aiErrRefused => 'مدل از پاسخ دادن خودداری کرد';
+
+  @override
+  String get aiErrBadResponse => 'پاسخ، ارزیابی معتبری نبود';
+
+  @override
+  String aiErrHttp(String status) {
+    return 'سرویس‌دهنده خطا داد ($status)';
+  }
+
+  @override
+  String get aiRemove => 'حذف سرویس‌دهنده و کلید';
+
+  @override
+  String get aiSaved => 'ذخیره شد';
+
+  @override
+  String get aiInterpreting => 'هوش مصنوعی‌ات در حال تفسیر این کردار است…';
+
+  @override
+  String get aiFallbackUsed => 'به هوش مصنوعی‌ات دسترسی نبود، پس قواعد داخلی به کار رفت.';
+
+  @override
   String get sectionNotifications => 'اعلان‌ها';
 
   @override

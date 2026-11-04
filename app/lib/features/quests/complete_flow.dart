@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -5,6 +7,8 @@ import 'package:wyrd_engine/wyrd_engine.dart';
 
 import '../../app/providers.dart';
 import '../../core/format/bidi.dart';
+import '../../data/ai/ai_client.dart';
+import '../../data/ai/ai_evaluator.dart';
 import '../../data/models.dart';
 import '../../data/sync/sync_coordinator.dart';
 import '../../data/repositories/progression_repository.dart';
@@ -30,12 +34,17 @@ Future<CompletionOutcome?> completeQuest(BuildContext context, WidgetRef ref, Qu
   }
   final profile = ref.read(profileProvider).value;
   final regional = ref.read(regionalProvider);
+  final aiProposal = (profile?.aiEnabled ?? true) && context.mounted
+      ? await _askOwnAi(context, ref, quest, declared: declared, tracked: tracked)
+      : null;
+  if (!context.mounted) return null;
   final outcome = await ref
       .read(progressionRepositoryProvider)
       .complete(
         quest,
         declaredMinutes: declared,
         trackedMinutes: tracked,
+        aiProposal: aiProposal,
         provisional: ref.read(provisionalCompletionsProvider),
         weeklyTarget: profile?.weeklyTarget ?? 4,
         firstWeekday: regional.firstWeekday,
@@ -198,5 +207,71 @@ class RewardSheet extends ConsumerWidget {
         ),
       ),
     );
+  }
+}
+
+/// Asks the user's own AI provider (if configured) for a proposal, showing
+/// a small progress dialog. Returns null when no provider is set or the
+/// call fails; the built-in rules are then used and the user is told.
+Future<EvaluationProposal?> _askOwnAi(
+  BuildContext context,
+  WidgetRef ref,
+  Quest quest, {
+  required int? declared,
+  required int? tracked,
+}) async {
+  final AiClient? client;
+  try {
+    client = await ref.read(aiSettingsRepositoryProvider).client();
+  } on Object {
+    return null; // secure storage unavailable on this platform/session
+  }
+  if (client == null || !context.mounted) return null;
+  final l10n = context.l10n;
+  final navigator = Navigator.of(context, rootNavigator: true);
+  final messenger = ScaffoldMessenger.of(context);
+  unawaited(
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => AlertDialog(
+        content: Row(
+          children: [
+            const SizedBox.square(dimension: 20, child: CircularProgressIndicator(strokeWidth: 2)),
+            const SizedBox(width: AppSpace.lg),
+            Expanded(child: Text(l10n.aiInterpreting)),
+          ],
+        ),
+      ),
+    ),
+  );
+  try {
+    final repo = ref.read(questRepositoryProvider);
+    final parent = quest.parentId == null ? null : await repo.byId(quest.parentId!);
+    final heuristicKey = HeuristicEvaluator.evaluate(HeuristicInput(title: quest.title, tier: quest.tier))
+        .similarityKey;
+    final similar = await ref
+        .read(progressionRepositoryProvider)
+        .similarCountSince(heuristicKey, DateTime.now().subtract(const Duration(days: 7)));
+    final profile = ref.read(profileProvider).value;
+    return await AiEvaluator(client).evaluate(
+      AiEvaluationInput(
+        title: quest.title,
+        notes: quest.notes,
+        tier: quest.tier,
+        categoryHint: quest.category,
+        declaredMinutes: declared,
+        trackedMinutes: tracked,
+        plannedMinutes: quest.estimatedMinutes,
+        parentObjectiveTitle: parent?.title,
+        similarCompletionsLast7Days: similar,
+        outputLanguage: profile?.aiLocale ?? ref.read(regionalProvider).locale.languageCode,
+      ),
+    );
+  } on Object {
+    messenger.showSnackBar(SnackBar(content: Text(l10n.aiFallbackUsed)));
+    return null;
+  } finally {
+    navigator.pop();
   }
 }

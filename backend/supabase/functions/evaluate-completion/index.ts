@@ -2,7 +2,10 @@
  * evaluate-completion — authoritative progression for one completion
  * (architecture overview §4, ADR-005).
  *
- *   POST { "completion_id": "<uuid>" }
+ *   POST { "completion_id": "<uuid>", "client_proposal"?: {...}, "client_model"?: "<name>" }
+ *
+ * `client_proposal` is a proposal the device obtained from the user's own AI
+ * provider (bring your own key); it is validated and bounded server-side.
  *   Authorization: Bearer <user access token>   (or the service-role key)
  *
  * 1. Verify the caller and that they own the completion.
@@ -40,6 +43,8 @@ import {
   type EvaluationInput,
   PROPOSAL_OUTPUT_SCHEMA,
   validateAiProposal,
+  clientModelLabel,
+  guardClientProposal,
 } from '../_shared/ai/evaluation.ts';
 import { aiConfigured } from '../_shared/ai/anthropic.ts';
 import { authenticate } from '../_shared/auth.ts';
@@ -187,6 +192,8 @@ async function chooseProposal(
   aiEnabledByUser: boolean,
   input: EvaluationInput,
   heuristic: EvaluationProposal,
+  clientProposal: unknown = null,
+  clientModel: unknown = null,
 ): Promise<ProposalChoice> {
   const fallback = (reason: string, extra: Partial<ProposalChoice> = {}): ProposalChoice => ({
     proposal: heuristic,
@@ -199,6 +206,17 @@ async function chooseProposal(
   });
 
   if (!aiEnabledByUser) return fallback('ai_disabled_by_user');
+
+  // Bring-your-own-key: the device already asked the user's AI provider.
+  // Used even when this server has no AI key; never costs server quota.
+  if (clientProposal !== null && clientProposal !== undefined) {
+    const guarded = guardClientProposal(clientProposal, heuristic);
+    if (!guarded) return fallback('client_proposal_invalid');
+    const model = clientModelLabel(clientModel);
+    const inputHash = await sha256Hex(evaluationCacheMaterial(input, model));
+    return { proposal: guarded, source: 'ai', model, latencyMs: 0, inputHash, fallbackReason: null };
+  }
+
   if (!aiConfigured()) return fallback('ai_not_configured');
 
   const model = modelFor('evaluation');
@@ -297,7 +315,14 @@ Deno.serve(async (req: Request): Promise<Response> => {
       outputLanguage: profile.ai_locale ?? profile.locale ?? 'en',
     };
 
-    const choice = await chooseProposal(completion.owner_id, profile.ai_evaluation_enabled, input, heuristic);
+    const choice = await chooseProposal(
+      completion.owner_id,
+      profile.ai_evaluation_enabled,
+      input,
+      heuristic,
+      body['client_proposal'] ?? null,
+      body['client_model'] ?? null,
+    );
 
     const facts: CompletionFacts = {
       tier,
