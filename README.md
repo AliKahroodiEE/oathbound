@@ -75,7 +75,7 @@ Without backend configuration the app runs fully on the device (guest mode): eve
 except accounts, sync and guilds works offline. To connect a Supabase backend:
 
 ```bash
-flutter run --dart-define=SUPABASE_URL=https://<project>.supabase.co --dart-define=SUPABASE_ANON_KEY=<anon-key>
+flutter run --dart-define=SUPABASE_URL=https://<project>.supabase.co --dart-define=SUPABASE_PUBLISHABLE_KEY=<publishable-key>
 ```
 
 Backend setup is documented in [`backend/README.md`](backend/README.md).

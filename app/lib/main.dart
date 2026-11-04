@@ -6,17 +6,20 @@ import 'app/app.dart';
 import 'app/providers.dart';
 import 'app/router.dart';
 import 'data/db/database.dart';
+import 'data/remote/backend.dart';
 import 'data/repositories/settings_repository.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting();
+  final backendReady = await initBackend();
   final db = AppDatabase();
   final profile = await SettingsRepository(db).profile();
   runApp(
     ProviderScope(
       overrides: [
         databaseProvider.overrideWithValue(db),
+        backendReadyProvider.overrideWithValue(backendReady),
         initialOnboardedProvider.overrideWithValue(profile.onboardingComplete),
       ],
       child: const OathboundApp(),
