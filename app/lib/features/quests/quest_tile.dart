@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:oathbound_engine/oathbound_engine.dart';
 
 import '../../app/providers.dart';
+import '../../core/format/bidi.dart';
 import '../../data/models.dart';
 import '../../design/components/seal.dart';
 import '../../design/tokens.dart';
@@ -73,7 +74,7 @@ class QuestTile extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  UserText(
                     q.title,
                     style: text.bodyLarge?.copyWith(
                       color: done ? AppColors.ashMuted : AppColors.bone,

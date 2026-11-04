@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:oathbound_engine/oathbound_engine.dart';
 
 import '../../app/providers.dart';
+import '../../core/format/bidi.dart';
 import '../../data/models.dart';
 import '../../data/repositories/progression_repository.dart';
 import '../../design/components/motion.dart';
@@ -106,7 +107,7 @@ class _MinutesSheetState extends State<_MinutesSheet> {
         children: [
           Text(l10n.completeSheetTitle, style: text.titleLarge),
           const SizedBox(height: AppSpace.xs),
-          Text(widget.quest.title, style: text.bodyMedium),
+          UserText(widget.quest.title, style: text.bodyMedium),
           const SizedBox(height: AppSpace.xl),
           TextField(
             controller: _minutes,
@@ -155,7 +156,7 @@ class RewardSheet extends ConsumerWidget {
           children: [
             Text(l10n.rewardTitle, style: text.labelSmall),
             const SizedBox(height: AppSpace.xs),
-            Text(questTitle, style: text.titleMedium),
+            UserText(questTitle, style: text.titleMedium),
             const SizedBox(height: AppSpace.lg),
             TweenAnimationBuilder<double>(
               tween: Tween(begin: 0, end: outcome.result.totalXp.toDouble()),

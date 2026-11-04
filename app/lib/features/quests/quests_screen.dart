@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:oathbound_engine/oathbound_engine.dart';
 
 import '../../app/providers.dart';
+import '../../core/format/bidi.dart';
 import '../../data/models.dart';
 import '../../design/components/states.dart';
 import '../../design/tokens.dart';
@@ -130,7 +131,7 @@ class _CompletedList extends ConsumerWidget {
                 return ListTile(
                   contentPadding: EdgeInsetsDirectional.zero,
                   leading: const Icon(Icons.verified_outlined, color: AppColors.crimson),
-                  title: Text(r.questTitle, maxLines: 2, overflow: TextOverflow.ellipsis),
+                  title: UserText(r.questTitle, maxLines: 2, overflow: TextOverflow.ellipsis),
                   subtitle: Text('${f.date(r.createdAt)} · ${f.time(r.createdAt)}'),
                   trailing: Text(
                     l10n.rewardTotal(f.number(r.result.totalXp)),

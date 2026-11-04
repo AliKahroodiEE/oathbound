@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/providers.dart';
+import '../../core/format/bidi.dart';
 import '../../design/components/states.dart';
 import '../../design/tokens.dart';
 import '../../l10n/content.dart';
@@ -38,7 +39,7 @@ class LedgerScreen extends ConsumerWidget {
                         shape: const Border(),
                         collapsedShape: const Border(),
                         childrenPadding: const EdgeInsetsDirectional.only(bottom: AppSpace.lg),
-                        title: Text(
+                        title: UserText(
                           r.questTitle,
                           style: text.bodyLarge?.copyWith(
                             decoration: r.undone ? TextDecoration.lineThrough : null,

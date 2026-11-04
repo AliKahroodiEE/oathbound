@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:oathbound_engine/oathbound_engine.dart';
 
 import '../../app/providers.dart';
+import '../../core/format/bidi.dart';
 import '../../data/models.dart';
 import '../../data/repositories/character_repository.dart';
 import '../../design/components/background.dart';
@@ -69,9 +70,12 @@ class _CharacterLayout extends StatelessWidget {
       ],
     );
 
-    final padding = EdgeInsetsDirectional.symmetric(
-      horizontal: widthClass == WidthClass.compact ? AppSpace.lg : AppSpace.xl,
-      vertical: AppSpace.lg,
+    final padding = EdgeInsetsDirectional.fromSTEB(
+      widthClass == WidthClass.compact ? AppSpace.lg : AppSpace.xl,
+      AppSpace.lg,
+      widthClass == WidthClass.compact ? AppSpace.lg : AppSpace.xl,
+      // Room to scroll content clear of the floating quick-add button.
+      widthClass == WidthClass.compact ? 88 : AppSpace.lg,
     );
 
     if (widthClass == WidthClass.compact) {
@@ -152,7 +156,7 @@ class _Header extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    UserText(
                       p.characterName.isEmpty ? l10n.appName : p.characterName,
                       style: text.headlineSmall,
                       maxLines: 1,
@@ -446,7 +450,7 @@ class _GrowthPanel extends ConsumerWidget {
                     childrenPadding: const EdgeInsetsDirectional.only(bottom: AppSpace.md),
                     shape: const Border(),
                     collapsedShape: const Border(),
-                    title: Text(
+                    title: UserText(
                       r.questTitle,
                       style: text.bodyMedium?.copyWith(
                         decoration: r.undone ? TextDecoration.lineThrough : null,
