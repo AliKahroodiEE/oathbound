@@ -2,9 +2,11 @@ import 'dart:convert';
 
 import 'package:flutter/widgets.dart';
 
-import '../../core/locale/locale_registry.dart';
 import '../../core/locale/regional_settings.dart';
 import '../db/database.dart';
+
+/// Light, dark, or whatever the device uses.
+enum ThemePreference { system, light, dark }
 
 /// User-owned preferences and character identity.
 @immutable
@@ -26,6 +28,7 @@ class UserProfile {
     this.quietEndMinutes = 8 * 60,
     this.reducedMotion = false,
     this.reducedEffects = false,
+    this.theme = ThemePreference.system,
     this.onboardingComplete = false,
     this.pauseStartedDay,
     this.returnAcknowledgedDay,
@@ -47,6 +50,7 @@ class UserProfile {
   final int quietEndMinutes;
   final bool reducedMotion;
   final bool reducedEffects;
+  final ThemePreference theme;
   final bool onboardingComplete;
 
   /// Local day key when pause mode started; null when not paused.
@@ -76,6 +80,7 @@ class UserProfile {
     int? quietEndMinutes,
     bool? reducedMotion,
     bool? reducedEffects,
+    ThemePreference? theme,
     bool? onboardingComplete,
     Object? pauseStartedDay = _unset,
     Object? returnAcknowledgedDay = _unset,
@@ -96,6 +101,7 @@ class UserProfile {
     quietEndMinutes: quietEndMinutes ?? this.quietEndMinutes,
     reducedMotion: reducedMotion ?? this.reducedMotion,
     reducedEffects: reducedEffects ?? this.reducedEffects,
+    theme: theme ?? this.theme,
     onboardingComplete: onboardingComplete ?? this.onboardingComplete,
     pauseStartedDay: pauseStartedDay == _unset ? this.pauseStartedDay : pauseStartedDay as String?,
     returnAcknowledgedDay: returnAcknowledgedDay == _unset
@@ -120,6 +126,7 @@ class UserProfile {
     'quietEndMinutes': quietEndMinutes,
     'reducedMotion': reducedMotion,
     'reducedEffects': reducedEffects,
+    'theme': theme.name,
     'onboardingComplete': onboardingComplete,
     'pauseStartedDay': pauseStartedDay,
     'returnAcknowledgedDay': returnAcknowledgedDay,
@@ -145,6 +152,7 @@ class UserProfile {
       quietEndMinutes: as<int>('quietEndMinutes') ?? 8 * 60,
       reducedMotion: as<bool>('reducedMotion') ?? false,
       reducedEffects: as<bool>('reducedEffects') ?? false,
+      theme: ThemePreference.values.asNameMap()[j['theme']] ?? ThemePreference.system,
       onboardingComplete: as<bool>('onboardingComplete') ?? false,
       pauseStartedDay: as<String>('pauseStartedDay'),
       returnAcknowledgedDay: as<String>('returnAcknowledgedDay'),
@@ -172,19 +180,20 @@ class SettingsRepository {
 
   Future<void> updateProfile(UserProfile Function(UserProfile) change) async => saveProfile(change(await profile()));
 
-  /// Regional settings; defaults follow the device locale until chosen.
-  Stream<RegionalSettings> watchRegional(Locale deviceLocale) => _watch(_regionalKey).map(
-    (v) =>
-        (v == null ? null : RegionalSettings.fromJson(v)) ??
-        RegionalSettings.defaultsFor(LocaleRegistry.resolve(deviceLocale)),
-  );
+  /// Regional choices; empty until the user changes something, so the app
+  /// follows the device language by default.
+  Stream<RegionalPrefs> watchRegionalPrefs() =>
+      _watch(_regionalKey).map((v) => v == null ? const RegionalPrefs() : RegionalPrefs.fromJson(v));
 
-  Future<RegionalSettings?> regional() async {
+  Future<RegionalPrefs> regionalPrefs() async {
     final v = await _read(_regionalKey);
-    return v == null ? null : RegionalSettings.fromJson(v);
+    return v == null ? const RegionalPrefs() : RegionalPrefs.fromJson(v);
   }
 
-  Future<void> saveRegional(RegionalSettings s) => _write(_regionalKey, s.toJson());
+  Future<void> saveRegionalPrefs(RegionalPrefs prefs) => _write(_regionalKey, prefs.toJson());
+
+  Future<void> updateRegionalPrefs(RegionalPrefs Function(RegionalPrefs) change) async =>
+      saveRegionalPrefs(change(await regionalPrefs()));
 
   Future<Map<String, Object?>?> _read(String key) async {
     final row = await (_db.select(_db.keyValues)..where((t) => t.key.equals(key))).getSingleOrNull();

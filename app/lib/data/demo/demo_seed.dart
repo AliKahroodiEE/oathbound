@@ -12,8 +12,10 @@ import '../repositories/settings_repository.dart';
 
 /// Six weeks of realistic activity for demos and README screenshots.
 /// Only used when explicitly requested (`--dart-define=WYRD_DEMO=true`
-/// or the screenshot test); production never seeds data.
-Future<void> seedDemo(AppDatabase db, {required Locale locale, DateTime? now}) async {
+/// or the screenshot test); production never seeds data. Content is
+/// written in [locale]; the app language keeps following the device
+/// unless [pinLanguage] is set.
+Future<void> seedDemo(AppDatabase db, {required Locale locale, bool pinLanguage = false, DateTime? now}) async {
   final fa = locale.languageCode == 'fa';
   final today = now ?? DateTime.now();
   var clock = today.subtract(const Duration(days: 43));
@@ -24,7 +26,7 @@ Future<void> seedDemo(AppDatabase db, {required Locale locale, DateTime? now}) a
 
   String t(String en, String faText) => fa ? faText : en;
 
-  await settings.saveRegional(RegionalSettings.defaultsFor(locale));
+  if (pinLanguage) await settings.saveRegionalPrefs(RegionalPrefs(language: locale.languageCode));
   final regional = RegionalSettings.defaultsFor(locale);
 
   final objective = await quests.create(

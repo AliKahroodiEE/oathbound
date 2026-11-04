@@ -1371,6 +1371,29 @@ class AppLocalizationsFa extends AppLocalizations {
   String get reducedEffects => 'کاهش جلوه‌های دیداری';
 
   @override
+  String get themeLabel => 'پوسته';
+
+  @override
+  String get themeAuto => 'خودکار';
+
+  @override
+  String get themeLight => 'روشن';
+
+  @override
+  String get themeDark => 'تیره';
+
+  @override
+  String get languageAuto => 'خودکار';
+
+  @override
+  String languageFollowsDevice(String language) {
+    return 'مطابق زبان دستگاه: $language';
+  }
+
+  @override
+  String get deviceLanguage => 'زبان دستگاه شما';
+
+  @override
   String get sectionAccount => 'حساب کاربری';
 
   @override

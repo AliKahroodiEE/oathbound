@@ -58,9 +58,20 @@ abstract final class LocaleRegistry {
   static LocaleMeta of(Locale locale) =>
       all.firstWhere((m) => m.locale.languageCode == locale.languageCode, orElse: () => all.first);
 
+  static bool isSupported(Locale locale) => all.any((m) => m.locale.languageCode == locale.languageCode);
+
   /// Best supported match for the device locale.
   static Locale resolve(Locale? device) {
     if (device == null) return all.first.locale;
     return of(device).locale;
+  }
+
+  /// The first language in the device's order of preference that the app
+  /// supports, so a device set to German then Persian opens in Persian.
+  static Locale resolveAll(List<Locale> device) {
+    for (final l in device) {
+      if (isSupported(l)) return of(l).locale;
+    }
+    return all.first.locale;
   }
 }

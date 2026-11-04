@@ -2588,6 +2588,48 @@ abstract class AppLocalizations {
   /// **'Reduce visual effects'**
   String get reducedEffects;
 
+  /// No description provided for @themeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Theme'**
+  String get themeLabel;
+
+  /// No description provided for @themeAuto.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto'**
+  String get themeAuto;
+
+  /// No description provided for @themeLight.
+  ///
+  /// In en, this message translates to:
+  /// **'Light'**
+  String get themeLight;
+
+  /// No description provided for @themeDark.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark'**
+  String get themeDark;
+
+  /// No description provided for @languageAuto.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto'**
+  String get languageAuto;
+
+  /// No description provided for @languageFollowsDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Following your device: {language}'**
+  String languageFollowsDevice(String language);
+
+  /// No description provided for @deviceLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Your device\'s language'**
+  String get deviceLanguage;
+
   /// No description provided for @sectionAccount.
   ///
   /// In en, this message translates to:

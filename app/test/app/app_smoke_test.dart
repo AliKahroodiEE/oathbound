@@ -13,11 +13,12 @@ import 'package:wyrd/data/models.dart';
 import 'package:wyrd/data/repositories/quest_repository.dart';
 import 'package:wyrd/data/repositories/settings_repository.dart';
 
-Future<AppDatabase> _seeded(Locale locale) async {
+/// [locale] pins the app language; null follows the (test) device.
+Future<AppDatabase> _seeded(Locale? locale, {ThemePreference theme = ThemePreference.system}) async {
   final db = AppDatabase(DatabaseConnection(NativeDatabase.memory(), closeStreamsSynchronously: true));
   final settings = SettingsRepository(db);
-  await settings.saveProfile(const UserProfile(characterName: 'Arin', onboardingComplete: true));
-  await settings.saveRegional(RegionalSettings.defaultsFor(locale));
+  await settings.saveProfile(UserProfile(characterName: 'Arin', onboardingComplete: true, theme: theme));
+  if (locale != null) await settings.saveRegionalPrefs(RegionalPrefs(language: locale.languageCode));
   await QuestRepository(db).create(const QuestDraft(title: 'Study electronics 90m'));
   return db;
 }
@@ -59,6 +60,39 @@ void main() {
     final scaffold = find.byType(Scaffold).first;
     expect(Directionality.of(tester.element(scaffold)), TextDirection.rtl);
     await tester.runAsync(db.close);
+  });
+
+  testWidgets('follows the device language when none was chosen', (tester) async {
+    // German is unsupported, so the next preferred language wins.
+    tester.platformDispatcher.localesTestValue = const [Locale('de', 'DE'), Locale('fa', 'IR')];
+    addTearDown(tester.platformDispatcher.clearLocalesTestValue);
+    final db = await tester.runAsync(() => _seeded(null));
+    await _pump(tester, db!);
+    expect(find.text('قدرت'), findsOneWidget);
+    expect(Directionality.of(tester.element(find.byType(Scaffold).first)), TextDirection.rtl);
+    await tester.runAsync(db.close);
+  });
+
+  testWidgets('a chosen language wins over the device language', (tester) async {
+    tester.platformDispatcher.localesTestValue = const [Locale('fa', 'IR')];
+    addTearDown(tester.platformDispatcher.clearLocalesTestValue);
+    final db = await tester.runAsync(() => _seeded(const Locale('en')));
+    await _pump(tester, db!);
+    expect(find.text('Strength'), findsOneWidget);
+    await tester.runAsync(db.close);
+  });
+
+  testWidgets('light and dark themes follow the saved preference', (tester) async {
+    for (final (pref, brightness) in [
+      (ThemePreference.light, Brightness.light),
+      (ThemePreference.dark, Brightness.dark),
+    ]) {
+      final db = await tester.runAsync(() => _seeded(const Locale('en'), theme: pref));
+      await _pump(tester, db!);
+      expect(Theme.of(tester.element(find.byType(Scaffold).first)).brightness, brightness);
+      await tester.pumpWidget(const SizedBox());
+      await tester.runAsync(db.close);
+    }
   });
 
   testWidgets('expanded width shows the sidebar', (tester) async {

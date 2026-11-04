@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/sync/sync_coordinator.dart';
+import '../data/repositories/settings_repository.dart';
 import '../design/theme.dart';
 import '../design/tokens.dart';
 import '../features/reminders/reminder_coordinator.dart';
@@ -18,7 +19,8 @@ class WyrdApp extends ConsumerWidget {
     ref.watch(syncCoordinatorProvider);
     final regional = ref.watch(regionalProvider);
     final reducedMotion = ref.watch(profileProvider.select((p) => p.value?.reducedMotion ?? false));
-    final theme = buildAppTheme(regional.locale, Palette.dark);
+    final theme =
+        ref.watch(profileProvider.select((p) => p.value?.theme)) ?? ref.watch<ThemePreference>(initialThemeProvider);
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
       onGenerateTitle: (c) => AppLocalizations.of(c).appName,
@@ -26,9 +28,15 @@ class WyrdApp extends ConsumerWidget {
       locale: regional.locale,
       supportedLocales: AppLocalizations.supportedLocales,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
-      theme: theme,
-      darkTheme: theme,
-      themeMode: ThemeMode.dark,
+      theme: buildAppTheme(regional.locale, Palette.light),
+      darkTheme: buildAppTheme(regional.locale, Palette.dark),
+      themeMode: switch (theme) {
+        ThemePreference.system => ThemeMode.system,
+        ThemePreference.light => ThemeMode.light,
+        ThemePreference.dark => ThemeMode.dark,
+      },
+      themeAnimationDuration: AppMotion.settle,
+      themeAnimationCurve: AppMotion.standard,
       builder: (context, child) {
         final mq = MediaQuery.of(context);
         return MediaQuery(

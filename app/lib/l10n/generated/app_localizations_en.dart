@@ -1383,6 +1383,29 @@ class AppLocalizationsEn extends AppLocalizations {
   String get reducedEffects => 'Reduce visual effects';
 
   @override
+  String get themeLabel => 'Theme';
+
+  @override
+  String get themeAuto => 'Auto';
+
+  @override
+  String get themeLight => 'Light';
+
+  @override
+  String get themeDark => 'Dark';
+
+  @override
+  String get languageAuto => 'Auto';
+
+  @override
+  String languageFollowsDevice(String language) {
+    return 'Following your device: $language';
+  }
+
+  @override
+  String get deviceLanguage => 'Your device\'s language';
+
+  @override
   String get sectionAccount => 'Account';
 
   @override
