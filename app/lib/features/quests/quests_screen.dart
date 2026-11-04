@@ -21,6 +21,7 @@ class QuestsScreen extends ConsumerWidget {
     return DefaultTabController(
       length: 5,
       child: Scaffold(
+        backgroundColor: Colors.transparent,
         appBar: AppBar(
           title: Text(l10n.questsTitle),
           bottom: TabBar(

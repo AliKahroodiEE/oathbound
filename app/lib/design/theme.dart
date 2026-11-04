@@ -57,7 +57,7 @@ ThemeData buildAppTheme(Locale locale) {
     dividerTheme: const DividerThemeData(color: AppColors.hairline, thickness: 1, space: 1),
     iconTheme: const IconThemeData(color: AppColors.ash, size: 22),
     appBarTheme: AppBarTheme(
-      backgroundColor: AppColors.void_,
+      backgroundColor: Colors.transparent,
       surfaceTintColor: Colors.transparent,
       elevation: 0,
       scrolledUnderElevation: 0,

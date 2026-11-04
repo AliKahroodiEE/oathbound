@@ -75,6 +75,7 @@ class _ChronicleScreenState extends ConsumerState<ChronicleScreen> {
     final wide = MediaQuery.sizeOf(context).width >= 900;
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: Text(l10n.chronicleTitle),
         actions: [

@@ -154,7 +154,7 @@ class _RadarPainter extends CustomPainter {
     }
 
     final shape = Path();
-    final attrs = Attribute.values;
+    const attrs = Attribute.values;
     for (var i = 0; i < 6; i++) {
       final v = ((values[attrs[i]] ?? 0).clamp(0.12, 1.0)) * t;
       final p = _point(c, r * v, i);

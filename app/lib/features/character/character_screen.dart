@@ -7,7 +7,7 @@ import '../../app/providers.dart';
 import '../../core/format/bidi.dart';
 import '../../data/models.dart';
 import '../../data/repositories/character_repository.dart';
-import '../../design/components/background.dart';
+import '../../design/components/game.dart';
 import '../../design/components/panel.dart';
 import '../../design/components/progress.dart';
 import '../../design/components/states.dart';
@@ -25,21 +25,19 @@ class CharacterScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(characterStateProvider);
     return Scaffold(
-      body: AppBackground(
-        reducedEffects: state.value?.profile.reducedEffects ?? false,
-        child: SafeArea(
-          child: state.when(
-            loading: () => const LoadingPanels(),
-            error: (e, _) => Padding(
-              padding: const EdgeInsetsDirectional.all(AppSpace.lg),
-              child: ErrorState(
-                message: context.l10n.errorGeneric,
-                retryLabel: context.l10n.actionRetry,
-                onRetry: () => ref.invalidate(characterStateProvider),
-              ),
+      backgroundColor: Colors.transparent,
+      body: SafeArea(
+        child: state.when(
+          loading: () => const LoadingPanels(),
+          error: (e, _) => Padding(
+            padding: const EdgeInsetsDirectional.all(AppSpace.lg),
+            child: ErrorState(
+              message: context.l10n.errorGeneric,
+              retryLabel: context.l10n.actionRetry,
+              onRetry: () => ref.invalidate(characterStateProvider),
             ),
-            data: (s) => _CharacterLayout(state: s),
           ),
+          data: (s) => _CharacterLayout(state: s),
         ),
       ),
     );
@@ -52,12 +50,10 @@ class _CharacterLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final width = MediaQuery.sizeOf(context).width;
-    final widthClass = WidthClass.of(width);
-    final header = _Header(state: state);
+    final widthClass = WidthClass.of(MediaQuery.sizeOf(context).width);
+    final hero = _Hero(state: state);
     final returning = state.showReturn(dayKey(DateTime.now())) ? const _ReturnCard() : null;
     final attributes = _AttributesPanel(state: state);
-    final consistency = _ConsistencyPanel(state: state);
     const today = _TodayPanel();
     final growth = _GrowthPanel(state: state);
     final achievements = _AchievementsPanel(state: state);
@@ -70,19 +66,19 @@ class _CharacterLayout extends StatelessWidget {
       ],
     );
 
+    final side = widthClass == WidthClass.compact ? AppSpace.lg : AppSpace.xl;
     final padding = EdgeInsetsDirectional.fromSTEB(
-      widthClass == WidthClass.compact ? AppSpace.lg : AppSpace.xl,
+      side,
       AppSpace.lg,
-      widthClass == WidthClass.compact ? AppSpace.lg : AppSpace.xl,
-      // Room to scroll content clear of the floating quick-add button.
-      widthClass == WidthClass.compact ? 88 : AppSpace.lg,
+      side,
+      widthClass == WidthClass.compact ? 96 : AppSpace.lg,
     );
 
     if (widthClass == WidthClass.compact) {
       return ListView(
         padding: padding,
         children: [
-          column([header, returning, today, attributes, consistency, growth, achievements]),
+          column([hero, returning, today, attributes, growth, achievements]),
         ],
       );
     }
@@ -91,15 +87,15 @@ class _CharacterLayout extends StatelessWidget {
         padding: padding,
         child: Column(
           children: [
-            header,
+            hero,
             gap,
             if (returning != null) ...[returning, gap],
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(child: column([attributes, consistency])),
+                Expanded(child: column([attributes, achievements])),
                 gap,
-                Expanded(child: column([today, growth, achievements])),
+                Expanded(child: column([today, growth])),
               ],
             ),
           ],
@@ -111,7 +107,7 @@ class _CharacterLayout extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(flex: 5, child: column([header, attributes, consistency])),
+          Expanded(flex: 6, child: column([hero, attributes])),
           gap,
           Expanded(flex: 5, child: column([returning, today, achievements])),
           gap,
@@ -122,8 +118,8 @@ class _CharacterLayout extends StatelessWidget {
   }
 }
 
-class _Header extends ConsumerWidget {
-  const _Header({required this.state});
+class _Hero extends ConsumerWidget {
+  const _Hero({required this.state});
   final CharacterState state;
 
   @override
@@ -133,61 +129,157 @@ class _Header extends ConsumerWidget {
     final text = Theme.of(context).textTheme;
     final level = state.level;
     final p = state.profile;
-    final subtitle = [
-      if (p.equippedTitle != null) l10n.titleName(p.equippedTitle!),
-      if (state.characterClass != null) l10n.className(state.characterClass!),
-    ].join(' · ');
+    final w = state.weekly;
+    final (conditionText, conditionHelp, conditionColor) = switch (state.conditionLabel) {
+      ConditionLabel.rested => (l10n.conditionRested, l10n.conditionRestedHelp, AppColors.attrVitality),
+      ConditionLabel.steady => (l10n.conditionSteady, l10n.conditionSteadyHelp, AppColors.warning),
+      ConditionLabel.strained => (l10n.conditionStrained, l10n.conditionStrainedHelp, AppColors.ember),
+    };
+
     return Panel(
+      accent: AppColors.ember,
+      padding: const EdgeInsetsDirectional.fromSTEB(AppSpace.lg, AppSpace.xl, AppSpace.lg, AppSpace.lg),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 64,
-                height: 64,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: AppColors.abyss,
-                  border: Border.all(color: AppColors.hairline),
+              XpRing(
+                fraction: level.fraction,
+                size: 108,
+                child: DecoratedBox(
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: RadialGradient(colors: [Color(0xFF2A2140), AppColors.abyss]),
+                  ),
+                  child: Center(
+                    child: Icon(portraitGlyphs[p.portrait] ?? Icons.castle_outlined, color: AppColors.bone, size: 38),
+                  ),
                 ),
-                child: Icon(portraitGlyphs[p.portrait] ?? Icons.castle_outlined, color: AppColors.bone, size: 30),
               ),
               const SizedBox(width: AppSpace.lg),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    UserText(
-                      p.characterName.isEmpty ? l10n.appName : p.characterName,
-                      style: text.headlineSmall,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                    Row(
+                      children: [
+                        Expanded(
+                          child: UserText(
+                            p.characterName.isEmpty ? l10n.appName : p.characterName,
+                            style: text.headlineSmall,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        IconButton(
+                          tooltip: l10n.navSettings,
+                          visualDensity: VisualDensity.compact,
+                          onPressed: () => context.push('/settings'),
+                          icon: const Icon(Icons.settings_outlined, size: 20),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 2),
-                    Text(subtitle.isEmpty ? l10n.classUnrevealed : subtitle, style: text.bodySmall),
+                    const SizedBox(height: AppSpace.xs),
+                    Wrap(
+                      spacing: AppSpace.xs + 2,
+                      runSpacing: AppSpace.xs + 2,
+                      children: [
+                        LevelSeal(level: f.number(level.step), caption: l10n.levelLabel),
+                        if (p.equippedTitle != null)
+                          Pill(l10n.titleName(p.equippedTitle!), color: AppColors.gold, icon: Icons.workspace_premium),
+                        if (state.characterClass != null)
+                          Pill(l10n.className(state.characterClass!), color: AppColors.arcane, icon: Icons.shield_moon),
+                      ],
+                    ),
+                    if (state.characterClass == null) ...[
+                      const SizedBox(height: AppSpace.xs),
+                      Text(l10n.classUnrevealed, style: text.bodySmall),
+                    ],
                   ],
                 ),
               ),
-              IconButton(
-                tooltip: l10n.navSettings,
-                onPressed: () => context.push('/settings'),
-                icon: const Icon(Icons.settings_outlined),
-              ),
-              LevelSeal(level: f.number(level.step), caption: l10n.levelLabel),
             ],
           ),
           const SizedBox(height: AppSpace.lg),
           XpBar(fraction: level.fraction, semanticsLabel: l10n.characterLevel(f.number(level.step))),
           const SizedBox(height: AppSpace.sm),
-          // Wraps onto two lines at large text sizes instead of overflowing.
           Wrap(
             alignment: WrapAlignment.spaceBetween,
-            runSpacing: AppSpace.xs,
             spacing: AppSpace.md,
+            runSpacing: AppSpace.xs,
             children: [
-              Text(l10n.xpProgress(f.number(level.xpIntoStep), f.number(level.xpForNextStep)), style: text.labelMedium),
+              Text(l10n.xpProgress(f.number(level.xpIntoStep), f.number(level.xpForNextStep)), style: text.labelLarge),
               Text(l10n.xpToNextLevel(f.number(level.xpRemaining), f.number(level.step + 1)), style: text.bodySmall),
+            ],
+          ),
+          const SizedBox(height: AppSpace.lg),
+          LayoutBuilder(
+            builder: (context, c) {
+              final perRow = c.maxWidth >= 480 ? 3 : (c.maxWidth >= 300 ? 2 : 1);
+              final tileW = (c.maxWidth - AppSpace.sm * (perRow - 1)) / perRow;
+              return Wrap(
+                spacing: AppSpace.sm,
+                runSpacing: AppSpace.sm,
+                children: [
+                  SizedBox(
+                    width: tileW,
+                    child: Tooltip(
+                      message: conditionHelp,
+                      triggerMode: TooltipTriggerMode.tap,
+                      child: StatTile(
+                        icon: Icons.favorite_rounded,
+                        color: conditionColor,
+                        value: '$conditionText · ${f.number(state.condition)}',
+                        label: l10n.conditionLabel,
+                      ),
+                    ),
+                  ),
+                  SizedBox(
+                    width: tileW,
+                    child: StatTile(
+                      icon: Icons.local_fire_department_rounded,
+                      color: AppColors.emberGlow,
+                      value: l10n.weeksKept(w.currentStreak, f.number(w.currentStreak)),
+                      label: l10n.bestRecord(f.number(w.bestStreak)),
+                    ),
+                  ),
+                  SizedBox(
+                    width: tileW,
+                    child: StatTile(
+                      icon: Icons.link_rounded,
+                      color: AppColors.gold,
+                      value: l10n.chainDays(state.chain.current, f.number(state.chain.current)),
+                      label: l10n.bestRecord(f.number(state.chain.best)),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+          const SizedBox(height: AppSpace.md),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  l10n.weeklyTargetProgress(f.number(w.activeDaysThisWeek), f.number(w.targetThisWeek)),
+                  style: text.bodySmall,
+                ),
+              ),
+              for (var i = 0; i < w.targetThisWeek; i++)
+                Padding(
+                  padding: const EdgeInsetsDirectional.only(start: 4),
+                  child: Container(
+                    width: 14,
+                    height: 14,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: i < w.activeDaysThisWeek ? AppGradients.emberDiagonal : null,
+                      border: i < w.activeDaysThisWeek ? null : Border.all(color: AppColors.hairline, width: 2),
+                    ),
+                  ),
+                ),
             ],
           ),
         ],
@@ -207,23 +299,27 @@ class _ReturnCard extends ConsumerWidget {
         .read(settingsRepositoryProvider)
         .updateProfile((p) => p.copyWith(returnAcknowledgedDay: dayKey(DateTime.now())));
     return Panel(
+      accent: AppColors.arcane,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(l10n.returnTitle, style: text.titleMedium),
+          Text(l10n.returnTitle, style: text.titleLarge),
           const SizedBox(height: AppSpace.sm),
           Text(l10n.returnBody, style: text.bodyMedium),
-          const SizedBox(height: AppSpace.md),
-          Row(
+          const SizedBox(height: AppSpace.lg),
+          Wrap(
+            spacing: AppSpace.sm,
+            runSpacing: AppSpace.sm,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
-              FilledButton(
+              GlowButton(
+                label: l10n.returnAction,
+                icon: Icons.add_rounded,
                 onPressed: () async {
                   await dismiss();
                   if (context.mounted) context.push('/quest/new');
                 },
-                child: Text(l10n.returnAction),
               ),
-              const SizedBox(width: AppSpace.sm),
               TextButton(onPressed: dismiss, child: Text(l10n.actionClose)),
             ],
           ),
@@ -241,20 +337,41 @@ class _AttributesPanel extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final f = ref.fmt(context);
+    final maxRank = Attribute.values.map((a) => state.rank(a).step).reduce((a, b) => a > b ? a : b);
+    final radar = Center(
+      child: AttributeRadar(
+        size: 236,
+        values: {for (final a in Attribute.values) a: state.rank(a).step / maxRank},
+        labels: {for (final a in Attribute.values) a: l10n.attributeName(a)},
+      ),
+    );
+    Widget tile(Attribute a) => AttributeTile(
+      attribute: a,
+      name: l10n.attributeName(a),
+      rankLabel: l10n.attributeRank(f.number(state.rank(a).step)),
+      fraction: state.rank(a).fraction,
+      todayLabel: (state.todayXp[a] ?? 0) > 0 ? l10n.xpToday(f.number(state.todayXp[a]!)) : null,
+      onTap: () => showAttributeSheet(context, a),
+    );
     return Panel(
       title: l10n.sectionAttributes,
-      child: Column(
-        children: [
-          for (final a in Attribute.values)
-            AttributeRow(
-              attribute: a,
-              name: l10n.attributeName(a),
-              rankLabel: l10n.attributeRank(f.number(state.rank(a).step)),
-              fraction: state.rank(a).fraction,
-              todayLabel: (state.todayXp[a] ?? 0) > 0 ? l10n.xpToday(f.number(state.todayXp[a]!)) : null,
-              onTap: () => showAttributeSheet(context, a),
-            ),
-        ],
+      icon: Icons.hexagon_outlined,
+      child: LayoutBuilder(
+        builder: (context, c) {
+          final cols = c.maxWidth >= 300 ? 2 : 1;
+          final w = (c.maxWidth - AppSpace.sm * (cols - 1)) / cols;
+          return Column(
+            children: [
+              radar,
+              const SizedBox(height: AppSpace.md),
+              Wrap(
+                spacing: AppSpace.sm,
+                runSpacing: AppSpace.sm,
+                children: [for (final a in Attribute.values) SizedBox(width: w, child: tile(a))],
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -271,6 +388,7 @@ void showAttributeSheet(BuildContext context, Attribute a) {
         final text = Theme.of(context).textTheme;
         final s = ref.watch(characterStateProvider).value;
         final rank = s?.rank(a) ?? Curves.rank(0);
+        final color = AppColors.forAttribute(a);
         return Padding(
           padding: const EdgeInsetsDirectional.fromSTEB(AppSpace.xl, 0, AppSpace.xl, AppSpace.xxl),
           child: Column(
@@ -279,16 +397,22 @@ void showAttributeSheet(BuildContext context, Attribute a) {
             children: [
               Row(
                 children: [
-                  AttributeSigil(a, size: 28),
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(color: color.withValues(alpha: 0.16), shape: BoxShape.circle),
+                    alignment: Alignment.center,
+                    child: AttributeSigil(a, size: 26),
+                  ),
                   const SizedBox(width: AppSpace.md),
                   Expanded(child: Text(l10n.attributeName(a), style: text.titleLarge)),
-                  Text(l10n.attributeRank(f.number(rank.step)), style: text.titleSmall),
+                  Pill(l10n.attributeRank(f.number(rank.step)), color: color),
                 ],
               ),
               const SizedBox(height: AppSpace.md),
               Text(l10n.attributeDescription(a), style: text.bodyMedium),
               const SizedBox(height: AppSpace.lg),
-              XpBar(fraction: rank.fraction, color: AppColors.forAttribute(a)),
+              XpBar(fraction: rank.fraction, color: color),
               const SizedBox(height: AppSpace.sm),
               Text(
                 '${l10n.xpProgress(f.number(rank.xpIntoStep), f.number(rank.xpForNextStep))} · '
@@ -303,95 +427,6 @@ void showAttributeSheet(BuildContext context, Attribute a) {
   );
 }
 
-class _ConsistencyPanel extends ConsumerWidget {
-  const _ConsistencyPanel({required this.state});
-  final CharacterState state;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = context.l10n;
-    final f = ref.fmt(context);
-    final text = Theme.of(context).textTheme;
-    final (label, help, color) = switch (state.conditionLabel) {
-      ConditionLabel.rested => (l10n.conditionRested, l10n.conditionRestedHelp, AppColors.attrVitality),
-      ConditionLabel.steady => (l10n.conditionSteady, l10n.conditionSteadyHelp, AppColors.warning),
-      ConditionLabel.strained => (l10n.conditionStrained, l10n.conditionStrainedHelp, AppColors.ember),
-    };
-    final w = state.weekly;
-    return Panel(
-      title: l10n.sectionConsistency,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Tooltip(
-            message: help,
-            triggerMode: TooltipTriggerMode.tap,
-            child: Row(
-              children: [
-                Text(l10n.conditionLabel, style: text.bodyMedium),
-                const Spacer(),
-                Container(
-                  width: 8,
-                  height: 8,
-                  decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-                ),
-                const SizedBox(width: AppSpace.sm),
-                Text('$label · ${f.number(state.condition)}', style: text.titleSmall),
-              ],
-            ),
-          ),
-          const SizedBox(height: AppSpace.md),
-          Text(
-            l10n.weeklyTargetProgress(f.number(w.activeDaysThisWeek), f.number(w.targetThisWeek)),
-            style: text.bodyMedium,
-          ),
-          const SizedBox(height: AppSpace.xs),
-          XpBar(
-            fraction: w.targetThisWeek == 0 ? 0 : w.activeDaysThisWeek / w.targetThisWeek,
-            color: AppColors.attrDiscipline,
-            height: 4,
-          ),
-          const SizedBox(height: AppSpace.md),
-          Row(
-            children: [
-              Expanded(
-                child: _Stat(
-                  value: l10n.weeksKept(w.currentStreak, f.number(w.currentStreak)),
-                  caption: l10n.bestRecord(f.number(w.bestStreak)),
-                ),
-              ),
-              Expanded(
-                child: _Stat(
-                  value: l10n.chainDays(state.chain.current, f.number(state.chain.current)),
-                  caption: l10n.bestRecord(f.number(state.chain.best)),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _Stat extends StatelessWidget {
-  const _Stat({required this.value, required this.caption});
-  final String value;
-  final String caption;
-
-  @override
-  Widget build(BuildContext context) {
-    final text = Theme.of(context).textTheme;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(value, style: text.titleSmall),
-        Text(caption, style: text.bodySmall),
-      ],
-    );
-  }
-}
-
 class _TodayPanel extends ConsumerWidget {
   const _TodayPanel();
 
@@ -401,7 +436,8 @@ class _TodayPanel extends ConsumerWidget {
     final quests = ref.watch(todayQuestsProvider);
     return Panel(
       title: l10n.sectionToday,
-      padding: const EdgeInsetsDirectional.fromSTEB(AppSpace.sm, AppSpace.lg, AppSpace.sm, AppSpace.sm),
+      icon: Icons.wb_twilight_rounded,
+      padding: const EdgeInsetsDirectional.fromSTEB(AppSpace.md, AppSpace.lg, AppSpace.md, AppSpace.md),
       trailing: TextButton(onPressed: () => context.go('/quests'), child: Text(l10n.navQuests)),
       child: quests.when(
         loading: () => const Skeleton(height: 48),
@@ -412,7 +448,15 @@ class _TodayPanel extends ConsumerWidget {
                 actionLabel: l10n.todayEmptyAction,
                 onAction: () => context.push('/quest/new'),
               )
-            : Column(children: [for (final v in list.take(5)) QuestTile(view: v)]),
+            : Column(
+                children: [
+                  for (final v in list.take(5))
+                    Padding(
+                      padding: const EdgeInsetsDirectional.only(bottom: AppSpace.sm),
+                      child: QuestTile(view: v),
+                    ),
+                ],
+              ),
       ),
     );
   }
@@ -429,8 +473,10 @@ class _GrowthPanel extends ConsumerWidget {
     final text = Theme.of(context).textTheme;
     return Panel(
       title: l10n.sectionRecentGrowth,
+      icon: Icons.trending_up_rounded,
       trailing: IconButton(
         tooltip: l10n.ledgerTitle,
+        visualDensity: VisualDensity.compact,
         icon: const Icon(Icons.receipt_long_outlined, size: 20, color: AppColors.ember),
         onPressed: () => context.go('/chronicle/ledger'),
       ),
@@ -439,36 +485,39 @@ class _GrowthPanel extends ConsumerWidget {
           : Column(
               children: [
                 for (final r in state.recent)
-                  ExpansionTile(
-                    tilePadding: EdgeInsetsDirectional.zero,
-                    childrenPadding: const EdgeInsetsDirectional.only(bottom: AppSpace.md),
-                    shape: const Border(),
-                    collapsedShape: const Border(),
-                    title: UserText(
-                      r.questTitle,
-                      style: text.bodyMedium?.copyWith(decoration: r.undone ? TextDecoration.lineThrough : null),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                  Theme(
+                    data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+                    child: ExpansionTile(
+                      tilePadding: EdgeInsetsDirectional.zero,
+                      childrenPadding: const EdgeInsetsDirectional.only(bottom: AppSpace.md),
+                      shape: const Border(),
+                      collapsedShape: const Border(),
+                      title: UserText(
+                        r.questTitle,
+                        style: text.bodyMedium?.copyWith(
+                          color: AppColors.bone,
+                          decoration: r.undone ? TextDecoration.lineThrough : null,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      subtitle: Padding(
+                        padding: const EdgeInsetsDirectional.only(top: 4),
+                        child: Wrap(
+                          spacing: AppSpace.xs,
+                          runSpacing: AppSpace.xs,
+                          children: [
+                            for (final g in r.result.grants)
+                              Pill(f.signedNumber(g.amount), color: AppColors.forAttribute(g.attribute)),
+                          ],
+                        ),
+                      ),
+                      trailing: Text(
+                        l10n.rewardTotal(f.number(r.result.totalXp)),
+                        style: text.labelLarge?.copyWith(color: AppColors.ember),
+                      ),
+                      children: [RewardExplanation(result: r.result, proposal: r.proposal, provisional: r.provisional)],
                     ),
-                    subtitle: Wrap(
-                      spacing: AppSpace.sm,
-                      children: [
-                        for (final g in r.result.grants)
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              AttributeSigil(g.attribute, size: 12),
-                              const SizedBox(width: 3),
-                              Text(f.signedNumber(g.amount), style: text.bodySmall),
-                            ],
-                          ),
-                      ],
-                    ),
-                    trailing: Text(
-                      l10n.rewardTotal(f.number(r.result.totalXp)),
-                      style: text.labelMedium?.copyWith(color: AppColors.ember),
-                    ),
-                    children: [RewardExplanation(result: r.result, proposal: r.proposal, provisional: r.provisional)],
                   ),
               ],
             ),
@@ -487,6 +536,8 @@ class _AchievementsPanel extends ConsumerWidget {
     final text = Theme.of(context).textTheme;
     return Panel(
       title: l10n.sectionAchievements,
+      icon: Icons.military_tech_rounded,
+      accent: AppColors.gold,
       child: state.achievements.isEmpty
           ? EmptyState(message: l10n.achievementsEmpty, icon: Icons.military_tech_outlined)
           : Wrap(
@@ -497,9 +548,29 @@ class _AchievementsPanel extends ConsumerWidget {
                   Tooltip(
                     message: '${l10n.achievementDescription(a.id)} · ${f.date(a.unlockedAt)}',
                     triggerMode: TooltipTriggerMode.tap,
-                    child: Chip(
-                      avatar: const Icon(Icons.military_tech_outlined, size: 16, color: AppColors.ember),
-                      label: Text(l10n.achievementName(a.id), style: text.labelMedium),
+                    child: Container(
+                      padding: const EdgeInsetsDirectional.fromSTEB(6, 6, AppSpace.md, 6),
+                      decoration: BoxDecoration(
+                        color: AppColors.gold.withValues(alpha: 0.08),
+                        borderRadius: AppRadius.pillAll,
+                        border: Border.all(color: AppColors.gold.withValues(alpha: 0.35)),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 24,
+                            height: 24,
+                            decoration: const BoxDecoration(
+                              shape: BoxShape.circle,
+                              gradient: LinearGradient(colors: [AppColors.gold, AppColors.emberGlow]),
+                            ),
+                            child: const Icon(Icons.star_rounded, size: 15, color: AppColors.void_),
+                          ),
+                          const SizedBox(width: AppSpace.sm),
+                          Text(l10n.achievementName(a.id), style: text.labelMedium?.copyWith(color: AppColors.bone)),
+                        ],
+                      ),
                     ),
                   ),
               ],

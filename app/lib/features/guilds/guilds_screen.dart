@@ -45,6 +45,7 @@ class GuildsScreen extends ConsumerWidget {
     );
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(title: Text(l10n.guildsTitle)),
       body: Align(
         alignment: AlignmentDirectional.topCenter,
