@@ -115,20 +115,26 @@ policy = "per_worker"
 inspector_port = 8083
 deno_version = 2
 
-# Users call this with their access token; the gateway verifies the JWT and
-# the function re-checks ownership of the completion.
+# Every function authenticates its callers in code (_shared/auth.ts): user
+# access tokens with auth.getClaims, internal callers by a project secret key
+# in the apikey header. verify_jwt adds the platform's JWT check in front;
+# secret keys are not JWTs, so functions that internal callers reach run
+# without it.
+
+# User-facing: the app calls it with the user's access token. The function
+# checks the token again and that the caller owns the completion.
 [functions.evaluate-completion]
 enabled = true
 verify_jwt = true
 
-# Users (their own chronicle) or the service role (pg_cron dispatch).
+# Users (their own chronicle) and pg_cron through pg_net (secret key as
+# apikey, …_cron_secret_key.sql).
 [functions.generate-chronicle]
 enabled = true
-verify_jwt = true
+verify_jwt = false
 
-# Internal only. Authenticated in code (service-role key or
-# INTERNAL_FUNCTION_SECRET), so Database Webhooks and internal callers that
-# do not send a user JWT are accepted by the gateway.
+# Internal only: the notification triggers (…_notify_triggers.sql) and
+# generate-chronicle send a secret key as apikey, or INTERNAL_FUNCTION_SECRET.
 [functions.notify]
 enabled = true
 verify_jwt = false
