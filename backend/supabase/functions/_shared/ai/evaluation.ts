@@ -279,3 +279,32 @@ export function validateAiProposal(raw: unknown): ProposalValidation {
     }),
   };
 }
+
+/** Model label recorded for proposals made with a user's own AI provider. */
+export function clientModelLabel(model: unknown): string {
+  const name = typeof model === 'string' ? model.replace(/[^\w.:/-]/g, '').slice(0, 60) : '';
+  return `byo:${name || 'unknown'}`;
+}
+
+/**
+ * A proposal produced on the user's device with their own AI provider
+ * ("bring your own key"). The server never sees that key, so the proposal
+ * is untrusted: it must pass the same strict validation as server-side
+ * model output, and the two fields that move rewards are bounded by the
+ * server's own heuristic — difficulty within ±1 and the estimate at most
+ * twice the heuristic estimate (min 15) — so a custom endpoint cannot
+ * inflate XP. The engine's caps apply on top as usual.
+ */
+export function guardClientProposal(raw: unknown, heuristic: EvaluationProposal): EvaluationProposal | null {
+  const validation = validateAiProposal(raw);
+  if (!validation.ok) return null;
+  const p = validation.proposal;
+  const minDifficulty = Math.max(1, heuristic.difficulty - 1);
+  const maxDifficulty = Math.min(5, heuristic.difficulty + 1);
+  return {
+    ...p,
+    difficulty: Math.min(Math.max(p.difficulty, minDifficulty), maxDifficulty),
+    estimatedMinutes: Math.min(p.estimatedMinutes, Math.max(heuristic.estimatedMinutes * 2, 15)),
+    source: 'ai',
+  };
+}
