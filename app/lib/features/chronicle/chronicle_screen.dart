@@ -99,7 +99,7 @@ class _ChronicleScreenState extends ConsumerState<ChronicleScreen> {
             children: [
               IconButton(
                 tooltip: l10n.previousPeriod,
-                icon: const Icon(Icons.chevron_left),
+                icon: const _DirectionalChevron(back: true),
                 onPressed: () => setState(() => _offset--),
               ),
               Expanded(
@@ -107,7 +107,7 @@ class _ChronicleScreenState extends ConsumerState<ChronicleScreen> {
               ),
               IconButton(
                 tooltip: l10n.nextPeriod,
-                icon: const Icon(Icons.chevron_right),
+                icon: const _DirectionalChevron(back: false),
                 onPressed: _offset >= 0 ? null : () => setState(() => _offset++),
               ),
             ],
@@ -304,6 +304,16 @@ class _XpChartPanel extends ConsumerWidget {
     final ordered = rtl ? buckets.reversed.toList() : buckets;
     final maxY = ordered.fold<int>(0, (m, b) => [m, b.$2.values.fold(0, (a, c) => a + c)].reduce((a, c) => a > c ? a : c));
     final labelEvery = ordered.length > 16 ? 5 : 1;
+    final valueAxis = AxisTitles(
+      sideTitles: SideTitles(
+        showTitles: true,
+        reservedSize: 36,
+        getTitlesWidget: (v, meta) => SideTitleWidget(
+          meta: meta,
+          child: Text(f.number(v.round()), style: Theme.of(context).textTheme.bodySmall),
+        ),
+      ),
+    );
 
     return Panel(
       title: l10n.chartXpByAttribute,
@@ -330,17 +340,8 @@ class _XpChartPanel extends ConsumerWidget {
                   ),
                   titlesData: FlTitlesData(
                     topTitles: const AxisTitles(),
-                    rightTitles: const AxisTitles(),
-                    leftTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        reservedSize: 36,
-                        getTitlesWidget: (v, meta) => SideTitleWidget(
-                          meta: meta,
-                          child: Text(f.number(v.round()), style: Theme.of(context).textTheme.bodySmall),
-                        ),
-                      ),
-                    ),
+                    rightTitles: rtl ? valueAxis : const AxisTitles(),
+                    leftTitles: rtl ? const AxisTitles() : valueAxis,
                     bottomTitles: AxisTitles(
                       sideTitles: SideTitles(
                         showTitles: true,
@@ -523,5 +524,18 @@ class _RhythmPanel extends ConsumerWidget {
         ],
       ),
     );
+  }
+}
+
+/// A chevron pointing toward the past (back) or the future, mirrored for
+/// right-to-left layouts where time flows from right to left.
+class _DirectionalChevron extends StatelessWidget {
+  const _DirectionalChevron({required this.back});
+  final bool back;
+
+  @override
+  Widget build(BuildContext context) {
+    final rtl = Directionality.of(context) == TextDirection.rtl;
+    return Icon(back != rtl ? Icons.chevron_left : Icons.chevron_right);
   }
 }
