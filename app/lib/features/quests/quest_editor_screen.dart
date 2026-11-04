@@ -12,6 +12,7 @@ import '../../design/components/date_picker.dart';
 import '../../design/components/panel.dart';
 import '../../design/tokens.dart';
 import '../../l10n/content.dart';
+import '../reminders/reminder_coordinator.dart';
 import 'complete_flow.dart';
 import 'quest_timer.dart';
 
@@ -39,6 +40,7 @@ class _QuestEditorScreenState extends ConsumerState<QuestEditorScreen> {
   DateTime? _due;
   Recurrence _recurrence = Recurrence.none;
   ShareLevel _share = ShareLevel.private;
+  int? _remindAt;
   late String? _parentId = widget.parentId;
   bool _loaded = false;
   bool _saving = false;
@@ -72,6 +74,7 @@ class _QuestEditorScreenState extends ConsumerState<QuestEditorScreen> {
       _recurrence = q.recurrence;
       _share = q.shareLevel;
       _parentId = q.parentId;
+      _remindAt = q.remindAt;
     }
     setState(() => _loaded = true);
   }
@@ -97,6 +100,7 @@ class _QuestEditorScreenState extends ConsumerState<QuestEditorScreen> {
     intention: _intention.text,
     shareLevel: _share,
     parentId: _tier == QuestTier.objective ? null : _parentId,
+    remindAt: _tier == QuestTier.objective ? null : _remindAt,
   );
 
   Future<void> _save() async {
@@ -135,6 +139,18 @@ class _QuestEditorScreenState extends ConsumerState<QuestEditorScreen> {
   Future<void> _pickDate() async {
     final d = await showCalendarDatePicker(context, initial: _due);
     if (d != null) setState(() => _due = d);
+  }
+
+  Future<void> _pickReminder() async {
+    final initial = _remindAt ?? 18 * 60;
+    final t = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay(hour: initial ~/ 60, minute: initial % 60),
+    );
+    if (t == null) return;
+    setState(() => _remindAt = t.hour * 60 + t.minute);
+    // Ask for notification permission only when it is first needed.
+    await ref.read(reminderSchedulerProvider).requestPermission();
   }
 
   @override
@@ -242,6 +258,28 @@ class _QuestEditorScreenState extends ConsumerState<QuestEditorScreen> {
                     helperText: l10n.fieldIntentionHelp,
                   ),
                 ),
+                if (_tier != QuestTier.objective)
+                  ListTile(
+                    contentPadding: EdgeInsetsDirectional.zero,
+                    leading: const Icon(Icons.notifications_none_outlined),
+                    title: Text(l10n.fieldReminder),
+                    subtitle: Text(
+                      _remindAt == null
+                          ? l10n.reminderNone
+                          : f.digits(
+                              '${(_remindAt! ~/ 60).toString().padLeft(2, '0')}:'
+                              '${(_remindAt! % 60).toString().padLeft(2, '0')}',
+                            ),
+                    ),
+                    trailing: _remindAt == null
+                        ? null
+                        : IconButton(
+                            tooltip: l10n.reminderClear,
+                            icon: const Icon(Icons.close, size: 18),
+                            onPressed: () => setState(() => _remindAt = null),
+                          ),
+                    onTap: _pickReminder,
+                  ),
                 const SizedBox(height: AppSpace.md),
                 Theme(
                   data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
