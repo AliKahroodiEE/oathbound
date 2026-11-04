@@ -5,7 +5,7 @@ Status: Accepted for M0–M1 · Decisions are recorded as ADRs in [`adr/`](adr/)
 ## 1. System context
 
 ```
-┌──────────────── Flutter client (Android · iOS · macOS · Windows · Web) ───────────────┐
+┌──────────────── Flutter client (Android · iOS · Web) ────── ───────────────┐
 │  UI (adaptive shells, design system, l10n)                                            │
 │  State (Riverpod) ─▶ Repositories ─▶ Local store (Drift / SQLite, offline-first)      │
 │                                   └▶ Sync engine (outbox push, cursor pull, realtime)  │

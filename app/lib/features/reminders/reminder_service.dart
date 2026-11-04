@@ -15,7 +15,7 @@ abstract class ReminderScheduler {
   Future<void> apply(List<ReminderPlan> plans, {required String fallbackBody});
   void dispose() {}
 
-  /// OS scheduling on Android, iOS, macOS and Windows; an in-app timer on
+  /// OS scheduling on Android and iOS; an in-app timer on
   /// the web, where background scheduling is unavailable.
   factory ReminderScheduler.forPlatform() => kIsWeb ? _InAppScheduler() : _OsScheduler();
 }
@@ -29,13 +29,6 @@ const _details = NotificationDetails(
     priority: Priority.defaultPriority,
   ),
   iOS: DarwinNotificationDetails(),
-  macOS: DarwinNotificationDetails(),
-);
-
-const _windows = WindowsInitializationSettings(
-  appName: 'Wyrd',
-  appUserModelId: 'App.Wyrd.Desktop',
-  guid: '6f1d4c1e-9a8b-4f3e-b5a2-0b0b10a71924',
 );
 
 class _OsScheduler implements ReminderScheduler {
@@ -60,12 +53,6 @@ class _OsScheduler implements ReminderScheduler {
           requestBadgePermission: false,
           requestSoundPermission: false,
         ),
-        macOS: DarwinInitializationSettings(
-          requestAlertPermission: false,
-          requestBadgePermission: false,
-          requestSoundPermission: false,
-        ),
-        windows: _windows,
       ),
     );
     _ready = true;
@@ -78,8 +65,6 @@ class _OsScheduler implements ReminderScheduler {
     if (android != null) return await android.requestNotificationsPermission() ?? false;
     final ios = _plugin.resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>();
     if (ios != null) return await ios.requestPermissions(alert: true, sound: true) ?? false;
-    final mac = _plugin.resolvePlatformSpecificImplementation<MacOSFlutterLocalNotificationsPlugin>();
-    if (mac != null) return await mac.requestPermissions(alert: true, sound: true) ?? false;
     return true;
   }
 

@@ -1,6 +1,6 @@
 # ADR-001 — Flutter as the single client codebase
 
-Status: Accepted · 2026-11-04
+Status: Accepted · 2026-11-04 · Amended 2026-11-04 (see below)
 
 ## Context
 Wyrd must ship on Android, iOS, macOS, Windows and Web with identical business logic,
@@ -25,3 +25,11 @@ scroll physics on Apple platforms) are layered on through small adapters.
 + Dart is shared with the progression engine package.
 − Web bundle size and first paint need care (deferred loading, CanvasKit vs. Skwasm choice).
 − Push notifications on Windows/macOS desktop need platform-specific handling (ADR-007).
+
+## Amendment — desktop through the web app
+
+Native macOS and Windows builds are dropped. Desktop users run the web app in their browser
+(installable as a web app), which uses the same expanded layout, keyboard shortcuts and
+data. This removes two platform toolchains, two signing and store pipelines, and the desktop
+notification gaps, at the cost of background reminders on desktop (the browser shows them
+only while the app is open). Supported targets: Android, iOS and Web.

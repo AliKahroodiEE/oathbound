@@ -15,5 +15,5 @@ Status: Accepted · 2026-11-04
 | Notifications | `flutter_local_notifications`, `firebase_messaging` (M1) | See ADR-007 |
 | IDs | `uuid` v7 | Time-ordered client-generated IDs for idempotency |
 
-All dependencies must support Android, iOS, macOS, Windows and Web, or be isolated behind an
+All dependencies must support Android, iOS and Web, or be isolated behind an
 interface with a no-op implementation on unsupported platforms.

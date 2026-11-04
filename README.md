@@ -7,7 +7,7 @@
 A dark-fantasy RPG productivity ecosystem in which real-life effort shapes a persistent character,
 its history, and the guilds it belongs to.
 
-Android · iOS · macOS · Windows · Web — English & فارسی (full RTL) from day one
+Android · iOS · Web (desktop browsers) — English & فارسی (full RTL) from day one
 
 [![License: PolyForm Strict 1.0.0](https://img.shields.io/badge/license-PolyForm%20Strict%201.0.0-A71924)](LICENSE.md)
 
@@ -73,14 +73,15 @@ Function; the web build exercised in a browser in English and Persian at phone, 
 desktop widths.
 
 **Not yet verified:** a live Supabase project, real Claude and FCM calls, and native builds for
-Android, iOS, macOS and Windows (they need the Android SDK, Xcode and Visual Studio).
+Android and iOS (they need the Android SDK and Xcode). On desktop, Wyrd runs as a web app
+in the browser and can be installed from it.
 Persian copy needs review by a native speaker before release.
 
 ## Repository layout
 
 ```
 .
-├── app/            Flutter client (Android, iOS, macOS, Windows, Web)
+├── app/            Flutter client (Android, iOS, Web)
 ├── packages/       Shared pure-Dart packages (the progression engine)
 ├── backend/        Supabase schema, row-level security, Edge Functions
 └── docs/           Research, product spec, design system, architecture, ADRs
@@ -93,7 +94,7 @@ Prerequisites: Flutter 3.47+ (stable), Dart 3.13+, plus the toolchain for each t
 ```bash
 cd app
 flutter pub get
-flutter run -d chrome          # or: -d macos, -d windows, an Android device or iOS simulator
+flutter run -d chrome          # or an Android device / iOS simulator
 ```
 
 Without backend configuration the app runs fully on the device (guest mode): every feature
