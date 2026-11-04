@@ -37,3 +37,18 @@ disabled by the user.
 + Users can opt out of AI and still use the full product.
 − AI cost scales with completions; mitigated by caching identical proposals for 7 days and
   per-user daily evaluation limits.
+
+## Amendment — bring your own key (2026-11-04)
+
+Users may connect their own provider: Anthropic (Messages API), OpenAI (Chat Completions),
+Google Gemini (`generateContent`), or any service implementing the Anthropic or OpenAI
+protocol at a custom base URL. The client calls the provider directly with the same
+minimised input and the same system prompt (generated from the server source; a test
+enforces byte equality). The key is kept in platform secure storage and never synced.
+
+For signed-in users the resulting proposal is sent with `evaluate-completion` as
+`client_proposal`. Because the server cannot verify where it came from, it is validated with
+the same strict schema check and bounded by the server heuristic (difficulty within ±1,
+estimate at most twice the heuristic's, minimum 15 minutes) before the engine applies its
+usual caps. This keeps guild challenges fair while letting deployments run with no server AI
+key at all. Users who switch AI off get the heuristic regardless.

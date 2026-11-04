@@ -66,6 +66,7 @@ premium, store releases) are next.
 | Adaptive layouts: phone (bottom bar), tablet (rail), desktop/web (sidebar, multi-column) | ✅ |
 | Backend: schema, row-level security, sync and progression RPCs, Claude evaluation and chronicle functions, push notifications | ✅ [`backend/`](backend/) |
 | Client accounts, sync, server evaluation, guilds (feed, reactions, comments, challenges) | ✅ |
+| Bring your own AI: Anthropic, OpenAI, Google Gemini, or any Anthropic/OpenAI-compatible service (OpenRouter, Groq, Ollama…) | ✅ |
 
 **Verified here:** all engine, app and backend test suites; static analysis; all migrations and
 73 security/behaviour checks against an offline Postgres (PGlite); type-checks of every Edge
@@ -110,6 +111,22 @@ flutter run --dart-define=SUPABASE_URL=https://<project>.supabase.co --dart-defi
 ```
 
 Backend setup is documented in [`backend/README.md`](backend/README.md).
+
+## Hosting
+
+| You want | You host |
+| --- | --- |
+| The app on phones, everything local (guest mode) | Nothing |
+| The web app (desktop and mobile browsers) | Static files only: `flutter build web` → GitHub Pages, Cloudflare Pages, Netlify or Vercel |
+| Accounts, sync across devices, guilds, push | The Supabase backend in [`backend/`](backend/) (Supabase Cloud or self-hosted) — see its README |
+
+**AI is optional and can cost the operator nothing.** Each user can connect their own Anthropic,
+OpenAI, Google Gemini or compatible account under *Settings → AI → Your own AI*. The key stays
+on the user's device (platform secure storage) and goes only to that provider. Signed-in users'
+AI proposals are sent to the server, which validates them and bounds difficulty and duration by
+its own estimate before the rules engine grants anything. A server-side key
+(`ANTHROPIC_API_KEY`) remains possible but is not required; without any AI, the built-in rules
+evaluate every quest.
 
 ## Tests
 
