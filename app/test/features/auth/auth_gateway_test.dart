@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -77,6 +78,13 @@ void main() {
       );
       await expectLater(SupabaseAuthGateway(client).signOut(), throwsA(isA<AuthRetryableFetchException>()));
       expect(client.auth.currentUser?.id, 'u2');
+    });
+
+    test('does not wait on a network that never answers', () async {
+      final never = Completer<Never>();
+      final client = await _signedIn(httpClient: MockClient((_) => never.future));
+      await SupabaseAuthGateway(client, signOutTimeout: const Duration(milliseconds: 50)).signOut();
+      expect(client.auth.currentSession, isNull);
     });
   });
 }

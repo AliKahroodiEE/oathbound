@@ -64,9 +64,14 @@ final authGatewayProvider = Provider<AuthGateway?>((ref) {
 String webRedirectUrl() => '${Uri.base.origin}${Uri.base.path}';
 
 class SupabaseAuthGateway implements AuthGateway {
-  SupabaseAuthGateway(this._client);
+  SupabaseAuthGateway(this._client, {this.signOutTimeout = const Duration(seconds: 10)});
 
   final SupabaseClient _client;
+
+  /// How long sign-out waits for the server. Auth forgets the session on
+  /// this device first, so a network that drops packets (instead of
+  /// refusing them) never holds up signing out.
+  final Duration signOutTimeout;
 
   GoTrueClient get _auth => _client.auth;
 
@@ -142,7 +147,7 @@ class SupabaseAuthGateway implements AuthGateway {
   @override
   Future<void> signOut() async {
     try {
-      await _auth.signOut();
+      await _auth.signOut().timeout(signOutTimeout);
     } on Object catch (error) {
       if (_auth.currentSession != null) rethrow;
       debugPrint('Signed out on this device; the server was not told ($error)');
