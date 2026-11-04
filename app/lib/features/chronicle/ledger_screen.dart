@@ -57,7 +57,7 @@ class LedgerScreen extends ConsumerWidget {
                             ),
                             trailing: Text(
                               l10n.rewardTotal(f.number(r.undone ? 0 : r.result.totalXp)),
-                              style: text.labelLarge?.copyWith(color: AppColors.ember),
+                              style: text.labelLarge?.copyWith(color: context.palette.accent),
                             ),
                             children: [
                               RewardExplanation(result: r.result, proposal: r.proposal, provisional: r.provisional),

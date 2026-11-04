@@ -18,7 +18,7 @@ class AttributeSigil extends StatelessWidget {
   Widget build(BuildContext context) => ExcludeSemantics(
     child: CustomPaint(
       size: Size.square(size),
-      painter: _SigilPainter(attribute, color ?? AppColors.forAttribute(attribute)),
+      painter: _SigilPainter(attribute, color ?? context.palette.attribute(attribute)),
     ),
   );
 }

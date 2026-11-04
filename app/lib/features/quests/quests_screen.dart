@@ -138,7 +138,7 @@ class _CompletedList extends ConsumerWidget {
                       subtitle: Text('${f.date(r.createdAt)} · ${f.time(r.createdAt)}'),
                       trailing: Text(
                         l10n.rewardTotal(f.number(r.result.totalXp)),
-                        style: text.labelMedium?.copyWith(color: AppColors.ember),
+                        style: text.labelMedium?.copyWith(color: context.palette.accent),
                       ),
                     );
                   },

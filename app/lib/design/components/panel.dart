@@ -42,9 +42,9 @@ class Panel extends StatelessWidget {
     );
     return DecoratedBox(
       decoration: BoxDecoration(
-        gradient: AppGradients.surface,
+        gradient: context.palette.surfaceGradient,
         borderRadius: AppRadius.cardAll,
-        border: Border.all(color: AppColors.hairline),
+        border: Border.all(color: context.palette.hairline),
       ),
       child: ClipRRect(
         borderRadius: AppRadius.cardAll,
@@ -86,13 +86,13 @@ class SectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final style = Theme.of(context).textTheme.labelSmall?.copyWith(color: color ?? AppColors.ashMuted);
+    final style = Theme.of(context).textTheme.labelSmall?.copyWith(color: color ?? context.palette.inkMuted);
     return Semantics(
       header: true,
       child: Row(
         children: [
           if (icon != null) ...[
-            Icon(icon, size: 16, color: color ?? AppColors.ember),
+            Icon(icon, size: 16, color: color ?? context.palette.accent),
             const SizedBox(width: AppSpace.sm),
           ],
           Expanded(
@@ -149,13 +149,20 @@ class Pill extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (icon != null) ...[Icon(icon, size: 13, color: filled ? AppColors.bone : color), const SizedBox(width: 4)],
+          if (icon != null) ...[
+            Icon(icon, size: 13, color: filled ? AppColors.onAccent : color),
+            const SizedBox(width: 4),
+          ],
           Flexible(
             child: Text(
               label,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: text?.copyWith(color: filled ? AppColors.bone : color, fontWeight: FontWeight.w600, height: 1.2),
+              style: text?.copyWith(
+                color: filled ? AppColors.onAccent : color,
+                fontWeight: FontWeight.w600,
+                height: 1.2,
+              ),
             ),
           ),
         ],

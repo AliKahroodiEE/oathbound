@@ -202,14 +202,17 @@ class RewardSheet extends ConsumerWidget {
                 padding: const EdgeInsetsDirectional.symmetric(horizontal: AppSpace.md, vertical: AppSpace.sm + 2),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [AppColors.gold.withValues(alpha: 0.22), AppColors.arcane.withValues(alpha: 0.12)],
+                    colors: [
+                      context.palette.gold.withValues(alpha: 0.22),
+                      context.palette.arcane.withValues(alpha: 0.12),
+                    ],
                   ),
                   borderRadius: AppRadius.softAll,
-                  border: Border.all(color: AppColors.gold.withValues(alpha: 0.4)),
+                  border: Border.all(color: context.palette.gold.withValues(alpha: 0.4)),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.auto_awesome_rounded, size: 18, color: AppColors.gold),
+                    Icon(Icons.auto_awesome_rounded, size: 18, color: context.palette.gold),
                     const SizedBox(width: AppSpace.sm),
                     Expanded(child: Text(b, style: text.labelLarge)),
                   ],

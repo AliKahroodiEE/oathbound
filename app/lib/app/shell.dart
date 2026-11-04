@@ -58,8 +58,8 @@ class AdaptiveShell extends StatelessWidget {
               ? GlowFab(tooltip: l10n.quickAdd, onPressed: () => _newQuest(context))
               : null,
           bottomNavigationBar: DecoratedBox(
-            decoration: const BoxDecoration(
-              border: Border(top: BorderSide(color: AppColors.hairline)),
+            decoration: BoxDecoration(
+              border: Border(top: BorderSide(color: context.palette.hairline)),
             ),
             child: NavigationBar(
               selectedIndex: shell.currentIndex,
@@ -168,7 +168,7 @@ class _Sidebar extends StatelessWidget {
     final l10n = context.l10n;
     return Container(
       width: 256,
-      color: AppColors.abyss.withValues(alpha: 0.85),
+      color: context.palette.sunken.withValues(alpha: 0.85),
       child: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -236,13 +236,13 @@ class _SidebarItem extends StatelessWidget {
                   padding: const EdgeInsetsDirectional.symmetric(horizontal: AppSpace.md, vertical: AppSpace.md),
                   child: Icon(
                     selected ? destination.selectedIcon : destination.icon,
-                    color: selected ? AppColors.ember : AppColors.ashMuted,
+                    color: selected ? context.palette.accent : context.palette.inkMuted,
                     size: 21,
                   ),
                 ),
                 Text(
                   destination.label,
-                  style: text.labelLarge?.copyWith(color: selected ? AppColors.bone : AppColors.ash),
+                  style: text.labelLarge?.copyWith(color: selected ? context.palette.ink : context.palette.inkSoft),
                 ),
               ],
             ),

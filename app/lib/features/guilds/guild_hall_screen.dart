@@ -283,9 +283,9 @@ class _GuildHallScreenState extends ConsumerState<GuildHallScreen> {
           for (final m in _members)
             ListTile(
               contentPadding: EdgeInsetsDirectional.zero,
-              leading: const CircleAvatar(
-                backgroundColor: AppColors.abyss,
-                child: Icon(Icons.person_outline, color: AppColors.ash),
+              leading: CircleAvatar(
+                backgroundColor: context.palette.sunken,
+                child: Icon(Icons.person_outline, color: context.palette.inkSoft),
               ),
               title: UserText(m.name),
               subtitle: Text(
@@ -444,10 +444,10 @@ class _FeedItem extends ConsumerWidget {
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const CircleAvatar(
+            CircleAvatar(
               radius: 16,
-              backgroundColor: AppColors.abyss,
-              child: Icon(Icons.shield_outlined, size: 16, color: AppColors.ash),
+              backgroundColor: context.palette.sunken,
+              child: Icon(Icons.shield_outlined, size: 16, color: context.palette.inkSoft),
             ),
             const SizedBox(width: AppSpace.md),
             Expanded(

@@ -13,8 +13,8 @@ class AppBackground extends StatelessWidget {
   @override
   Widget build(BuildContext context) => DecoratedBox(
     decoration: reducedEffects
-        ? const BoxDecoration(color: AppColors.void_)
-        : const BoxDecoration(gradient: AppGradients.backdrop),
+        ? BoxDecoration(color: context.palette.canvas)
+        : BoxDecoration(gradient: context.palette.backdrop),
     child: child,
   );
 }

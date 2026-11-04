@@ -43,7 +43,7 @@ class SealCheckbox extends StatelessWidget {
                 border: checked ? null : Border.all(color: color.withValues(alpha: 0.7), width: 2),
                 boxShadow: checked ? AppShadows.glow(AppColors.ember, strength: 0.45, blur: 12) : null,
               ),
-              child: checked ? const Icon(Icons.check_rounded, size: 17, color: AppColors.bone) : null,
+              child: checked ? const Icon(Icons.check_rounded, size: 17, color: AppColors.onAccent) : null,
             ),
           ),
         ),

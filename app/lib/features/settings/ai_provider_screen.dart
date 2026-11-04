@@ -240,7 +240,7 @@ class _AiProviderScreenState extends ConsumerState<AiProviderScreen> {
                             Text(
                               _status!,
                               style: text.bodyMedium?.copyWith(
-                                color: _statusOk ? AppColors.attrVitality : AppColors.ember,
+                                color: _statusOk ? context.palette.success : context.palette.accent,
                               ),
                             ),
                           ],

@@ -161,7 +161,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const SizedBox(height: AppSpace.xl),
-        const Center(
+        Center(
           child: XpRing(
             fraction: 1,
             size: 148,
@@ -169,9 +169,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             child: DecoratedBox(
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                gradient: RadialGradient(colors: [Color(0xFF2A2140), AppColors.abyss]),
+                gradient: RadialGradient(colors: [context.palette.glow, context.palette.sunken]),
               ),
-              child: Center(child: Icon(Icons.local_fire_department_rounded, size: 54, color: AppColors.ember)),
+              child: const Center(child: Icon(Icons.local_fire_department_rounded, size: 54, color: AppColors.ember)),
             ),
           ),
         ),
@@ -227,10 +227,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     height: 56,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: _portrait == e.key ? AppColors.wine : AppColors.abyss,
-                      border: Border.all(color: _portrait == e.key ? AppColors.ember : AppColors.hairline),
+                      color: _portrait == e.key ? context.palette.accentContainer : context.palette.sunken,
+                      border: Border.all(color: _portrait == e.key ? AppColors.ember : context.palette.hairline),
                     ),
-                    child: Icon(e.value, color: AppColors.bone),
+                    child: Icon(e.value, color: context.palette.ink),
                   ),
                 ),
               ),

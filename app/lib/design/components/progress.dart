@@ -29,7 +29,7 @@ class XpBar extends StatelessWidget {
           height: height,
           child: Stack(
             children: [
-              Positioned.fill(child: ColoredBox(color: (c ?? AppColors.ember).withValues(alpha: 0.12))),
+              Positioned.fill(child: ColoredBox(color: (c ?? context.palette.accent).withValues(alpha: 0.12))),
               TweenAnimationBuilder<double>(
                 tween: Tween(end: f),
                 duration: motion(context, AppMotion.reveal),
@@ -41,7 +41,7 @@ class XpBar extends StatelessWidget {
                   child: DecoratedBox(
                     decoration: BoxDecoration(
                       borderRadius: AppRadius.pillAll,
-                      gradient: c == null ? AppGradients.ember : AppGradients.tint(c),
+                      gradient: c == null ? AppGradients.ember : context.palette.tint(c),
                     ),
                   ),
                 ),
@@ -106,7 +106,7 @@ class AttributeTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
-    final color = AppColors.forAttribute(attribute);
+    final color = context.palette.attribute(attribute);
     return Material(
       color: color.withValues(alpha: 0.07),
       shape: RoundedRectangleBorder(
@@ -147,7 +147,7 @@ class AttributeTile extends StatelessWidget {
                               if (todayLabel != null)
                                 TextSpan(
                                   text: '  $todayLabel',
-                                  style: text.labelMedium?.copyWith(color: AppColors.attrVitality),
+                                  style: text.labelMedium?.copyWith(color: context.palette.success),
                                 ),
                             ],
                           ),
@@ -215,9 +215,9 @@ class StatTile extends StatelessWidget {
     return Container(
       padding: const EdgeInsetsDirectional.all(AppSpace.md),
       decoration: BoxDecoration(
-        color: AppColors.abyss.withValues(alpha: 0.7),
+        color: context.palette.sunken.withValues(alpha: 0.7),
         borderRadius: AppRadius.softAll,
-        border: Border.all(color: AppColors.hairline),
+        border: Border.all(color: context.palette.hairline),
       ),
       child: Row(
         children: [
@@ -235,7 +235,7 @@ class StatTile extends StatelessWidget {
                 Text(value, style: text.titleMedium, maxLines: 1, overflow: TextOverflow.ellipsis),
                 Text(label, style: text.bodySmall, maxLines: 1, overflow: TextOverflow.ellipsis),
                 if (caption != null)
-                  Text(caption!, style: text.bodySmall?.copyWith(color: AppColors.ashFaint), maxLines: 2),
+                  Text(caption!, style: text.bodySmall?.copyWith(color: context.palette.inkFaint), maxLines: 2),
               ],
             ),
           ),
@@ -268,7 +268,7 @@ class LevelSeal extends StatelessWidget {
         ),
         child: Text(
           '$caption $level',
-          style: text.labelLarge?.copyWith(color: AppColors.bone, fontWeight: FontWeight.w800),
+          style: text.labelLarge?.copyWith(color: AppColors.onAccent, fontWeight: FontWeight.w800),
         ),
       ),
     );

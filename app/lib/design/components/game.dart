@@ -24,7 +24,7 @@ class XpRing extends StatelessWidget {
         duration: motion(context, AppMotion.reveal),
         curve: AppMotion.emphasizedDecelerate,
         builder: (context, v, _) => CustomPaint(
-          painter: _RingPainter(v, stroke),
+          painter: _RingPainter(v, stroke, context.palette.hairline),
           child: SizedBox.square(
             dimension: size,
             child: Padding(padding: EdgeInsets.all(stroke * 2), child: child),
@@ -36,9 +36,10 @@ class XpRing extends StatelessWidget {
 }
 
 class _RingPainter extends CustomPainter {
-  _RingPainter(this.value, this.stroke);
+  _RingPainter(this.value, this.stroke, this.track);
   final double value;
   final double stroke;
+  final Color track;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -52,7 +53,7 @@ class _RingPainter extends CustomPainter {
       Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = stroke
-        ..color = AppColors.hairline,
+        ..color = track,
     );
     if (value <= 0) return;
     final sweep = math.pi * 2 * value;
@@ -85,7 +86,7 @@ class _RingPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_RingPainter old) => old.value != value;
+  bool shouldRepaint(_RingPainter old) => old.value != value || old.track != track;
 }
 
 /// Hexagonal radar of the six attributes. Values are 0–1 shares of the
@@ -110,7 +111,7 @@ class AttributeRadar extends StatelessWidget {
           curve: AppMotion.emphasizedDecelerate,
           builder: (context, t, _) => CustomPaint(
             size: Size.square(size),
-            painter: _RadarPainter(values, labels, style, rtl, t, Directionality.of(context)),
+            painter: _RadarPainter(values, labels, style, rtl, t, Directionality.of(context), context.palette),
           ),
         ),
       ),
@@ -119,7 +120,7 @@ class AttributeRadar extends StatelessWidget {
 }
 
 class _RadarPainter extends CustomPainter {
-  _RadarPainter(this.values, this.labels, this.style, this.rtl, this.t, this.direction);
+  _RadarPainter(this.values, this.labels, this.style, this.rtl, this.t, this.direction, this.palette);
 
   final Map<Attribute, double> values;
   final Map<Attribute, String> labels;
@@ -127,6 +128,7 @@ class _RadarPainter extends CustomPainter {
   final bool rtl;
   final double t;
   final TextDirection direction;
+  final Palette palette;
 
   Offset _point(Offset c, double r, int i) {
     final angle = -math.pi / 2 + (rtl ? -1 : 1) * i * math.pi / 3;
@@ -140,7 +142,7 @@ class _RadarPainter extends CustomPainter {
     final grid = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1
-      ..color = AppColors.hairline;
+      ..color = palette.hairline;
     for (final k in [1 / 3, 2 / 3, 1.0]) {
       final path = Path();
       for (var i = 0; i < 6; i++) {
@@ -180,11 +182,11 @@ class _RadarPainter extends CustomPainter {
     for (var i = 0; i < 6; i++) {
       final a = attrs[i];
       final v = ((values[a] ?? 0).clamp(0.12, 1.0)) * t;
-      canvas.drawCircle(_point(c, r * v, i), 4.5, Paint()..color = AppColors.forAttribute(a));
+      canvas.drawCircle(_point(c, r * v, i), 4.5, Paint()..color = palette.attribute(a));
       final tp = TextPainter(
         text: TextSpan(
           text: labels[a] ?? a.name,
-          style: style.copyWith(color: AppColors.forAttribute(a)),
+          style: style.copyWith(color: palette.attribute(a)),
         ),
         textDirection: direction,
         maxLines: 1,
@@ -201,7 +203,8 @@ class _RadarPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_RadarPainter old) => old.t != t || old.values != values || old.labels != labels;
+  bool shouldRepaint(_RadarPainter old) =>
+      old.t != t || old.values != values || old.labels != labels || old.palette != palette;
 }
 
 /// Gradient floating action button with a soft ember glow.
@@ -226,7 +229,7 @@ class GlowFab extends StatelessWidget {
         child: InkWell(
           borderRadius: AppRadius.softAll,
           onTap: onPressed,
-          child: SizedBox.square(dimension: 58, child: Icon(icon, color: AppColors.bone, size: 30)),
+          child: SizedBox.square(dimension: 58, child: Icon(icon, color: AppColors.onAccent, size: 30)),
         ),
       ),
     ),
@@ -266,14 +269,14 @@ class GlowButton extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     if (icon != null) ...[
-                      Icon(icon, color: AppColors.bone, size: 20),
+                      Icon(icon, color: AppColors.onAccent, size: 20),
                       const SizedBox(width: AppSpace.sm),
                     ],
                     Flexible(
                       child: Text(
                         label,
                         textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.labelLarge?.copyWith(color: AppColors.bone),
+                        style: Theme.of(context).textTheme.labelLarge?.copyWith(color: AppColors.onAccent),
                       ),
                     ),
                   ],

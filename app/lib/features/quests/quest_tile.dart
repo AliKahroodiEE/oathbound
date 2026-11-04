@@ -38,7 +38,7 @@ class QuestTile extends ConsumerWidget {
     final category =
         q.category ??
         HeuristicEvaluator.evaluate(HeuristicInput(title: q.title, notes: q.notes, tier: q.tier)).category;
-    final color = AppColors.forCategory(category);
+    final color = context.palette.category(category);
 
     final meta = <String>[
       if (q.tier != QuestTier.daily) l10n.tierName(q.tier),
@@ -49,10 +49,10 @@ class QuestTile extends ConsumerWidget {
     ];
 
     return Material(
-      color: done ? AppColors.abyss.withValues(alpha: 0.5) : AppColors.slateHigh.withValues(alpha: 0.55),
+      color: done ? context.palette.sunken.withValues(alpha: 0.5) : context.palette.surfaceHigh.withValues(alpha: 0.55),
       shape: RoundedRectangleBorder(
         borderRadius: AppRadius.softAll,
-        side: BorderSide(color: done ? AppColors.hairline.withValues(alpha: 0.5) : AppColors.hairline),
+        side: BorderSide(color: done ? context.palette.hairline.withValues(alpha: 0.5) : context.palette.hairline),
       ),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
@@ -89,9 +89,9 @@ class QuestTile extends ConsumerWidget {
                       q.title,
                       style: text.bodyLarge?.copyWith(
                         fontWeight: FontWeight.w600,
-                        color: done ? AppColors.ashMuted : AppColors.bone,
+                        color: done ? context.palette.inkMuted : context.palette.ink,
                         decoration: done && !q.isRecurring ? TextDecoration.lineThrough : null,
-                        decorationColor: AppColors.ashFaint,
+                        decorationColor: context.palette.inkFaint,
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
@@ -123,14 +123,14 @@ class QuestTile extends ConsumerWidget {
                 ),
               ),
               if (timerRunning)
-                const Padding(
-                  padding: EdgeInsetsDirectional.symmetric(horizontal: AppSpace.xs),
-                  child: Icon(Icons.timer_outlined, size: 18, color: AppColors.ember),
+                Padding(
+                  padding: const EdgeInsetsDirectional.symmetric(horizontal: AppSpace.xs),
+                  child: Icon(Icons.timer_outlined, size: 18, color: context.palette.accent),
                 ),
               if (q.isRecurring)
-                const Padding(
-                  padding: EdgeInsetsDirectional.symmetric(horizontal: AppSpace.xs),
-                  child: Icon(Icons.repeat_rounded, size: 16, color: AppColors.ashFaint),
+                Padding(
+                  padding: const EdgeInsetsDirectional.symmetric(horizontal: AppSpace.xs),
+                  child: Icon(Icons.repeat_rounded, size: 16, color: context.palette.inkFaint),
                 ),
               const SizedBox(width: AppSpace.xs),
               Tooltip(

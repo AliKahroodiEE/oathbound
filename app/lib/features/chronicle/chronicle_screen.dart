@@ -195,28 +195,28 @@ class _SummaryPanel extends ConsumerWidget {
         f.number(stats.completions),
         change(stats.completions, previous?.completions),
         Icons.task_alt_rounded,
-        AppColors.ember,
+        context.palette.accent,
       ),
       (
         l10n.statMinutes,
         f.duration(stats.minutes),
         change(stats.minutes, previous?.minutes),
         Icons.hourglass_bottom_rounded,
-        AppColors.attrIntelligence,
+        context.palette.intelligence,
       ),
       (
         l10n.statXp,
         f.number(stats.totalXp),
         change(stats.totalXp, previous?.totalXp),
         Icons.bolt_rounded,
-        AppColors.gold,
+        context.palette.gold,
       ),
       (
         l10n.statActiveDays,
         f.number(stats.activeDays.length),
         null,
         Icons.calendar_month_rounded,
-        AppColors.attrVitality,
+        context.palette.success,
       ),
     ];
     final periodName = switch (period) {
@@ -228,7 +228,7 @@ class _SummaryPanel extends ConsumerWidget {
     return Panel(
       title: l10n.writtenChronicle,
       icon: Icons.auto_stories_rounded,
-      accent: AppColors.arcane,
+      accent: context.palette.arcane,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -369,15 +369,15 @@ class _XpChartPanel extends ConsumerWidget {
                   maxY: (maxY * 1.15).ceilToDouble(),
                   gridData: FlGridData(
                     drawVerticalLine: false,
-                    getDrawingHorizontalLine: (_) => const FlLine(color: AppColors.hairline, strokeWidth: 1),
+                    getDrawingHorizontalLine: (_) => FlLine(color: context.palette.hairline, strokeWidth: 1),
                   ),
                   borderData: FlBorderData(show: false),
                   barTouchData: BarTouchData(
                     touchTooltipData: BarTouchTooltipData(
-                      getTooltipColor: (_) => AppColors.slateHigh,
+                      getTooltipColor: (_) => context.palette.surfaceHigh,
                       getTooltipItem: (group, _, rod, _) => BarTooltipItem(
                         '${ordered[group.x].$1}\n${l10n.totalXp(f.number(rod.toY.round()))}',
-                        Theme.of(context).textTheme.bodySmall!.copyWith(color: AppColors.bone),
+                        Theme.of(context).textTheme.bodySmall!.copyWith(color: context.palette.ink),
                       ),
                     ),
                   ),
@@ -402,7 +402,7 @@ class _XpChartPanel extends ConsumerWidget {
                   ),
                   barGroups: [
                     for (var i = 0; i < ordered.length; i++)
-                      BarChartGroupData(x: i, barRods: [_stackedRod(ordered[i].$2, ordered.length)]),
+                      BarChartGroupData(x: i, barRods: [_stackedRod(context.palette, ordered[i].$2, ordered.length)]),
                   ],
                 ),
               ),
@@ -410,13 +410,13 @@ class _XpChartPanel extends ConsumerWidget {
     );
   }
 
-  BarChartRodData _stackedRod(Map<Attribute, int> xp, int count) {
+  BarChartRodData _stackedRod(Palette palette, Map<Attribute, int> xp, int count) {
     var from = 0.0;
     final items = <BarChartRodStackItem>[];
     for (final a in Attribute.values) {
       final v = (xp[a] ?? 0).toDouble();
       if (v <= 0) continue;
-      items.add(BarChartRodStackItem(from, from + v, AppColors.forAttribute(a)));
+      items.add(BarChartRodStackItem(from, from + v, palette.attribute(a)));
       from += v;
     }
     return BarChartRodData(
@@ -424,7 +424,7 @@ class _XpChartPanel extends ConsumerWidget {
       rodStackItems: items,
       width: count > 16 ? 7 : 18,
       borderRadius: const BorderRadius.vertical(top: Radius.circular(6)),
-      color: AppColors.slateHigh,
+      color: palette.surfaceHigh,
     );
   }
 }
@@ -456,7 +456,7 @@ class _DistributionPanel extends ConsumerWidget {
                   Expanded(
                     child: XpBar(
                       fraction: total == 0 ? 0 : (stats.xpByAttribute[a] ?? 0) / total,
-                      color: AppColors.forAttribute(a),
+                      color: context.palette.attribute(a),
                       height: 6,
                     ),
                   ),
@@ -512,9 +512,9 @@ class _RhythmPanel extends ConsumerWidget {
     Color colorFor(DateTime d) {
       final k = dayKey(d);
       if (stats.activeDays.contains(k)) return AppColors.crimson;
-      if (stats.restDays.contains(k)) return AppColors.attrVitality;
+      if (stats.restDays.contains(k)) return context.palette.success;
       if (d.isAfter(today)) return Colors.transparent;
-      return AppColors.abyss;
+      return context.palette.sunken;
     }
 
     return Panel(
@@ -536,7 +536,7 @@ class _RhythmPanel extends ConsumerWidget {
                     decoration: BoxDecoration(
                       color: colorFor(d),
                       borderRadius: BorderRadius.circular(4),
-                      border: Border.all(color: AppColors.hairline, width: 0.5),
+                      border: Border.all(color: context.palette.hairline, width: 0.5),
                     ),
                   ),
                 ),
@@ -548,8 +548,8 @@ class _RhythmPanel extends ConsumerWidget {
             children: [
               for (final (c, label) in [
                 (AppColors.crimson, l10n.legendActive),
-                (AppColors.attrVitality, l10n.legendRest),
-                (AppColors.abyss, l10n.legendQuiet),
+                (context.palette.success, l10n.legendRest),
+                (context.palette.sunken, l10n.legendQuiet),
               ])
                 Row(
                   mainAxisSize: MainAxisSize.min,
@@ -559,7 +559,7 @@ class _RhythmPanel extends ConsumerWidget {
                       height: 10,
                       decoration: BoxDecoration(
                         color: c,
-                        border: Border.all(color: AppColors.hairline, width: 0.5),
+                        border: Border.all(color: context.palette.hairline, width: 0.5),
                       ),
                     ),
                     const SizedBox(width: AppSpace.xs),

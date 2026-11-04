@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/sync/sync_coordinator.dart';
 import '../design/theme.dart';
+import '../design/tokens.dart';
 import '../features/reminders/reminder_coordinator.dart';
 import '../l10n/generated/app_localizations.dart';
 import 'providers.dart';
@@ -17,7 +18,7 @@ class WyrdApp extends ConsumerWidget {
     ref.watch(syncCoordinatorProvider);
     final regional = ref.watch(regionalProvider);
     final reducedMotion = ref.watch(profileProvider.select((p) => p.value?.reducedMotion ?? false));
-    final theme = buildAppTheme(regional.locale);
+    final theme = buildAppTheme(regional.locale, Palette.dark);
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
       onGenerateTitle: (c) => AppLocalizations.of(c).appName,
