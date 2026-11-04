@@ -72,9 +72,7 @@ class _CalendarDialogState extends ConsumerState<_CalendarDialog> {
                 children: [
                   IconButton(
                     tooltip: l10n.previousPeriod,
-                    icon: Icon(
-                      Directionality.of(context) == TextDirection.rtl ? Icons.chevron_right : Icons.chevron_left,
-                    ),
+                    icon: const Icon(Icons.chevron_left), // mirrors automatically in RTL
                     onPressed: () => setState(() => _month = f.addMonths(_month, -1)),
                   ),
                   Expanded(
@@ -82,9 +80,7 @@ class _CalendarDialogState extends ConsumerState<_CalendarDialog> {
                   ),
                   IconButton(
                     tooltip: l10n.nextPeriod,
-                    icon: Icon(
-                      Directionality.of(context) == TextDirection.rtl ? Icons.chevron_left : Icons.chevron_right,
-                    ),
+                    icon: const Icon(Icons.chevron_right),
                     onPressed: () => setState(() => _month = f.addMonths(_month, 1)),
                   ),
                 ],

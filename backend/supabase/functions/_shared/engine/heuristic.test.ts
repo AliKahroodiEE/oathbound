@@ -1,6 +1,6 @@
 /**
  * Heuristic evaluator tests, mirroring
- * `packages/oathbound_engine/test/curves_heuristic_test.dart` so both
+ * `packages/wyrd_engine/test/curves_heuristic_test.dart` so both
  * fallback evaluators classify identically.
  */
 import assert from 'node:assert/strict';

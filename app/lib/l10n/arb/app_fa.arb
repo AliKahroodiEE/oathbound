@@ -1,7 +1,7 @@
 {
   "@@locale": "fa",
 
-  "appName": "Oathbound",
+  "appName": "سرنوشت\u200cساز",
   "appTagline": "شخصیت تو کسی نیست که نقشش را بازی می‌کنی؛ کسی است که به آن تبدیل می‌شوی.",
 
   "navCharacter": "شخصیت",
@@ -271,6 +271,10 @@
   "periodWeek": "هفته",
   "periodMonth": "ماه",
   "periodYear": "سال",
+  "periodWeekNoun": "هفته",
+  "periodMonthNoun": "ماه",
+  "periodYearNoun": "سال",
+  "comparedToSamePoint": "{change} نسبت به همین زمان در دوره‌ی قبل",
   "previousPeriod": "دوره‌ی قبل",
   "nextPeriod": "دوره‌ی بعد",
   "statCompletions": "کردارها",

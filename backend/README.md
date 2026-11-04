@@ -1,6 +1,6 @@
-# Oathbound backend
+# Wyrd backend
 
-Supabase project for Oathbound: Postgres schema with row-level security, the
+Supabase project for Wyrd: Postgres schema with row-level security, the
 sync and progression RPCs, the TypeScript twin of the progression engine and
 three Edge Functions (AI evaluation, chronicles, push notifications).
 
@@ -87,17 +87,17 @@ hosted Supabase; the migration skips scheduling elsewhere):
 
 | Job | Schedule (UTC) | Function |
 | --- | --- | --- |
-| `oathbound-monthly` | 05:00 on the 1st | `private.take_monthly_snapshots()`, `private.recompute_classes()` |
-| `oathbound-chronicles` | 03:15 daily | `private.enqueue_weekly_chronicles()` (idempotent per user/week) |
-| `oathbound-dispatch` | every 15 min | `private.dispatch_pending_chronicles()` → `generate-chronicle {mode:"pending"}` |
-| `oathbound-hourly` | :07 hourly | `private.refresh_conditions()`, `private.end_challenges()` |
-| `oathbound-retention` | 04:30 daily | `private.retention_cleanup()` |
+| `wyrd-monthly` | 05:00 on the 1st | `private.take_monthly_snapshots()`, `private.recompute_classes()` |
+| `wyrd-chronicles` | 03:15 daily | `private.enqueue_weekly_chronicles()` (idempotent per user/week) |
+| `wyrd-dispatch` | every 15 min | `private.dispatch_pending_chronicles()` → `generate-chronicle {mode:"pending"}` |
+| `wyrd-hourly` | :07 hourly | `private.refresh_conditions()`, `private.end_challenges()` |
+| `wyrd-retention` | 04:30 daily | `private.retention_cleanup()` |
 
 The dispatch job uses pg_net and two Vault secrets (run once per project):
 
 ```sql
-select vault.create_secret('https://<project-ref>.supabase.co', 'oathbound_project_url');
-select vault.create_secret('<service-role key>', 'oathbound_service_role_key');
+select vault.create_secret('https://<project-ref>.supabase.co', 'wyrd_project_url');
+select vault.create_secret('<service-role key>', 'wyrd_service_role_key');
 ```
 
 ### Notification webhooks
@@ -116,7 +116,7 @@ runs in local-only (guest/demo) mode.
 
 ```bash
 flutter run \
-  --dart-define=OATHBOUND_ENV=local \
+  --dart-define=WYRD_ENV=local \
   --dart-define=SUPABASE_URL=http://127.0.0.1:54321 \
   --dart-define=SUPABASE_ANON_KEY=<anon key from `supabase status`>
 ```
@@ -142,7 +142,7 @@ The engine conformance test can also be run on its own from the repo root:
 node --test backend/supabase/functions/_shared/engine/engine.test.ts
 ```
 
-It loads `packages/oathbound_engine/test/vectors/reward_cases.json` and
+It loads `packages/wyrd_engine/test/vectors/reward_cases.json` and
 `curves.json` — the same files the Dart engine tests use (ADR-004). Any rule
 change must update both engines, bump `RULES_VERSION` and regenerate the
 vectors (`dart run tool/generate_vectors.dart` in the Dart package).

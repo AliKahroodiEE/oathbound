@@ -1,4 +1,4 @@
-import 'package:oathbound_engine/oathbound_engine.dart';
+import 'package:wyrd_engine/wyrd_engine.dart';
 import 'package:test/test.dart';
 
 final _morning = DateTime.utc(2026, 11, 4, 8);

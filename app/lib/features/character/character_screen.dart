@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart' hide Curves;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:oathbound_engine/oathbound_engine.dart';
+import 'package:wyrd_engine/wyrd_engine.dart';
 
 import '../../app/providers.dart';
 import '../../core/format/bidi.dart';
@@ -429,7 +429,11 @@ class _GrowthPanel extends ConsumerWidget {
     final text = Theme.of(context).textTheme;
     return Panel(
       title: l10n.sectionRecentGrowth,
-      trailing: TextButton(onPressed: () => context.go('/chronicle/ledger'), child: Text(l10n.ledgerTitle)),
+      trailing: IconButton(
+        tooltip: l10n.ledgerTitle,
+        icon: const Icon(Icons.receipt_long_outlined, size: 20, color: AppColors.ember),
+        onPressed: () => context.go('/chronicle/ledger'),
+      ),
       child: state.recent.isEmpty
           ? EmptyState(message: l10n.growthEmpty, icon: Icons.trending_up)
           : Column(

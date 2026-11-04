@@ -10,7 +10,7 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
-  String get appName => 'Oathbound';
+  String get appName => 'Wyrd';
 
   @override
   String get appTagline => 'Your character is not someone you play. Your character is who you become.';
@@ -852,6 +852,20 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get periodYear => 'Year';
+
+  @override
+  String get periodWeekNoun => 'week';
+
+  @override
+  String get periodMonthNoun => 'month';
+
+  @override
+  String get periodYearNoun => 'year';
+
+  @override
+  String comparedToSamePoint(Object change) {
+    return '$change vs the same point last period';
+  }
 
   @override
   String get previousPeriod => 'Previous period';

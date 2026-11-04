@@ -27,7 +27,7 @@ import {
   xpToAdvanceRank,
 } from './index.ts';
 
-const VECTORS = new URL('../../../../../packages/oathbound_engine/test/vectors/', import.meta.url);
+const VECTORS = new URL('../../../../../packages/wyrd_engine/test/vectors/', import.meta.url);
 
 interface RewardCase {
   name: string;

@@ -10,7 +10,7 @@ import { languageName } from './evaluation.ts';
 
 export const CHRONICLE_PROMPT_VERSION = 'chronicle-2026.11.1';
 
-export const CHRONICLE_SYSTEM_PROMPT = `You write the chronicle for Oathbound, a productivity app in which a person's real-world effort shapes a role-playing character in a restrained dark-fantasy world. A chronicle is a short narrative record of one period (a week, a month or a year) of that person's real activity, addressed to them in the second person.
+export const CHRONICLE_SYSTEM_PROMPT = `You write the chronicle for Wyrd, a productivity app in which a person's real-world effort shapes a role-playing character in a restrained dark-fantasy world. A chronicle is a short narrative record of one period (a week, a month or a year) of that person's real activity, addressed to them in the second person.
 
 # Grounding
 

@@ -8,8 +8,8 @@ import '../l10n/generated/app_localizations.dart';
 import 'providers.dart';
 import 'router.dart';
 
-class OathboundApp extends ConsumerWidget {
-  const OathboundApp({super.key});
+class WyrdApp extends ConsumerWidget {
+  const WyrdApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

@@ -9,7 +9,7 @@ Status: Accepted for M0–M1 · Decisions are recorded as ADRs in [`adr/`](adr/)
 │  UI (adaptive shells, design system, l10n)                                            │
 │  State (Riverpod) ─▶ Repositories ─▶ Local store (Drift / SQLite, offline-first)      │
 │                                   └▶ Sync engine (outbox push, cursor pull, realtime)  │
-│  oathbound_engine (pure Dart): provisional evaluation, curves, streaks, achievements   │
+│  wyrd_engine (pure Dart): provisional evaluation, curves, streaks, achievements   │
 └───────────────┬───────────────────────────────────────────────────────┬───────────────┘
                 │ HTTPS (PostgREST / RPC, JWT)                          │ WebSocket (Realtime)
 ┌───────────────▼───────────────────────────────────────────────────────▼───────────────┐
@@ -128,5 +128,5 @@ and a reward-distribution dashboard used to tune rules between versions.
 ## 8. Environments
 
 `local` (Supabase CLI + Docker) · `staging` · `production`. Client flavours are selected with
-`--dart-define=OATHBOUND_ENV=…`; without backend configuration the app runs in local-only
+`--dart-define=WYRD_ENV=…`; without backend configuration the app runs in local-only
 mode with the heuristic evaluator, which is also the demo environment.

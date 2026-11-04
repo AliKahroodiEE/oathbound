@@ -1,4 +1,4 @@
-import 'package:oathbound_engine/oathbound_engine.dart';
+import 'package:wyrd_engine/wyrd_engine.dart';
 import 'package:test/test.dart';
 
 DateTime d(int month, int day) => DateTime.utc(2026, month, day);

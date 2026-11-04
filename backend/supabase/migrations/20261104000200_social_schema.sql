@@ -1,5 +1,5 @@
 -- =============================================================================
--- Oathbound · social schema
+-- Wyrd · social schema
 --
 -- Guilds, membership, invites, the privacy-projected activity feed,
 -- reactions, comments, collective challenges, safety (blocks, reports) and

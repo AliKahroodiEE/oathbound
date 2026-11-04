@@ -39,7 +39,7 @@ language is a content task.
    values identical to English (allow-list for brand names).
 8. **Layout testing:** run golden tests in the new locale
    (`flutter test --tags golden`), and manually check the pseudo-localised
-   long-string build (`--dart-define=OATHBOUND_PSEUDO_L10N=true`).
+   long-string build (`--dart-define=WYRD_PSEUDO_L10N=true`).
 9. **Review:** a native speaker reviews strings in context before release. Machine
    translation may be used for drafts only.
 

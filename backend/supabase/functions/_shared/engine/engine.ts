@@ -1,7 +1,7 @@
 /**
  * The deterministic progression engine (progression rules §5).
  *
- * TypeScript twin of `packages/oathbound_engine/lib/src/engine.dart`. A pure
+ * TypeScript twin of `packages/wyrd_engine/lib/src/engine.dart`. A pure
  * function of its inputs: the same proposal, facts and day state always
  * produce the same result on every platform. The server result is
  * authoritative; both engines must reproduce the shared conformance vectors.

@@ -1,13 +1,13 @@
 import 'package:drift/drift.dart' show DatabaseConnection;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:oathbound/data/db/database.dart';
-import 'package:oathbound/data/models.dart';
-import 'package:oathbound/data/repositories/character_repository.dart';
-import 'package:oathbound/data/repositories/progression_repository.dart';
-import 'package:oathbound/data/repositories/quest_repository.dart';
-import 'package:oathbound/data/repositories/settings_repository.dart';
-import 'package:oathbound_engine/oathbound_engine.dart';
+import 'package:wyrd/data/db/database.dart';
+import 'package:wyrd/data/models.dart';
+import 'package:wyrd/data/repositories/character_repository.dart';
+import 'package:wyrd/data/repositories/progression_repository.dart';
+import 'package:wyrd/data/repositories/quest_repository.dart';
+import 'package:wyrd/data/repositories/settings_repository.dart';
+import 'package:wyrd_engine/wyrd_engine.dart';
 
 void main() {
   late AppDatabase db;

@@ -1,5 +1,5 @@
 -- =============================================================================
--- Oathbound · core schema
+-- Wyrd · core schema
 --
 -- Personal data: profiles, characters, quests, subtasks, completions,
 -- evaluations, the append-only XP ledger, achievements, per-day rollups,

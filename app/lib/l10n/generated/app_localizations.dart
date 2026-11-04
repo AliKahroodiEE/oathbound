@@ -95,7 +95,7 @@ abstract class AppLocalizations {
   /// No description provided for @appName.
   ///
   /// In en, this message translates to:
-  /// **'Oathbound'**
+  /// **'Wyrd'**
   String get appName;
 
   /// No description provided for @appTagline.
@@ -1645,6 +1645,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Year'**
   String get periodYear;
+
+  /// No description provided for @periodWeekNoun.
+  ///
+  /// In en, this message translates to:
+  /// **'week'**
+  String get periodWeekNoun;
+
+  /// No description provided for @periodMonthNoun.
+  ///
+  /// In en, this message translates to:
+  /// **'month'**
+  String get periodMonthNoun;
+
+  /// No description provided for @periodYearNoun.
+  ///
+  /// In en, this message translates to:
+  /// **'year'**
+  String get periodYearNoun;
+
+  /// No description provided for @comparedToSamePoint.
+  ///
+  /// In en, this message translates to:
+  /// **'{change} vs the same point last period'**
+  String comparedToSamePoint(Object change);
 
   /// No description provided for @previousPeriod.
   ///

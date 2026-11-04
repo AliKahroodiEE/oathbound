@@ -4,14 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
-import 'package:oathbound/app/app.dart';
-import 'package:oathbound/app/providers.dart';
-import 'package:oathbound/app/router.dart';
-import 'package:oathbound/core/locale/regional_settings.dart';
-import 'package:oathbound/data/db/database.dart';
-import 'package:oathbound/data/models.dart';
-import 'package:oathbound/data/repositories/quest_repository.dart';
-import 'package:oathbound/data/repositories/settings_repository.dart';
+import 'package:wyrd/app/app.dart';
+import 'package:wyrd/app/providers.dart';
+import 'package:wyrd/app/router.dart';
+import 'package:wyrd/core/locale/regional_settings.dart';
+import 'package:wyrd/data/db/database.dart';
+import 'package:wyrd/data/models.dart';
+import 'package:wyrd/data/repositories/quest_repository.dart';
+import 'package:wyrd/data/repositories/settings_repository.dart';
 
 Future<AppDatabase> _seeded(Locale locale) async {
   final db = AppDatabase(DatabaseConnection(NativeDatabase.memory(), closeStreamsSynchronously: true));
@@ -29,7 +29,7 @@ Future<void> _pump(WidgetTester tester, AppDatabase db, {Size size = const Size(
   await tester.pumpWidget(
     ProviderScope(
       overrides: [databaseProvider.overrideWithValue(db), initialOnboardedProvider.overrideWithValue(true)],
-      child: const OathboundApp(),
+      child: const WyrdApp(),
     ),
   );
   for (var i = 0; i < 10; i++) {

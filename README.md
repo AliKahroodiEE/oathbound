@@ -1,6 +1,6 @@
 <div align="center">
 
-# Oathbound
+# Wyrd
 
 **Your character is not someone you play. Your character is who you become.**
 
@@ -13,11 +13,31 @@ Android · iOS · macOS · Windows · Web — English & فارسی (full RTL) fr
 
 </div>
 
+<p align="center">
+  <img src="docs/screenshots/desktop-character-en.png" alt="Wyrd on desktop: character sheet with level, six attributes, today's quests, consistency and recent growth" width="100%">
+</p>
+
+<table>
+  <tr>
+    <td align="center" width="25%"><img src="docs/screenshots/phone-reward-en.png" alt="Reward reveal explaining each attribute gain and the planning bonus" width="100%"><br><sub>Every reward explains itself</sub></td>
+    <td align="center" width="25%"><img src="docs/screenshots/phone-character-fa.png" alt="Character sheet in Persian, right to left, with Persian digits" width="100%"><br><sub>Full Persian, right to left</sub></td>
+    <td align="center" width="25%"><img src="docs/screenshots/phone-quests-en.png" alt="Today's quests with recurring habits and completed seals" width="100%"><br><sub>Quests, habits and contracts</sub></td>
+    <td align="center" width="25%"><img src="docs/screenshots/phone-chronicle-fa.png" alt="Weekly chronicle in Persian with the Jalali calendar" width="100%"><br><sub>Chronicle in the Jalali calendar</sub></td>
+  </tr>
+</table>
+
+<p align="center">
+  <img src="docs/screenshots/desktop-chronicle-en.png" alt="Weekly chronicle on desktop: summary, growth by attribute, effort distribution and rhythm" width="100%">
+</p>
+
+<sub>Screenshots are rendered from the real app with six weeks of demo data
+(<code>flutter test --dart-define=SCREENSHOTS=true --update-goldens test/screenshots</code> in <code>app/</code>).</sub>
+
 ---
 
 ## What it is
 
-Oathbound is a task and habit system wrapped in a serious, atmospheric RPG. You don't assign
+Wyrd is a task and habit system wrapped in a serious, atmospheric RPG. You don't assign
 yourself points. You do real things — study, train, build, reach out to people — and an AI
 evaluator proposes how that effort should shape your character. A deterministic progression
 engine then validates, caps and records every reward in an auditable ledger, and tells you
@@ -77,7 +97,12 @@ flutter run -d chrome          # or: -d macos, -d windows, an Android device or 
 ```
 
 Without backend configuration the app runs fully on the device (guest mode): every feature
-except accounts, sync and guilds works offline. To connect a Supabase backend:
+except accounts, sync and guilds works offline. To try it with six weeks of sample activity:
+
+```bash
+flutter run -d chrome --dart-define=WYRD_DEMO=true                                  # English
+flutter run -d chrome --dart-define=WYRD_DEMO=true --dart-define=WYRD_DEMO_LOCALE=fa # Persian
+``` To connect a Supabase backend:
 
 ```bash
 flutter run --dart-define=SUPABASE_URL=https://<project>.supabase.co --dart-define=SUPABASE_PUBLISHABLE_KEY=<publishable-key>
@@ -88,7 +113,7 @@ Backend setup is documented in [`backend/README.md`](backend/README.md).
 ## Tests
 
 ```bash
-cd packages/oathbound_engine && dart test     # rules, caps, curves, consistency, vectors
+cd packages/wyrd_engine && dart test     # rules, caps, curves, consistency, vectors
 cd app && flutter test                        # data layer, l10n gates, RTL lint, smoke tests
 cd app && flutter analyze --fatal-infos
 ```

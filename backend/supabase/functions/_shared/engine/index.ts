@@ -1,9 +1,9 @@
 /**
- * Server twin of the Oathbound progression engine (ADR-004).
+ * Server twin of the Wyrd progression engine (ADR-004).
  *
  * The authoritative specification is `docs/product/progression-rules.md`;
- * the Dart client engine lives in `packages/oathbound_engine`. Both must pass
- * the shared conformance vectors in `packages/oathbound_engine/test/vectors/`
+ * the Dart client engine lives in `packages/wyrd_engine`. Both must pass
+ * the shared conformance vectors in `packages/wyrd_engine/test/vectors/`
  * (run `node --test backend/supabase/functions/_shared/engine/`).
  */
 export * from './model.ts';

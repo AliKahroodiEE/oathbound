@@ -1,7 +1,7 @@
 {
   "@@locale": "en",
 
-  "appName": "Oathbound",
+  "appName": "Wyrd",
   "appTagline": "Your character is not someone you play. Your character is who you become.",
 
   "navCharacter": "Character",
@@ -297,6 +297,10 @@
   "periodWeek": "Week",
   "periodMonth": "Month",
   "periodYear": "Year",
+  "periodWeekNoun": "week",
+  "periodMonthNoun": "month",
+  "periodYearNoun": "year",
+  "comparedToSamePoint": "{change} vs the same point last period",
   "previousPeriod": "Previous period",
   "nextPeriod": "Next period",
   "statCompletions": "Deeds",

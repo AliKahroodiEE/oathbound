@@ -1,10 +1,10 @@
 # Progression Rules — v2026.11.1
 
 These rules are the contract between the AI evaluator, the deterministic engine, the client and
-the server. They are implemented once in Dart (`packages/oathbound_engine`, used by clients for
+the server. They are implemented once in Dart (`packages/wyrd_engine`, used by clients for
 offline/provisional results) and once in TypeScript (server, authoritative). Both
 implementations must pass the shared conformance vectors in
-`packages/oathbound_engine/test/vectors/`. Any change to a number in this document bumps the
+`packages/wyrd_engine/test/vectors/`. Any change to a number in this document bumps the
 rule version, and every ledger entry records the version that produced it.
 
 Design rationale for each rule is in the [research document](../research/behavioral-science.md).

@@ -1,8 +1,8 @@
 {
-  "name": "oathbound-backend",
+  "name": "wyrd-backend",
   "private": true,
   "type": "module",
-  "description": "Tooling for the Oathbound Supabase backend (tests and offline validation only; Edge Functions run on Deno).",
+  "description": "Tooling for the Wyrd Supabase backend (tests and offline validation only; Edge Functions run on Deno).",
   "engines": {
     "node": ">=23.6"
   },

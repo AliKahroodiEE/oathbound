@@ -33,8 +33,8 @@ const _details = NotificationDetails(
 );
 
 const _windows = WindowsInitializationSettings(
-  appName: 'Oathbound',
-  appUserModelId: 'App.Oathbound.Desktop',
+  appName: 'Wyrd',
+  appUserModelId: 'App.Wyrd.Desktop',
   guid: '6f1d4c1e-9a8b-4f3e-b5a2-0b0b10a71924',
 );
 

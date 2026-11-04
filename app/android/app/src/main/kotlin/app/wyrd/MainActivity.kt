@@ -1,4 +1,4 @@
-package app.oathbound.oathbound
+package app.wyrd
 
 import io.flutter.embedding.android.FlutterActivity
 

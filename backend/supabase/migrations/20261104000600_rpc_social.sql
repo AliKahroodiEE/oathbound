@@ -1,5 +1,5 @@
 -- =============================================================================
--- Oathbound · social, safety and account RPCs
+-- Wyrd · social, safety and account RPCs
 --
 -- Every write to guild data goes through these SECURITY DEFINER functions,
 -- which enforce the permission matrix (requirements G5):
@@ -765,7 +765,7 @@ declare
   v_uid uuid := private.require_uid();
 begin
   return jsonb_build_object(
-    'format', 'oathbound-export/1',
+    'format', 'wyrd-export/1',
     'exported_at', now(),
     'user_id', v_uid,
     'profile', (select to_jsonb(p) from public.profiles p where p.id = v_uid),

@@ -1,11 +1,11 @@
 {
-    "name": "Oathbound",
-    "short_name": "Oathbound",
+    "name": "Wyrd",
+    "short_name": "Wyrd",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0B0B10",
     "theme_color": "#0B0B10",
-    "description": "Oathbound — your character is who you become.",
+    "description": "Wyrd — your character is who you become.",
     "orientation": "any",
     "prefer_related_applications": false,
     "icons": [
