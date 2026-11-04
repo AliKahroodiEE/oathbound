@@ -7,7 +7,7 @@
     "node": ">=23.6"
   },
   "scripts": {
-    "test": "node --test supabase/functions/_shared/",
+    "test": "node --test \"supabase/functions/_shared/**/*.test.ts\"",
     "test:engine": "node --test supabase/functions/_shared/engine/",
     "validate:sql": "node scripts/validate-sql.mjs",
     "check:functions": "cd supabase/functions && npx --yes deno@2 check --config deno.json evaluate-completion/index.ts generate-chronicle/index.ts notify/index.ts _shared/shared.test.ts _shared/engine/engine.test.ts _shared/engine/heuristic.test.ts",
