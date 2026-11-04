@@ -13,3 +13,18 @@ abstract final class BackendConfig {
 
   static bool get isConfigured => url.isNotEmpty && publishableKey.isNotEmpty;
 }
+
+/// Sign-in options. The OAuth app's client ID and secret live only in the
+/// Supabase project (backend/supabase/config.toml).
+abstract final class AuthConfig {
+  /// Shows "Continue with GitHub" (`--dart-define=WYRD_AUTH_GITHUB=true`),
+  /// the same flag that switches the provider on in Supabase.
+  static const githubEnabled = bool.fromEnvironment('WYRD_AUTH_GITHUB');
+
+  /// Custom URL scheme (the Android applicationId) that brings OAuth
+  /// sign-ins back into the phone apps; registered in AndroidManifest.xml
+  /// and Info.plist, allowed in `auth.additional_redirect_urls`.
+  static const mobileScheme = 'app.wyrd';
+  static const mobileCallbackHost = 'auth-callback';
+  static const mobileRedirectUrl = '$mobileScheme://$mobileCallbackHost';
+}

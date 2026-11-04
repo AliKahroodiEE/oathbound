@@ -1423,6 +1423,132 @@ class AppLocalizationsEn extends AppLocalizations {
   String get signOut => 'Sign out';
 
   @override
+  String get authHeadline => 'Keep your legend safe';
+
+  @override
+  String get authIntro =>
+      'Sign in to sync your character across devices and join guilds. Everything you made as a guest comes with you.';
+
+  @override
+  String get authContinueEmail => 'Continue with email';
+
+  @override
+  String get authContinueGithub => 'Continue with GitHub';
+
+  @override
+  String get authOr => 'or';
+
+  @override
+  String get authUsePassword => 'Use a password instead';
+
+  @override
+  String get authUseCode => 'Email me a code instead';
+
+  @override
+  String get authCodeTitle => 'Check your email';
+
+  @override
+  String authCodeSent(String email) {
+    return 'We sent a 6-digit code to $email. It works for an hour.';
+  }
+
+  @override
+  String get authCodeLabel => '6-digit code';
+
+  @override
+  String get authPasteCode => 'Paste code';
+
+  @override
+  String get authVerify => 'Verify';
+
+  @override
+  String get authResend => 'Send a new code';
+
+  @override
+  String authResendIn(String seconds) {
+    return 'New code in ${seconds}s';
+  }
+
+  @override
+  String get authCodeResent => 'A new code is on its way.';
+
+  @override
+  String get authChangeEmail => 'Use a different email';
+
+  @override
+  String get authForgotPassword => 'Forgot password?';
+
+  @override
+  String get authResetTitle => 'Reset your password';
+
+  @override
+  String get authResetBody => 'Enter your email and we\'ll send a 6-digit code to set a new password.';
+
+  @override
+  String get authSendCode => 'Send code';
+
+  @override
+  String get authNewPasswordTitle => 'Choose a new password';
+
+  @override
+  String get authNewPassword => 'New password';
+
+  @override
+  String get authSavePassword => 'Save password';
+
+  @override
+  String get authPasswordSaved => 'Password saved. You\'re signed in.';
+
+  @override
+  String get authPasswordRules => 'At least 8 characters, with letters and numbers.';
+
+  @override
+  String get authShowPassword => 'Show password';
+
+  @override
+  String get authHidePassword => 'Hide password';
+
+  @override
+  String get authErrEmail => 'Enter a valid email address.';
+
+  @override
+  String get authErrCodeLength => 'Enter all 6 digits.';
+
+  @override
+  String get authErrCode => 'That code is wrong or has expired. Check it, or ask for a new one.';
+
+  @override
+  String get authErrNotConfirmed => 'Confirm your email first. We\'ve sent you a new code.';
+
+  @override
+  String get authErrRateLimit => 'Too many tries. Wait a minute, then try again.';
+
+  @override
+  String get authErrWeakPassword => 'Choose a stronger password: at least 8 characters, with letters and numbers.';
+
+  @override
+  String get authErrSamePassword => 'That\'s your current password. Choose a new one.';
+
+  @override
+  String get authErrAccountExists => 'An account with this email already exists. Sign in instead.';
+
+  @override
+  String get authErrProvider => 'This sign-in option isn\'t available right now.';
+
+  @override
+  String get authErrNetwork => 'Can\'t reach the server. Check your connection and try again.';
+
+  @override
+  String get deleteAccount => 'Delete account';
+
+  @override
+  String get deleteAccountBody =>
+      'This permanently deletes your account and everything we store for it, then signs you out and clears this device. Your comments in guilds stay, shown as from a former member. This can\'t be undone.';
+
+  @override
+  String get accountDeleted => 'Your account has been deleted.';
+
+  @override
   String get createAccount => 'Create account';
 
   @override
@@ -1452,12 +1578,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get authPassword => 'Password';
-
-  @override
-  String get authMagicLink => 'Email me a sign-in link';
-
-  @override
-  String get authMagicLinkSent => 'Check your inbox for the sign-in link.';
 
   @override
   String get authInvalid => 'That email and password don\'t match.';

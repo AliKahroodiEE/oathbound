@@ -2660,6 +2660,246 @@ abstract class AppLocalizations {
   /// **'Sign out'**
   String get signOut;
 
+  /// No description provided for @authHeadline.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep your legend safe'**
+  String get authHeadline;
+
+  /// No description provided for @authIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to sync your character across devices and join guilds. Everything you made as a guest comes with you.'**
+  String get authIntro;
+
+  /// No description provided for @authContinueEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue with email'**
+  String get authContinueEmail;
+
+  /// No description provided for @authContinueGithub.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue with GitHub'**
+  String get authContinueGithub;
+
+  /// No description provided for @authOr.
+  ///
+  /// In en, this message translates to:
+  /// **'or'**
+  String get authOr;
+
+  /// No description provided for @authUsePassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Use a password instead'**
+  String get authUsePassword;
+
+  /// No description provided for @authUseCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Email me a code instead'**
+  String get authUseCode;
+
+  /// No description provided for @authCodeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Check your email'**
+  String get authCodeTitle;
+
+  /// No description provided for @authCodeSent.
+  ///
+  /// In en, this message translates to:
+  /// **'We sent a 6-digit code to {email}. It works for an hour.'**
+  String authCodeSent(String email);
+
+  /// No description provided for @authCodeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'6-digit code'**
+  String get authCodeLabel;
+
+  /// No description provided for @authPasteCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste code'**
+  String get authPasteCode;
+
+  /// No description provided for @authVerify.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify'**
+  String get authVerify;
+
+  /// No description provided for @authResend.
+  ///
+  /// In en, this message translates to:
+  /// **'Send a new code'**
+  String get authResend;
+
+  /// No description provided for @authResendIn.
+  ///
+  /// In en, this message translates to:
+  /// **'New code in {seconds}s'**
+  String authResendIn(String seconds);
+
+  /// No description provided for @authCodeResent.
+  ///
+  /// In en, this message translates to:
+  /// **'A new code is on its way.'**
+  String get authCodeResent;
+
+  /// No description provided for @authChangeEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Use a different email'**
+  String get authChangeEmail;
+
+  /// No description provided for @authForgotPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Forgot password?'**
+  String get authForgotPassword;
+
+  /// No description provided for @authResetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset your password'**
+  String get authResetTitle;
+
+  /// No description provided for @authResetBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your email and we\'ll send a 6-digit code to set a new password.'**
+  String get authResetBody;
+
+  /// No description provided for @authSendCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Send code'**
+  String get authSendCode;
+
+  /// No description provided for @authNewPasswordTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a new password'**
+  String get authNewPasswordTitle;
+
+  /// No description provided for @authNewPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'New password'**
+  String get authNewPassword;
+
+  /// No description provided for @authSavePassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Save password'**
+  String get authSavePassword;
+
+  /// No description provided for @authPasswordSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Password saved. You\'re signed in.'**
+  String get authPasswordSaved;
+
+  /// No description provided for @authPasswordRules.
+  ///
+  /// In en, this message translates to:
+  /// **'At least 8 characters, with letters and numbers.'**
+  String get authPasswordRules;
+
+  /// No description provided for @authShowPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Show password'**
+  String get authShowPassword;
+
+  /// No description provided for @authHidePassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide password'**
+  String get authHidePassword;
+
+  /// No description provided for @authErrEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid email address.'**
+  String get authErrEmail;
+
+  /// No description provided for @authErrCodeLength.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter all 6 digits.'**
+  String get authErrCodeLength;
+
+  /// No description provided for @authErrCode.
+  ///
+  /// In en, this message translates to:
+  /// **'That code is wrong or has expired. Check it, or ask for a new one.'**
+  String get authErrCode;
+
+  /// No description provided for @authErrNotConfirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm your email first. We\'ve sent you a new code.'**
+  String get authErrNotConfirmed;
+
+  /// No description provided for @authErrRateLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many tries. Wait a minute, then try again.'**
+  String get authErrRateLimit;
+
+  /// No description provided for @authErrWeakPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a stronger password: at least 8 characters, with letters and numbers.'**
+  String get authErrWeakPassword;
+
+  /// No description provided for @authErrSamePassword.
+  ///
+  /// In en, this message translates to:
+  /// **'That\'s your current password. Choose a new one.'**
+  String get authErrSamePassword;
+
+  /// No description provided for @authErrAccountExists.
+  ///
+  /// In en, this message translates to:
+  /// **'An account with this email already exists. Sign in instead.'**
+  String get authErrAccountExists;
+
+  /// No description provided for @authErrProvider.
+  ///
+  /// In en, this message translates to:
+  /// **'This sign-in option isn\'t available right now.'**
+  String get authErrProvider;
+
+  /// No description provided for @authErrNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'Can\'t reach the server. Check your connection and try again.'**
+  String get authErrNetwork;
+
+  /// No description provided for @deleteAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete account'**
+  String get deleteAccount;
+
+  /// No description provided for @deleteAccountBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This permanently deletes your account and everything we store for it, then signs you out and clears this device. Your comments in guilds stay, shown as from a former member. This can\'t be undone.'**
+  String get deleteAccountBody;
+
+  /// No description provided for @accountDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account has been deleted.'**
+  String get accountDeleted;
+
   /// No description provided for @createAccount.
   ///
   /// In en, this message translates to:
@@ -2719,18 +2959,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Password'**
   String get authPassword;
-
-  /// No description provided for @authMagicLink.
-  ///
-  /// In en, this message translates to:
-  /// **'Email me a sign-in link'**
-  String get authMagicLink;
-
-  /// No description provided for @authMagicLinkSent.
-  ///
-  /// In en, this message translates to:
-  /// **'Check your inbox for the sign-in link.'**
-  String get authMagicLinkSent;
 
   /// No description provided for @authInvalid.
   ///
