@@ -3044,6 +3044,18 @@ abstract class AppLocalizations {
   /// **'Source-available under the PolyForm Strict License 1.0.0.'**
   String get aboutLicense;
 
+  /// No description provided for @legalPrivacy.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy'**
+  String get legalPrivacy;
+
+  /// No description provided for @legalTerms.
+  ///
+  /// In en, this message translates to:
+  /// **'Terms'**
+  String get legalTerms;
+
   /// No description provided for @authTitle.
   ///
   /// In en, this message translates to:

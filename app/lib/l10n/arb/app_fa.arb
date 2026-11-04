@@ -506,6 +506,8 @@
   "deviceCleared": "خارج شدی. دیگر داده‌ای از تو روی این دستگاه نیست.",
   "dataDeleted": "همه‌ی داده‌ها حذف شد.",
   "aboutLicense": "کد منبع با مجوز PolyForm Strict 1.0.0 در دسترس است.",
+  "legalPrivacy": "حریم خصوصی",
+  "legalTerms": "شرایط استفاده",
 
   "authTitle": "حساب تو",
   "authEmail": "ایمیل",

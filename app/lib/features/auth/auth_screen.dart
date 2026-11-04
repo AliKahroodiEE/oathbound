@@ -12,6 +12,7 @@ import '../../design/components/motion.dart';
 import '../../design/components/panel.dart';
 import '../../design/components/states.dart';
 import '../../design/tokens.dart';
+import '../settings/legal_links.dart';
 import 'auth_errors.dart';
 import 'auth_gateway.dart';
 import 'auth_steps.dart';
@@ -283,6 +284,8 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                           child: KeyedSubtree(key: ValueKey(_step), child: _form(gateway)),
                         ),
                       ),
+                      const SizedBox(height: AppSpace.sm),
+                      const LegalLinks(),
                     ],
                     if (_message != null) ...[
                       const SizedBox(height: AppSpace.lg),

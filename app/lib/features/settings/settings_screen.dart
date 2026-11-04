@@ -20,6 +20,7 @@ import '../install/ios_install_hint.dart';
 import '../notifications/push_tile.dart';
 import 'ai_provider_screen.dart';
 import 'clear_device_button.dart';
+import 'legal_links.dart';
 import 'theme_picker.dart';
 
 /// Settings (requirements §4.10).
@@ -444,6 +445,7 @@ class SettingsScreen extends ConsumerWidget {
               ),
               gap,
               Text(l10n.aboutLicense, style: text.bodySmall, textAlign: TextAlign.center),
+              const LegalLinks(),
               const SizedBox(height: AppSpace.xxl),
             ],
           ),

@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 /// Build-time configuration passed with `--dart-define`.
 ///
 /// Without a backend the app runs fully local (guest/demo mode, ADR-003).
@@ -30,4 +32,14 @@ abstract final class AuthConfig {
   static const mobileScheme = 'app.wyrd';
   static const mobileCallbackHost = 'auth-callback';
   static const mobileRedirectUrl = '$mobileScheme://$mobileCallbackHost';
+}
+
+/// The public web address (`--dart-define=WYRD_SITE_URL`, set by the deploy
+/// workflows) and the static pages shipped with the web app.
+abstract final class SiteConfig {
+  static const url = String.fromEnvironment('WYRD_SITE_URL', defaultValue: 'https://wyrd-app.pages.dev');
+
+  /// A page such as `privacy`: on the web the one next to the running app
+  /// (whatever its host and path), elsewhere the one on [url].
+  static Uri page(String name) => kIsWeb ? Uri.base.resolve(name) : Uri.parse('$url/$name');
 }

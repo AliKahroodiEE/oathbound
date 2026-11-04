@@ -552,6 +552,8 @@
   "deviceCleared": "Signed out. This device no longer holds your data.",
   "dataDeleted": "All data deleted.",
   "aboutLicense": "Source-available under the PolyForm Strict License 1.0.0.",
+  "legalPrivacy": "Privacy",
+  "legalTerms": "Terms",
 
   "authTitle": "Your account",
   "authEmail": "Email",

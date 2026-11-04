@@ -1612,6 +1612,12 @@ class AppLocalizationsFa extends AppLocalizations {
   String get aboutLicense => 'کد منبع با مجوز PolyForm Strict 1.0.0 در دسترس است.';
 
   @override
+  String get legalPrivacy => 'حریم خصوصی';
+
+  @override
+  String get legalTerms => 'شرایط استفاده';
+
+  @override
   String get authTitle => 'حساب تو';
 
   @override

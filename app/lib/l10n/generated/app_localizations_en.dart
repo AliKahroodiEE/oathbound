@@ -1624,6 +1624,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aboutLicense => 'Source-available under the PolyForm Strict License 1.0.0.';
 
   @override
+  String get legalPrivacy => 'Privacy';
+
+  @override
+  String get legalTerms => 'Terms';
+
+  @override
   String get authTitle => 'Your account';
 
   @override
