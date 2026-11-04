@@ -1351,6 +1351,40 @@ class AppLocalizationsFa extends AppLocalizations {
   String get notifWeekly => 'وقایع‌نامه‌ی هفتگی';
 
   @override
+  String get pushDevice => 'اعلان‌ها روی این دستگاه';
+
+  @override
+  String get pushDeviceOn => 'روشن است. اعلان‌ها حتی وقتی سرنوشت‌ساز بسته است به دستت می‌رسند.';
+
+  @override
+  String get pushDeviceOff => 'خاموش است. اجازه بده تا وقتی سرنوشت‌ساز بسته است هم خبرها به دستت برسند.';
+
+  @override
+  String get pushDeviceBlocked => 'مسدود است. در تنظیمات مرورگر یا دستگاهت به سرنوشت‌ساز اجازه‌ی اعلان بده.';
+
+  @override
+  String get pushAllow => 'اجازه بده';
+
+  @override
+  String get pushUnsupported => 'این مرورگر نمی‌تواند اعلان دریافت کند.';
+
+  @override
+  String get pushInstallHint =>
+      'روی آیفون، سرنوشت‌ساز را به صفحه‌ی اصلی اضافه کن (Share و بعد Add to Home Screen) و از همان‌جا بازش کن تا اعلان‌ها به دستت برسد.';
+
+  @override
+  String get pushInAppFallback => 'خبر تازه‌ای منتظرت است.';
+
+  @override
+  String get pushOpen => 'باز کن';
+
+  @override
+  String get pushChannelName => 'انجمن و وقایع‌نامه';
+
+  @override
+  String get pushChannelDescription => 'واکنش‌ها، نظرها و وقایع‌نامه‌ی هفتگی‌ات.';
+
+  @override
   String get quietHours => 'ساعات سکوت';
 
   @override
