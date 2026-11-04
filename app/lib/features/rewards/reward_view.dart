@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:wyrd_engine/wyrd_engine.dart';
 
 import '../../app/providers.dart';
+import '../../design/components/panel.dart';
 import '../../design/sigils.dart';
 import '../../design/tokens.dart';
 import '../../l10n/content.dart';
@@ -48,9 +49,15 @@ class RewardExplanation extends ConsumerWidget {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Padding(
-                    padding: const EdgeInsetsDirectional.only(top: 2),
-                    child: AttributeSigil(g.attribute, size: 20),
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: AppColors.forAttribute(g.attribute).withValues(alpha: 0.16),
+                      shape: BoxShape.circle,
+                    ),
+                    alignment: Alignment.center,
+                    child: AttributeSigil(g.attribute, size: 19),
                   ),
                   const SizedBox(width: AppSpace.md),
                   Expanded(
@@ -60,10 +67,7 @@ class RewardExplanation extends ConsumerWidget {
                         Row(
                           children: [
                             Expanded(child: Text(l10n.attributeName(g.attribute), style: text.titleSmall)),
-                            Text(
-                              f.signedNumber(g.amount),
-                              style: text.titleSmall?.copyWith(color: AppColors.forAttribute(g.attribute)),
-                            ),
+                            Pill(f.signedNumber(g.amount), color: AppColors.forAttribute(g.attribute)),
                           ],
                         ),
                         Text(_reason(context, g.attribute), style: text.bodySmall),

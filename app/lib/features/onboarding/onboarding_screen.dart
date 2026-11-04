@@ -8,6 +8,7 @@ import '../../core/locale/locale_registry.dart';
 import '../../core/locale/regional_settings.dart';
 import '../../data/models.dart';
 import '../../design/components/background.dart';
+import '../../design/components/game.dart';
 import '../../design/sigils.dart';
 import '../../design/tokens.dart';
 import '../../l10n/content.dart';
@@ -159,8 +160,23 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const SizedBox(height: AppSpace.xxl),
-        Text(l10n.appTagline, style: text.displayMedium),
+        const SizedBox(height: AppSpace.xl),
+        const Center(
+          child: XpRing(
+            fraction: 1,
+            size: 148,
+            stroke: 6,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(colors: [Color(0xFF2A2140), AppColors.abyss]),
+              ),
+              child: Center(child: Icon(Icons.local_fire_department_rounded, size: 54, color: AppColors.ember)),
+            ),
+          ),
+        ),
+        const SizedBox(height: AppSpace.xl),
+        Text(l10n.appTagline, style: text.displayMedium, textAlign: TextAlign.center),
         const SizedBox(height: AppSpace.lg),
         Text(l10n.onbWelcomeBody, style: text.bodyLarge),
         const SizedBox(height: AppSpace.xxxl),
@@ -221,7 +237,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           ],
         ),
         const SizedBox(height: AppSpace.xxl),
-        FilledButton(onPressed: _name.text.trim().isEmpty ? null : _saveIdentity, child: Text(l10n.actionContinue)),
+        GlowButton(onPressed: _name.text.trim().isEmpty ? null : _saveIdentity, label: l10n.actionContinue),
       ],
     );
   }
@@ -256,7 +272,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           ],
         ),
         const SizedBox(height: AppSpace.xxl),
-        FilledButton(onPressed: _saveAreas, child: Text(l10n.actionContinue)),
+        GlowButton(onPressed: _saveAreas, label: l10n.actionContinue),
         TextButton(onPressed: _next, child: Text(l10n.actionSkip)),
       ],
     );
@@ -288,7 +304,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           ],
         ),
         const SizedBox(height: AppSpace.xxl),
-        FilledButton(onPressed: ready ? () => _swear(completeNow: true) : null, child: Text(l10n.onbCompleteNow)),
+        GlowButton(onPressed: ready ? () => _swear(completeNow: true) : null, label: l10n.onbCompleteNow),
         const SizedBox(height: AppSpace.sm),
         OutlinedButton(onPressed: ready ? () => _swear(completeNow: false) : null, child: Text(l10n.onbLater)),
       ],
@@ -308,7 +324,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         const SizedBox(height: AppSpace.md),
         Text(l10n.onbHowItWorksBody, style: text.bodyLarge),
         const SizedBox(height: AppSpace.xxl),
-        FilledButton(onPressed: _finish, child: Text(l10n.onbBegin)),
+        GlowButton(onPressed: _finish, label: l10n.onbBegin),
       ],
     );
   }

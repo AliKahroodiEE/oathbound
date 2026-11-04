@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../tokens.dart';
 
-/// App background: void with a faint vignette toward the edges.
-/// Disabled when the user reduces visual effects.
+/// App backdrop: void with a soft arcane glow at the top. A single radial
+/// gradient — no blur, no images — so it costs nothing on any renderer.
 class AppBackground extends StatelessWidget {
   const AppBackground({super.key, required this.child, this.reducedEffects = false});
 
@@ -11,18 +11,10 @@ class AppBackground extends StatelessWidget {
   final bool reducedEffects;
 
   @override
-  Widget build(BuildContext context) {
-    if (reducedEffects) return ColoredBox(color: AppColors.void_, child: child);
-    return DecoratedBox(
-      decoration: const BoxDecoration(
-        gradient: RadialGradient(
-          center: AlignmentDirectional(-0.4, -0.9),
-          radius: 1.4,
-          colors: [Color(0xFF141621), AppColors.void_],
-          stops: [0, 0.75],
-        ),
-      ),
-      child: child,
-    );
-  }
+  Widget build(BuildContext context) => DecoratedBox(
+    decoration: reducedEffects
+        ? const BoxDecoration(color: AppColors.void_)
+        : const BoxDecoration(gradient: AppGradients.backdrop),
+    child: child,
+  );
 }

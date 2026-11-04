@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
+import '../design/components/background.dart';
+import '../design/components/game.dart';
 import '../design/tokens.dart';
 import 'providers.dart';
 
@@ -15,6 +17,7 @@ class _Destination {
 /// Adaptive navigation shell (ux-spec §2): bottom bar on compact widths,
 /// a rail on medium widths and a full sidebar on expanded widths. The
 /// start edge follows text direction, so everything mirrors in RTL.
+/// The backdrop gradient is painted once here behind all destinations.
 class AdaptiveShell extends StatelessWidget {
   const AdaptiveShell({super.key, required this.shell});
 
@@ -22,19 +25,18 @@ class AdaptiveShell extends StatelessWidget {
 
   void _go(int index) => shell.goBranch(index, initialLocation: index == shell.currentIndex);
 
-  void _newQuest(BuildContext context) => context.push('/quests/new');
+  void _newQuest(BuildContext context) => context.push('/quest/new');
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final destinations = [
-      _Destination(Icons.shield_outlined, Icons.shield, l10n.navCharacter),
-      _Destination(Icons.flag_outlined, Icons.flag, l10n.navQuests),
-      _Destination(Icons.groups_2_outlined, Icons.groups_2, l10n.navGuilds),
-      _Destination(Icons.auto_stories_outlined, Icons.auto_stories, l10n.navChronicle),
+      _Destination(Icons.shield_outlined, Icons.shield_rounded, l10n.navCharacter),
+      _Destination(Icons.flag_outlined, Icons.flag_rounded, l10n.navQuests),
+      _Destination(Icons.groups_2_outlined, Icons.groups_2_rounded, l10n.navGuilds),
+      _Destination(Icons.auto_stories_outlined, Icons.auto_stories_rounded, l10n.navChronicle),
     ];
-    final width = MediaQuery.sizeOf(context).width;
-    final widthClass = WidthClass.of(width);
+    final widthClass = WidthClass.of(MediaQuery.sizeOf(context).width);
 
     final shortcuts = <ShortcutActivator, VoidCallback>{
       const SingleActivator(LogicalKeyboardKey.keyN): () => _newQuest(context),
@@ -50,25 +52,28 @@ class AdaptiveShell extends StatelessWidget {
     switch (widthClass) {
       case WidthClass.compact:
         body = Scaffold(
+          backgroundColor: Colors.transparent,
           body: shell,
           floatingActionButton: shell.currentIndex <= 1
-              ? FloatingActionButton(
-                  tooltip: l10n.quickAdd,
-                  onPressed: () => _newQuest(context),
-                  child: const Icon(Icons.add),
-                )
+              ? GlowFab(tooltip: l10n.quickAdd, onPressed: () => _newQuest(context))
               : null,
-          bottomNavigationBar: NavigationBar(
-            selectedIndex: shell.currentIndex,
-            onDestinationSelected: _go,
-            destinations: [
-              for (final d in destinations)
-                NavigationDestination(icon: Icon(d.icon), selectedIcon: Icon(d.selectedIcon), label: d.label),
-            ],
+          bottomNavigationBar: DecoratedBox(
+            decoration: const BoxDecoration(
+              border: Border(top: BorderSide(color: AppColors.hairline)),
+            ),
+            child: NavigationBar(
+              selectedIndex: shell.currentIndex,
+              onDestinationSelected: _go,
+              destinations: [
+                for (final d in destinations)
+                  NavigationDestination(icon: Icon(d.icon), selectedIcon: Icon(d.selectedIcon), label: d.label),
+              ],
+            ),
           ),
         );
       case WidthClass.medium:
         body = Scaffold(
+          backgroundColor: Colors.transparent,
           body: Row(
             children: [
               NavigationRail(
@@ -77,11 +82,7 @@ class AdaptiveShell extends StatelessWidget {
                 labelType: NavigationRailLabelType.all,
                 leading: Padding(
                   padding: const EdgeInsetsDirectional.symmetric(vertical: AppSpace.md),
-                  child: FloatingActionButton.small(
-                    tooltip: l10n.quickAdd,
-                    onPressed: () => _newQuest(context),
-                    child: const Icon(Icons.add),
-                  ),
+                  child: GlowFab(tooltip: l10n.quickAdd, onPressed: () => _newQuest(context)),
                 ),
                 trailing: Expanded(
                   child: Align(
@@ -112,6 +113,7 @@ class AdaptiveShell extends StatelessWidget {
         );
       case WidthClass.expanded:
         body = Scaffold(
+          backgroundColor: Colors.transparent,
           body: Row(
             children: [
               _Sidebar(
@@ -128,9 +130,24 @@ class AdaptiveShell extends StatelessWidget {
     }
     return CallbackShortcuts(
       bindings: shortcuts,
-      child: Focus(autofocus: true, child: body),
+      child: Focus(autofocus: true, child: AppBackground(child: body)),
     );
   }
+}
+
+/// The wordmark in Cinzel with an ember gradient.
+class Wordmark extends StatelessWidget {
+  const Wordmark({super.key, this.size = 26});
+  final double size;
+
+  @override
+  Widget build(BuildContext context) => ShaderMask(
+    shaderCallback: (r) => AppGradients.emberDiagonal.createShader(r, textDirection: Directionality.of(context)),
+    child: Text(
+      context.l10n.appName,
+      style: Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: size, color: Colors.white),
+    ),
+  );
 }
 
 class _Sidebar extends StatelessWidget {
@@ -148,26 +165,21 @@ class _Sidebar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final text = Theme.of(context).textTheme;
     final l10n = context.l10n;
     return Container(
-      width: 248,
-      color: AppColors.abyss,
+      width: 256,
+      color: AppColors.abyss.withValues(alpha: 0.85),
       child: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Padding(
-              padding: const EdgeInsetsDirectional.fromSTEB(AppSpace.xl, AppSpace.xl, AppSpace.xl, AppSpace.lg),
-              child: Text(l10n.appName, style: text.titleLarge),
+            const Padding(
+              padding: EdgeInsetsDirectional.fromSTEB(AppSpace.xl, AppSpace.xl, AppSpace.xl, AppSpace.lg),
+              child: Wordmark(),
             ),
             Padding(
               padding: const EdgeInsetsDirectional.symmetric(horizontal: AppSpace.lg),
-              child: FilledButton.icon(
-                onPressed: onNewQuest,
-                icon: const Icon(Icons.add, size: 18),
-                label: Text(l10n.quickAdd),
-              ),
+              child: GlowButton(label: l10n.quickAdd, icon: Icons.add_rounded, onPressed: onNewQuest),
             ),
             const SizedBox(height: AppSpace.lg),
             for (var i = 0; i < destinations.length; i++)
@@ -200,7 +212,7 @@ class _SidebarItem extends StatelessWidget {
     return Padding(
       padding: const EdgeInsetsDirectional.symmetric(horizontal: AppSpace.md, vertical: 2),
       child: Material(
-        color: selected ? AppColors.wine : Colors.transparent,
+        color: selected ? AppColors.crimson.withValues(alpha: 0.18) : Colors.transparent,
         borderRadius: AppRadius.softAll,
         child: InkWell(
           borderRadius: AppRadius.softAll,
@@ -208,22 +220,31 @@ class _SidebarItem extends StatelessWidget {
           child: Semantics(
             selected: selected,
             button: true,
-            child: Padding(
-              padding: const EdgeInsetsDirectional.symmetric(horizontal: AppSpace.md, vertical: AppSpace.md),
-              child: Row(
-                children: [
-                  Icon(
+            child: Row(
+              children: [
+                AnimatedContainer(
+                  duration: AppMotion.base,
+                  width: 3,
+                  height: 22,
+                  margin: const EdgeInsetsDirectional.only(start: 2),
+                  decoration: BoxDecoration(
+                    gradient: selected ? AppGradients.emberDiagonal : null,
+                    borderRadius: AppRadius.pillAll,
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsetsDirectional.symmetric(horizontal: AppSpace.md, vertical: AppSpace.md),
+                  child: Icon(
                     selected ? destination.selectedIcon : destination.icon,
-                    color: selected ? AppColors.bone : AppColors.ashMuted,
-                    size: 20,
+                    color: selected ? AppColors.ember : AppColors.ashMuted,
+                    size: 21,
                   ),
-                  const SizedBox(width: AppSpace.md),
-                  Text(
-                    destination.label,
-                    style: text.labelLarge?.copyWith(color: selected ? AppColors.bone : AppColors.ash),
-                  ),
-                ],
-              ),
+                ),
+                Text(
+                  destination.label,
+                  style: text.labelLarge?.copyWith(color: selected ? AppColors.bone : AppColors.ash),
+                ),
+              ],
             ),
           ),
         ),

@@ -2,32 +2,44 @@ import 'package:flutter/animation.dart';
 import 'package:flutter/painting.dart';
 import 'package:wyrd_engine/wyrd_engine.dart';
 
-/// Ashen Codex colour tokens (docs/design/design-system.md §2).
-/// Feature code must use these, never raw colours.
+/// Ashen Codex colour tokens, v2 (docs/design/design-system.md §2).
+/// Dark-fantasy base with livelier, saturated accents. Feature code uses
+/// these, never raw colours.
 abstract final class AppColors {
-  static const void_ = Color(0xFF0B0B10);
-  static const abyss = Color(0xFF12131A);
-  static const slate = Color(0xFF202A38);
-  static const slateHigh = Color(0xFF2A3546);
-  static const hairline = Color(0xFF343F52);
-  static const wine = Color(0xFF5A2630);
-  static const crimson = Color(0xFFA71924);
-  static const ember = Color(0xFFE0525C);
-  static const bone = Color(0xFFECE6DA);
-  static const ash = Color(0xFFC4C7D0);
-  static const ashMuted = Color(0xFF8A8F9C);
-  static const ashFaint = Color(0xFF5E6372);
+  // Surfaces: near-black with a cold, slightly blue stone tint.
+  static const void_ = Color(0xFF09090E);
+  static const abyss = Color(0xFF111320);
+  static const slate = Color(0xFF181C2B);
+  static const slateHigh = Color(0xFF222839);
+  static const hairline = Color(0xFF2C3346);
+  static const wine = Color(0xFF4A1A26);
 
-  static const warning = Color(0xFFC8933A);
+  // Ember family: the primary accent, used for actions and progression.
+  static const crimson = Color(0xFFC0202D);
+  static const ember = Color(0xFFFF5A64);
+  static const emberGlow = Color(0xFFFF8A4C);
+
+  // Secondary accents, used sparingly.
+  static const arcane = Color(0xFF8B6CFF);
+  static const gold = Color(0xFFE2B45C);
+
+  // Ink.
+  static const bone = Color(0xFFF1EBDF);
+  static const ash = Color(0xFFC9CCD6);
+  static const ashMuted = Color(0xFF8E94A3);
+  static const ashFaint = Color(0xFF5A6074);
+
+  static const warning = Color(0xFFF0A93B);
   static const success = attrVitality;
   static const danger = ember;
 
-  static const attrStrength = Color(0xFFB5543C);
-  static const attrIntelligence = Color(0xFF5B7FB8);
-  static const attrDiscipline = Color(0xFF9A8A6A);
-  static const attrCreativity = Color(0xFF8A5FA8);
-  static const attrVitality = Color(0xFF4E8C6A);
-  static const attrSocial = Color(0xFFC07A8A);
+  // Attributes: saturated pigments, always paired with a sigil.
+  static const attrStrength = Color(0xFFF0663E);
+  static const attrIntelligence = Color(0xFF5B95FF);
+  static const attrDiscipline = Color(0xFFD9B260);
+  static const attrCreativity = Color(0xFFB476FF);
+  static const attrVitality = Color(0xFF3FCB8E);
+  static const attrSocial = Color(0xFFFF73A8);
 
   static Color forAttribute(Attribute a) => switch (a) {
     Attribute.strength => attrStrength,
@@ -37,6 +49,56 @@ abstract final class AppColors {
     Attribute.vitality => attrVitality,
     Attribute.social => attrSocial,
   };
+
+  /// Colour of a category's main attribute.
+  static Color forCategory(QuestCategory c) => forAttribute(c.defaultWeights.keys.first);
+}
+
+/// Gradients. Linear/radial only (cheap on every renderer); no blurs.
+abstract final class AppGradients {
+  static const ember = LinearGradient(
+    begin: AlignmentDirectional.centerStart,
+    end: AlignmentDirectional.centerEnd,
+    colors: [AppColors.crimson, AppColors.emberGlow],
+  );
+
+  static const emberDiagonal = LinearGradient(
+    begin: AlignmentDirectional.topStart,
+    end: AlignmentDirectional.bottomEnd,
+    colors: [AppColors.crimson, AppColors.ember, AppColors.emberGlow],
+  );
+
+  /// Card surface: lighter at the top, like stone lit from above.
+  static const surface = LinearGradient(
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+    colors: [Color(0xFF1C2132), Color(0xFF151927)],
+  );
+
+  /// Background glow behind the app: ember low, arcane high.
+  static const backdrop = RadialGradient(
+    center: AlignmentDirectional(-0.6, -1.1),
+    radius: 1.3,
+    colors: [Color(0xFF241A36), AppColors.void_],
+    stops: [0, 0.7],
+  );
+
+  static LinearGradient tint(Color c) => LinearGradient(
+    begin: AlignmentDirectional.centerStart,
+    end: AlignmentDirectional.centerEnd,
+    colors: [c, Color.lerp(c, AppColors.bone, 0.25)!],
+  );
+}
+
+/// Shadows: only on a few hero elements (cost matters on web and older phones).
+abstract final class AppShadows {
+  static List<BoxShadow> glow(Color c, {double strength = 0.35, double blur = 18}) => [
+    BoxShadow(
+      color: c.withValues(alpha: strength),
+      blurRadius: blur,
+      spreadRadius: -4,
+    ),
+  ];
 }
 
 /// 4-pt spacing scale.
@@ -51,10 +113,14 @@ abstract final class AppSpace {
 }
 
 abstract final class AppRadius {
-  static const sharp = Radius.circular(2);
-  static const soft = Radius.circular(6);
+  static const sharp = Radius.circular(8);
+  static const soft = Radius.circular(14);
+  static const card = Radius.circular(18);
+  static const pill = Radius.circular(999);
   static const sharpAll = BorderRadius.all(sharp);
   static const softAll = BorderRadius.all(soft);
+  static const cardAll = BorderRadius.all(card);
+  static const pillAll = BorderRadius.all(pill);
 }
 
 /// Motion tokens; durations collapse to zero when motion is reduced.

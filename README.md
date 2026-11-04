@@ -9,6 +9,8 @@ its history, and the guilds it belongs to.
 
 Android · iOS · Web (desktop browsers) — English & فارسی (full RTL) from day one
 
+**[▶ Try the live web demo](https://alikahroodiee.github.io/wyrd/)** — runs in your browser with sample data; nothing leaves your device.
+
 [![License: PolyForm Strict 1.0.0](https://img.shields.io/badge/license-PolyForm%20Strict%201.0.0-A71924)](LICENSE.md)
 
 </div>

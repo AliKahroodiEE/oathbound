@@ -41,6 +41,7 @@ ThemeData buildAppTheme(Locale locale) {
 
   const hairlineSide = BorderSide(color: AppColors.hairline);
   const softShape = RoundedRectangleBorder(borderRadius: AppRadius.softAll);
+  const pillShape = StadiumBorder();
   final buttonText = text.labelLarge!;
 
   return ThemeData(
@@ -56,7 +57,7 @@ ThemeData buildAppTheme(Locale locale) {
     dividerTheme: const DividerThemeData(color: AppColors.hairline, thickness: 1, space: 1),
     iconTheme: const IconThemeData(color: AppColors.ash, size: 22),
     appBarTheme: AppBarTheme(
-      backgroundColor: AppColors.void_,
+      backgroundColor: Colors.transparent,
       surfaceTintColor: Colors.transparent,
       elevation: 0,
       scrolledUnderElevation: 0,
@@ -68,7 +69,7 @@ ThemeData buildAppTheme(Locale locale) {
       color: AppColors.slate,
       elevation: 0,
       margin: EdgeInsets.zero,
-      shape: RoundedRectangleBorder(borderRadius: AppRadius.softAll, side: hairlineSide),
+      shape: RoundedRectangleBorder(borderRadius: AppRadius.cardAll, side: hairlineSide),
     ),
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
@@ -78,7 +79,7 @@ ThemeData buildAppTheme(Locale locale) {
         disabledForegroundColor: AppColors.ashFaint,
         minimumSize: const Size(64, 48),
         padding: const EdgeInsetsDirectional.symmetric(horizontal: AppSpace.xl),
-        shape: softShape,
+        shape: pillShape,
         textStyle: buttonText,
         elevation: 0,
       ),
@@ -89,7 +90,7 @@ ThemeData buildAppTheme(Locale locale) {
         side: hairlineSide,
         minimumSize: const Size(64, 48),
         padding: const EdgeInsetsDirectional.symmetric(horizontal: AppSpace.lg),
-        shape: softShape,
+        shape: pillShape,
         textStyle: buttonText,
       ),
     ),
@@ -136,10 +137,10 @@ ThemeData buildAppTheme(Locale locale) {
     ),
     chipTheme: ChipThemeData(
       backgroundColor: AppColors.abyss,
-      selectedColor: AppColors.wine,
+      selectedColor: const Color(0x4DC0202D),
       disabledColor: AppColors.abyss,
       side: hairlineSide,
-      shape: const RoundedRectangleBorder(borderRadius: AppRadius.sharpAll),
+      shape: const StadiumBorder(side: hairlineSide),
       labelStyle: text.labelMedium!,
       secondaryLabelStyle: text.labelMedium!.copyWith(color: AppColors.bone),
       checkmarkColor: AppColors.bone,
@@ -150,7 +151,7 @@ ThemeData buildAppTheme(Locale locale) {
         side: const WidgetStatePropertyAll(hairlineSide),
         shape: const WidgetStatePropertyAll(softShape),
         backgroundColor: WidgetStateProperty.resolveWith(
-          (s) => s.contains(WidgetState.selected) ? AppColors.wine : AppColors.abyss,
+          (s) => s.contains(WidgetState.selected) ? const Color(0x4DC0202D) : AppColors.abyss,
         ),
         foregroundColor: WidgetStateProperty.resolveWith(
           (s) => s.contains(WidgetState.selected) ? AppColors.bone : AppColors.ash,
@@ -161,7 +162,8 @@ ThemeData buildAppTheme(Locale locale) {
     navigationBarTheme: NavigationBarThemeData(
       backgroundColor: AppColors.abyss,
       surfaceTintColor: Colors.transparent,
-      indicatorColor: AppColors.wine,
+      indicatorColor: const Color(0x40C0202D),
+      indicatorShape: const StadiumBorder(),
       elevation: 0,
       height: 68,
       labelTextStyle: WidgetStateProperty.resolveWith(
@@ -174,8 +176,9 @@ ThemeData buildAppTheme(Locale locale) {
     ),
     navigationRailTheme: NavigationRailThemeData(
       backgroundColor: AppColors.abyss,
-      indicatorColor: AppColors.wine,
-      selectedIconTheme: const IconThemeData(color: AppColors.bone),
+      indicatorColor: const Color(0x40C0202D),
+      indicatorShape: const StadiumBorder(),
+      selectedIconTheme: const IconThemeData(color: AppColors.ember),
       unselectedIconTheme: const IconThemeData(color: AppColors.ashMuted),
       selectedLabelTextStyle: text.labelMedium!.copyWith(color: AppColors.bone),
       unselectedLabelTextStyle: text.labelMedium!.copyWith(color: AppColors.ashMuted),
@@ -248,9 +251,11 @@ ThemeData buildAppTheme(Locale locale) {
       unselectedLabelColor: AppColors.ashMuted,
       labelStyle: text.labelLarge,
       unselectedLabelStyle: text.labelMedium,
-      indicatorColor: AppColors.crimson,
-      dividerColor: AppColors.hairline,
-      indicatorSize: TabBarIndicatorSize.label,
+      indicator: const BoxDecoration(color: Color(0x33C0202D), borderRadius: AppRadius.pillAll),
+      dividerColor: Colors.transparent,
+      indicatorSize: TabBarIndicatorSize.tab,
+      labelPadding: const EdgeInsetsDirectional.symmetric(horizontal: AppSpace.lg),
+      splashBorderRadius: AppRadius.pillAll,
       tabAlignment: TabAlignment.start,
     ),
     focusColor: const Color(0x3DE0525C),

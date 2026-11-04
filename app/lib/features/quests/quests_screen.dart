@@ -21,6 +21,7 @@ class QuestsScreen extends ConsumerWidget {
     return DefaultTabController(
       length: 5,
       child: Scaffold(
+        backgroundColor: Colors.transparent,
         appBar: AppBar(
           title: Text(l10n.questsTitle),
           bottom: TabBar(
@@ -93,9 +94,9 @@ class _QuestList extends ConsumerWidget {
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 820),
                 child: ListView.separated(
-                  padding: const EdgeInsetsDirectional.fromSTEB(AppSpace.sm, AppSpace.md, AppSpace.lg, 96),
+                  padding: const EdgeInsetsDirectional.fromSTEB(AppSpace.lg, AppSpace.md, AppSpace.lg, 104),
                   itemCount: list.length,
-                  separatorBuilder: (_, _) => const Divider(indent: 52),
+                  separatorBuilder: (_, _) => const SizedBox(height: AppSpace.sm),
                   itemBuilder: (_, i) => QuestTile(view: list[i]),
                 ),
               ),

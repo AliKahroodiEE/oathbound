@@ -5,35 +5,31 @@ import '../sigils.dart';
 import '../tokens.dart';
 import 'motion.dart';
 
-/// True-proportion progress bar that fills from the start edge and
-/// animates changes (design-system §6, XP bar).
+/// True-proportion progress bar with a gradient fill from the start edge.
 class XpBar extends StatelessWidget {
-  const XpBar({
-    super.key,
-    required this.fraction,
-    this.color = AppColors.crimson,
-    this.height = 6,
-    this.semanticsLabel,
-  });
+  const XpBar({super.key, required this.fraction, this.color, this.height = 8, this.semanticsLabel});
 
   final double fraction;
-  final Color color;
+
+  /// Solid tint for attribute bars; null uses the ember gradient.
+  final Color? color;
   final double height;
   final String? semanticsLabel;
 
   @override
   Widget build(BuildContext context) {
     final f = fraction.isFinite ? fraction.clamp(0.0, 1.0) : 0.0;
+    final c = color;
     return Semantics(
       label: semanticsLabel,
       value: '${(f * 100).round()}%',
       child: ClipRRect(
-        borderRadius: AppRadius.sharpAll,
+        borderRadius: AppRadius.pillAll,
         child: SizedBox(
           height: height,
           child: Stack(
             children: [
-              const Positioned.fill(child: ColoredBox(color: AppColors.abyss)),
+              Positioned.fill(child: ColoredBox(color: (c ?? AppColors.ember).withValues(alpha: 0.12))),
               TweenAnimationBuilder<double>(
                 tween: Tween(end: f),
                 duration: motion(context, AppMotion.reveal),
@@ -42,7 +38,12 @@ class XpBar extends StatelessWidget {
                   alignment: AlignmentDirectional.centerStart,
                   widthFactor: value,
                   heightFactor: 1,
-                  child: ColoredBox(color: color),
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      borderRadius: AppRadius.pillAll,
+                      gradient: c == null ? AppGradients.ember : AppGradients.tint(c),
+                    ),
+                  ),
                 ),
               ),
             ],
@@ -53,7 +54,7 @@ class XpBar extends StatelessWidget {
   }
 }
 
-/// Sigil · name · rank · bar · today's delta.
+/// Sigil · name · rank · bar · today's delta (list form).
 class AttributeRow extends StatelessWidget {
   const AttributeRow({
     super.key,
@@ -73,45 +74,178 @@ class AttributeRow extends StatelessWidget {
   final VoidCallback? onTap;
 
   @override
+  Widget build(BuildContext context) => AttributeTile(
+    attribute: attribute,
+    name: name,
+    rankLabel: rankLabel,
+    fraction: fraction,
+    todayLabel: todayLabel,
+    onTap: onTap,
+  );
+}
+
+/// Attribute card: tinted sigil badge, name, rank and a progress bar.
+class AttributeTile extends StatelessWidget {
+  const AttributeTile({
+    super.key,
+    required this.attribute,
+    required this.name,
+    required this.rankLabel,
+    required this.fraction,
+    this.todayLabel,
+    this.onTap,
+  });
+
+  final Attribute attribute;
+  final String name;
+  final String rankLabel;
+  final double fraction;
+  final String? todayLabel;
+  final VoidCallback? onTap;
+
+  @override
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
-    return InkWell(
-      onTap: onTap,
-      borderRadius: AppRadius.softAll,
-      child: Padding(
-        padding: const EdgeInsetsDirectional.symmetric(vertical: AppSpace.sm, horizontal: AppSpace.xs),
-        child: Row(
-          children: [
-            AttributeSigil(attribute, size: 22),
-            const SizedBox(width: AppSpace.md),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+    final color = AppColors.forAttribute(attribute);
+    return Material(
+      color: color.withValues(alpha: 0.07),
+      shape: RoundedRectangleBorder(
+        borderRadius: AppRadius.softAll,
+        side: BorderSide(color: color.withValues(alpha: 0.22)),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsetsDirectional.fromSTEB(AppSpace.md, AppSpace.md, AppSpace.md, AppSpace.md),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
                 children: [
-                  Row(
-                    children: [
-                      Expanded(child: Text(name, style: text.titleSmall)),
-                      if (todayLabel != null)
-                        Padding(
-                          padding: const EdgeInsetsDirectional.only(end: AppSpace.sm),
-                          child: Text(todayLabel!, style: text.bodySmall),
-                        ),
-                      Text(rankLabel, style: text.labelMedium),
-                    ],
+                  Container(
+                    width: 34,
+                    height: 34,
+                    decoration: BoxDecoration(color: color.withValues(alpha: 0.16), shape: BoxShape.circle),
+                    alignment: Alignment.center,
+                    child: AttributeSigil(attribute, size: 18),
                   ),
-                  const SizedBox(height: AppSpace.xs + 2),
-                  XpBar(fraction: fraction, color: AppColors.forAttribute(attribute), height: 4),
+                  const SizedBox(width: AppSpace.sm + 2),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(name, style: text.titleSmall, maxLines: 1, overflow: TextOverflow.ellipsis),
+                        Text.rich(
+                          TextSpan(
+                            children: [
+                              TextSpan(
+                                text: rankLabel,
+                                style: text.labelMedium?.copyWith(color: color, fontWeight: FontWeight.w700),
+                              ),
+                              if (todayLabel != null)
+                                TextSpan(
+                                  text: '  $todayLabel',
+                                  style: text.labelMedium?.copyWith(color: AppColors.attrVitality),
+                                ),
+                            ],
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
               ),
-            ),
-          ],
+              const SizedBox(height: AppSpace.sm + 2),
+              XpBar(fraction: fraction, color: color, height: 5),
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
-/// The carved level seal shown on the character sheet.
+/// Small statistic card: tinted icon, value, label, optional caption.
+class StatTile extends StatelessWidget {
+  const StatTile({
+    super.key,
+    required this.icon,
+    required this.value,
+    required this.label,
+    this.caption,
+    this.color = AppColors.ember,
+    this.vertical = false,
+  });
+
+  final IconData icon;
+  final String value;
+  final String label;
+  final String? caption;
+  final Color color;
+
+  /// Stacked layout for narrow, three-across rows.
+  final bool vertical;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme;
+    if (vertical) {
+      return Container(
+        padding: const EdgeInsetsDirectional.all(AppSpace.md),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.07),
+          borderRadius: AppRadius.softAll,
+          border: Border.all(color: color.withValues(alpha: 0.22)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, size: 20, color: color),
+            const SizedBox(height: AppSpace.sm),
+            Text(value, style: text.titleSmall, maxLines: 2, overflow: TextOverflow.ellipsis),
+            Text(label, style: text.bodySmall, maxLines: 1, overflow: TextOverflow.ellipsis),
+          ],
+        ),
+      );
+    }
+    return Container(
+      padding: const EdgeInsetsDirectional.all(AppSpace.md),
+      decoration: BoxDecoration(
+        color: AppColors.abyss.withValues(alpha: 0.7),
+        borderRadius: AppRadius.softAll,
+        border: Border.all(color: AppColors.hairline),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(color: color.withValues(alpha: 0.15), borderRadius: AppRadius.sharpAll),
+            child: Icon(icon, size: 19, color: color),
+          ),
+          const SizedBox(width: AppSpace.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(value, style: text.titleMedium, maxLines: 1, overflow: TextOverflow.ellipsis),
+                Text(label, style: text.bodySmall, maxLines: 1, overflow: TextOverflow.ellipsis),
+                if (caption != null)
+                  Text(caption!, style: text.bodySmall?.copyWith(color: AppColors.ashFaint), maxLines: 2),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The carved level badge.
 class LevelSeal extends StatelessWidget {
   const LevelSeal({super.key, required this.level, required this.caption, this.size = 64});
 
@@ -126,20 +260,15 @@ class LevelSeal extends StatelessWidget {
       label: '$caption $level',
       excludeSemantics: true,
       child: Container(
-        width: size,
-        height: size,
+        padding: const EdgeInsetsDirectional.symmetric(horizontal: AppSpace.md, vertical: AppSpace.xs + 2),
         decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: AppColors.abyss,
-          border: Border.all(color: AppColors.crimson, width: 1.5),
+          gradient: AppGradients.emberDiagonal,
+          borderRadius: AppRadius.pillAll,
+          boxShadow: AppShadows.glow(AppColors.ember, strength: 0.4, blur: 14),
         ),
-        alignment: Alignment.center,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(level, style: text.titleLarge?.copyWith(height: 1)),
-            Text(caption, style: text.labelSmall?.copyWith(fontSize: 9, height: 1.2)),
-          ],
+        child: Text(
+          '$caption $level',
+          style: text.labelLarge?.copyWith(color: AppColors.bone, fontWeight: FontWeight.w800),
         ),
       ),
     );

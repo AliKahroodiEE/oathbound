@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
+import 'dart:ui' show PlatformDispatcher;
+
 import 'app/app.dart';
 import 'app/providers.dart';
 import 'app/router.dart';
+import 'core/locale/locale_registry.dart';
 import 'data/db/database.dart';
 import 'data/demo/demo_seed.dart';
 import 'data/remote/backend.dart';
@@ -17,7 +20,12 @@ Future<void> main() async {
   final db = AppDatabase();
   // Demo builds (`--dart-define=WYRD_DEMO=true`) start with sample data.
   if (const bool.fromEnvironment('WYRD_DEMO') && !(await SettingsRepository(db).profile()).onboardingComplete) {
-    await seedDemo(db, locale: const Locale(String.fromEnvironment('WYRD_DEMO_LOCALE', defaultValue: 'en')));
+    // Seed in the visitor's language unless the build pins one.
+    const pinned = String.fromEnvironment('WYRD_DEMO_LOCALE');
+    final locale = pinned.isEmpty
+        ? LocaleRegistry.resolve(PlatformDispatcher.instance.locale)
+        : Locale(pinned); // ignore: prefer_const_constructors
+    await seedDemo(db, locale: locale);
   }
   final profile = await SettingsRepository(db).profile();
   runApp(
