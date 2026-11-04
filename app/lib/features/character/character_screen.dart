@@ -8,6 +8,7 @@ import '../../core/format/bidi.dart';
 import '../../data/models.dart';
 import '../../data/repositories/character_repository.dart';
 import '../../design/components/game.dart';
+import '../../design/components/motion.dart';
 import '../../design/components/panel.dart';
 import '../../design/components/progress.dart';
 import '../../design/components/states.dart';
@@ -51,12 +52,15 @@ class _CharacterLayout extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final widthClass = WidthClass.of(MediaQuery.sizeOf(context).width);
-    final hero = _Hero(state: state);
-    final returning = state.showReturn(dayKey(DateTime.now())) ? const _ReturnCard() : null;
-    final attributes = _AttributesPanel(state: state);
-    const today = _TodayPanel();
-    final growth = _GrowthPanel(state: state);
-    final achievements = _AchievementsPanel(state: state);
+    // Panels ease in once, in reading order.
+    var order = 0;
+    Widget reveal(Widget w) => Reveal(index: order++, child: w);
+    final hero = reveal(_Hero(state: state));
+    final returning = state.showReturn(dayKey(DateTime.now())) ? reveal(const _ReturnCard()) : null;
+    final today = reveal(const _TodayPanel());
+    final attributes = reveal(_AttributesPanel(state: state));
+    final growth = reveal(_GrowthPanel(state: state));
+    final achievements = reveal(_AchievementsPanel(state: state));
     const gap = SizedBox(height: AppSpace.lg, width: AppSpace.lg);
 
     Widget column(List<Widget?> children) => Column(

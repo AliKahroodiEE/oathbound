@@ -107,61 +107,64 @@ class AttributeTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
     final color = context.palette.attribute(attribute);
-    return Material(
-      color: color.withValues(alpha: 0.07),
-      shape: RoundedRectangleBorder(
-        borderRadius: AppRadius.softAll,
-        side: BorderSide(color: color.withValues(alpha: 0.22)),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsetsDirectional.fromSTEB(AppSpace.md, AppSpace.md, AppSpace.md, AppSpace.md),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    width: 34,
-                    height: 34,
-                    decoration: BoxDecoration(color: color.withValues(alpha: 0.16), shape: BoxShape.circle),
-                    alignment: Alignment.center,
-                    child: AttributeSigil(attribute, size: 18),
-                  ),
-                  const SizedBox(width: AppSpace.sm + 2),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(name, style: text.titleSmall, maxLines: 1, overflow: TextOverflow.ellipsis),
-                        Text.rich(
-                          TextSpan(
-                            children: [
-                              TextSpan(
-                                text: rankLabel,
-                                style: text.labelMedium?.copyWith(color: color, fontWeight: FontWeight.w700),
-                              ),
-                              if (todayLabel != null)
-                                TextSpan(
-                                  text: '  $todayLabel',
-                                  style: text.labelMedium?.copyWith(color: context.palette.success),
-                                ),
-                            ],
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
+    return Pressable(
+      enabled: onTap != null,
+      child: Material(
+        color: color.withValues(alpha: 0.07),
+        shape: RoundedRectangleBorder(
+          borderRadius: AppRadius.softAll,
+          side: BorderSide(color: color.withValues(alpha: 0.22)),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsetsDirectional.fromSTEB(AppSpace.md, AppSpace.md, AppSpace.md, AppSpace.md),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 34,
+                      height: 34,
+                      decoration: BoxDecoration(color: color.withValues(alpha: 0.16), shape: BoxShape.circle),
+                      alignment: Alignment.center,
+                      child: AttributeSigil(attribute, size: 18),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppSpace.sm + 2),
-              XpBar(fraction: fraction, color: color, height: 5),
-            ],
+                    const SizedBox(width: AppSpace.sm + 2),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(name, style: text.titleSmall, maxLines: 1, overflow: TextOverflow.ellipsis),
+                          Text.rich(
+                            TextSpan(
+                              children: [
+                                TextSpan(
+                                  text: rankLabel,
+                                  style: text.labelMedium?.copyWith(color: color, fontWeight: FontWeight.w700),
+                                ),
+                                if (todayLabel != null)
+                                  TextSpan(
+                                    text: '  $todayLabel',
+                                    style: text.labelMedium?.copyWith(color: context.palette.success),
+                                  ),
+                              ],
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppSpace.sm + 2),
+                XpBar(fraction: fraction, color: color, height: 5),
+              ],
+            ),
           ),
         ),
       ),

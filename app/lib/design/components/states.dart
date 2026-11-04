@@ -26,7 +26,18 @@ class EmptyState extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 32, color: context.palette.inkFaint),
+          Container(
+            width: 64,
+            height: 64,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: RadialGradient(
+                colors: [context.palette.selection, context.palette.selection.withValues(alpha: 0)],
+              ),
+              border: Border.all(color: context.palette.hairline),
+            ),
+            child: Icon(icon, size: 28, color: context.palette.accent),
+          ),
           const SizedBox(height: AppSpace.md),
           Text(
             message,

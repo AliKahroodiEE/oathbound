@@ -218,18 +218,21 @@ class GlowFab extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Tooltip(
     message: tooltip,
-    child: DecoratedBox(
-      decoration: BoxDecoration(
-        gradient: AppGradients.emberDiagonal,
-        borderRadius: AppRadius.softAll,
-        boxShadow: AppShadows.glow(AppColors.ember, strength: 0.5, blur: 20),
-      ),
-      child: Material(
-        type: MaterialType.transparency,
-        child: InkWell(
+    child: Pressable(
+      scale: 0.94,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: AppGradients.emberDiagonal,
           borderRadius: AppRadius.softAll,
-          onTap: onPressed,
-          child: SizedBox.square(dimension: 58, child: Icon(icon, color: AppColors.onAccent, size: 30)),
+          boxShadow: AppShadows.glow(AppColors.ember, strength: 0.5, blur: 20),
+        ),
+        child: Material(
+          type: MaterialType.transparency,
+          child: InkWell(
+            borderRadius: AppRadius.softAll,
+            onTap: onPressed,
+            child: SizedBox.square(dimension: 58, child: Icon(icon, color: AppColors.onAccent, size: 30)),
+          ),
         ),
       ),
     ),
@@ -249,37 +252,41 @@ class GlowButton extends StatelessWidget {
     final enabled = onPressed != null;
     return Opacity(
       opacity: enabled ? 1 : 0.45,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          gradient: AppGradients.ember,
-          borderRadius: AppRadius.pillAll,
-          boxShadow: enabled ? AppShadows.glow(AppColors.ember, strength: 0.35, blur: 16) : null,
-        ),
-        child: Material(
-          type: MaterialType.transparency,
-          child: InkWell(
+      child: Pressable(
+        enabled: enabled,
+        scale: 0.97,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: AppGradients.ember,
             borderRadius: AppRadius.pillAll,
-            onTap: onPressed,
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(minHeight: 50),
-              child: Padding(
-                padding: const EdgeInsetsDirectional.symmetric(horizontal: AppSpace.xl),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    if (icon != null) ...[
-                      Icon(icon, color: AppColors.onAccent, size: 20),
-                      const SizedBox(width: AppSpace.sm),
-                    ],
-                    Flexible(
-                      child: Text(
-                        label,
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.labelLarge?.copyWith(color: AppColors.onAccent),
+            boxShadow: enabled ? AppShadows.glow(AppColors.ember, strength: 0.35, blur: 16) : null,
+          ),
+          child: Material(
+            type: MaterialType.transparency,
+            child: InkWell(
+              borderRadius: AppRadius.pillAll,
+              onTap: onPressed,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(minHeight: 50),
+                child: Padding(
+                  padding: const EdgeInsetsDirectional.symmetric(horizontal: AppSpace.xl),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      if (icon != null) ...[
+                        Icon(icon, color: AppColors.onAccent, size: 20),
+                        const SizedBox(width: AppSpace.sm),
+                      ],
+                      Flexible(
+                        child: Text(
+                          label,
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.labelLarge?.copyWith(color: AppColors.onAccent),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),

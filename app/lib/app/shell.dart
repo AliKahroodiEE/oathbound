@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../design/components/background.dart';
@@ -18,7 +19,7 @@ class _Destination {
 /// a rail on medium widths and a full sidebar on expanded widths. The
 /// start edge follows text direction, so everything mirrors in RTL.
 /// The backdrop gradient is painted once here behind all destinations.
-class AdaptiveShell extends StatelessWidget {
+class AdaptiveShell extends ConsumerWidget {
   const AdaptiveShell({super.key, required this.shell});
 
   final StatefulNavigationShell shell;
@@ -28,7 +29,7 @@ class AdaptiveShell extends StatelessWidget {
   void _newQuest(BuildContext context) => context.push('/quest/new');
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final destinations = [
       _Destination(Icons.shield_outlined, Icons.shield_rounded, l10n.navCharacter),
@@ -57,19 +58,7 @@ class AdaptiveShell extends StatelessWidget {
           floatingActionButton: shell.currentIndex <= 1
               ? GlowFab(tooltip: l10n.quickAdd, onPressed: () => _newQuest(context))
               : null,
-          bottomNavigationBar: DecoratedBox(
-            decoration: BoxDecoration(
-              border: Border(top: BorderSide(color: context.palette.hairline)),
-            ),
-            child: NavigationBar(
-              selectedIndex: shell.currentIndex,
-              onDestinationSelected: _go,
-              destinations: [
-                for (final d in destinations)
-                  NavigationDestination(icon: Icon(d.icon), selectedIcon: Icon(d.selectedIcon), label: d.label),
-              ],
-            ),
-          ),
+          bottomNavigationBar: _FloatingNavBar(destinations: destinations, selected: shell.currentIndex, onSelect: _go),
         );
       case WidthClass.medium:
         body = Scaffold(
@@ -130,7 +119,56 @@ class AdaptiveShell extends StatelessWidget {
     }
     return CallbackShortcuts(
       bindings: shortcuts,
-      child: Focus(autofocus: true, child: AppBackground(child: body)),
+      child: Focus(
+        autofocus: true,
+        child: AppBackground(
+          reducedEffects: ref.watch(profileProvider.select((p) => p.value?.reducedEffects ?? false)),
+          child: body,
+        ),
+      ),
+    );
+  }
+}
+
+/// Bottom navigation on phones: a floating, rounded "island" over the
+/// backdrop, keeping Material's NavigationBar for semantics and focus.
+class _FloatingNavBar extends StatelessWidget {
+  const _FloatingNavBar({required this.destinations, required this.selected, required this.onSelect});
+
+  final List<_Destination> destinations;
+  final int selected;
+  final ValueChanged<int> onSelect;
+
+  static const _radius = BorderRadius.all(Radius.circular(26));
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    return SafeArea(
+      top: false,
+      // Symmetric, so it needs no direction.
+      minimum: const EdgeInsets.symmetric(horizontal: AppSpace.md).copyWith(bottom: AppSpace.md),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: p.surfaceGradient,
+          borderRadius: _radius,
+          border: Border.all(color: p.hairline),
+          boxShadow: p.isDark
+              ? const [BoxShadow(color: Color(0x8C000000), blurRadius: 28, offset: Offset(0, 12), spreadRadius: -10)]
+              : p.cardShadow,
+        ),
+        child: ClipRRect(
+          borderRadius: _radius,
+          child: NavigationBar(
+            selectedIndex: selected,
+            onDestinationSelected: onSelect,
+            destinations: [
+              for (final d in destinations)
+                NavigationDestination(icon: Icon(d.icon), selectedIcon: Icon(d.selectedIcon), label: d.label),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

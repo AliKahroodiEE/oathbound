@@ -8,6 +8,7 @@ import '../../app/providers.dart';
 import '../../core/format/formatters.dart';
 import '../../data/models.dart';
 import '../../data/repositories/character_repository.dart';
+import '../../design/components/motion.dart';
 import '../../design/components/panel.dart';
 import '../../design/components/progress.dart';
 import '../../design/components/states.dart';
@@ -131,7 +132,7 @@ class _ChronicleScreenState extends ConsumerState<ChronicleScreen> {
                 _XpChartPanel(stats: s, period: _period),
                 _DistributionPanel(stats: s, previous: prevStats),
                 _RhythmPanel(stats: s, period: _period),
-              ];
+              ].indexed.map((e) => Reveal(index: e.$1, child: e.$2)).toList();
               if (!wide) {
                 return Column(
                   children: [
