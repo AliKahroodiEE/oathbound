@@ -171,8 +171,18 @@ warn_unless() { # warn_unless VALUE REGEX "message"
 # the rest of this group instead of ending the script.
 setup_android_key() {
   local keystore="" alias_name="" store_pass="" key_pass="" repeat="" owner_name="" fingerprints=""
-  if ! command -v keytool >/dev/null 2>&1; then
-    say "  ! keytool not found: install a JDK (Android Studio ships one), then run the script again"
+  local keytool="" candidate=""
+  # macOS has a /usr/bin/keytool stub that fails without a JDK; Android
+  # Studio's own JDK is not on PATH. Take the first one that runs.
+  for candidate in "$(command -v keytool 2>/dev/null || true)" \
+    "/Applications/Android Studio.app/Contents/jbr/Contents/Home/bin/keytool"; do
+    if [ -n "$candidate" ] && [ -x "$candidate" ] && "$candidate" -help >/dev/null 2>&1; then
+      keytool="$candidate"
+      break
+    fi
+  done
+  if [ -z "$keytool" ]; then
+    say "  ! no working keytool: install a JDK (brew install openjdk) or Android Studio, then run the script again"
     return 0
   fi
   if confirm "Create a new upload keystore with keytool?" Y; then
@@ -198,10 +208,16 @@ setup_android_key() {
     done
     key_pass="$store_pass" # PKCS12 keystores use one password for both
     owner_name="$(ask "Name on the certificate" Wyrd)"
+    # Characters with a meaning in a certificate name would break -dname.
+    owner_name="${owner_name//[,+=\"\\<>;]/}"
+    owner_name="${owner_name:-Wyrd}"
     mkdir -p "$(dirname "$keystore")"
-    WYRD_KEYSTORE_PASS="$store_pass" keytool -genkeypair -keystore "$keystore" -storetype PKCS12 \
+    if ! WYRD_KEYSTORE_PASS="$store_pass" "$keytool" -genkeypair -keystore "$keystore" -storetype PKCS12 \
       -alias "$alias_name" -keyalg RSA -keysize 4096 -validity 10000 -dname "CN=$owner_name" \
-      -storepass:env WYRD_KEYSTORE_PASS -keypass:env WYRD_KEYSTORE_PASS >/dev/null
+      -storepass:env WYRD_KEYSTORE_PASS -keypass:env WYRD_KEYSTORE_PASS >/dev/null; then
+      say "  ! keytool could not create the keystore; nothing stored"
+      return 0
+    fi
     chmod 600 "$keystore"
     say "  Created $keystore"
   else
@@ -216,7 +232,7 @@ setup_android_key() {
     key_pass="$(ask_secret "Key password (Enter if the same)")"
     key_pass="${key_pass:-$store_pass}"
   fi
-  if ! fingerprints="$(WYRD_KEYSTORE_PASS="$store_pass" keytool -list -v -keystore "$keystore" \
+  if ! fingerprints="$(WYRD_KEYSTORE_PASS="$store_pass" "$keytool" -list -v -keystore "$keystore" \
     -alias "$alias_name" -storepass:env WYRD_KEYSTORE_PASS 2>/dev/null)"; then
     say "  ! the keystore does not open with that password or has no key named $alias_name; nothing stored"
     return 0
@@ -261,9 +277,16 @@ if group "Supabase" "Backend project, its API keys and the CLI token the backend
   ref="$(ask "Project ref (from https://supabase.com/dashboard/project/<ref>)" "$known_ref")"
   warn_unless "$ref" '^[a-z0-9]{20}$' "a project ref is usually 20 lowercase letters"
   set_secret SUPABASE_PROJECT_ID "$ref"
-  default_url=""
-  if [ -n "$ref" ]; then default_url="https://$ref.supabase.co"; fi
-  url="$(variable_prompt SUPABASE_URL "Project URL" "$default_url")"
+  if [ -n "$ref" ]; then
+    # The URL follows the ref typed now, even if another project's is stored.
+    url="$(ask "Project URL" "https://$ref.supabase.co")"
+    case "$url" in
+      "https://$ref.supabase.co" | "https://$ref.supabase.co/") ;;
+      *) note "  ! that URL is not the one of project $ref; the apps and the backend deploy would use different projects" ;;
+    esac
+  else
+    url="$(variable_prompt SUPABASE_URL "Project URL")"
+  fi
   set_variable SUPABASE_URL "${url%/}"
   key="$(variable_prompt SUPABASE_PUBLISHABLE_KEY "Publishable key (sb_publishable_...)")"
   case "$key" in
@@ -289,6 +312,7 @@ fi
 
 pages_project="$(current_variable CF_PAGES_PROJECT)"
 pages_project="${pages_project:-wyrd-app}"
+old_pages_project="$pages_project"
 if group "Cloudflare Pages" "Hosting for the web app; the deploy workflow creates the Pages project on its first run (step 2)." \
   CLOUDFLARE_API_TOKEN CLOUDFLARE_ACCOUNT_ID CF_PAGES_PROJECT; then
   set_secret CLOUDFLARE_API_TOKEN "$(secret_prompt CLOUDFLARE_API_TOKEN "API token with Account > Cloudflare Pages > Edit")"
@@ -307,9 +331,24 @@ fi
 
 # --- Site address ---------------------------------------------------------------
 
+# A renamed Pages project makes a stored https://<old name>.pages.dev address
+# stale, so the group is offered again with the new address as default.
+site_names="WYRD_SITE_URL"
+site_default=""
+stored_site="$(current_variable WYRD_SITE_URL)"
+if [ "$pages_project" != "$old_pages_project" ] && [ "${stored_site%/}" = "https://$old_pages_project.pages.dev" ]; then
+  site_names=""
+  site_default="https://$pages_project.pages.dev"
+  note "The Pages project is now $pages_project, but WYRD_SITE_URL still names $old_pages_project."
+fi
+# shellcheck disable=SC2086 # site_names is one name or none
 if group "Site address" "The one public URL everything else uses (sign-in redirects, the backend's Site URL, release notes). Change it here when you move to your own domain." \
-  WYRD_SITE_URL; then
-  site="$(variable_prompt WYRD_SITE_URL "Site URL" "https://$pages_project.pages.dev")"
+  $site_names; then
+  if [ -n "$site_default" ]; then
+    site="$(ask "Site URL" "$site_default")"
+  else
+    site="$(variable_prompt WYRD_SITE_URL "Site URL" "https://$pages_project.pages.dev")"
+  fi
   site="${site%/}"
   warn_unless "$site" '^https://' "the site must be served over https"
   set_variable WYRD_SITE_URL "$site"
@@ -436,8 +475,21 @@ if group "Encrypted backups" "Database dumps are encrypted to an age public key;
       say "  ! age-keygen not found (https://github.com/FiloSottile/age); BACKUP_AGE_RECIPIENT not set"
     fi
   fi
-  warn_unless "$recipient" '^age1' "age public keys start with age1"
-  set_variable BACKUP_AGE_RECIPIENT "$recipient"
+  # Variables are not secret: only public keys (age1...) may be stored, never
+  # the private key (AGE-SECRET-KEY-...) from the same file.
+  valid_recipients=true
+  # shellcheck disable=SC2086 # split a comma- or space-separated list
+  for one_recipient in ${recipient//,/ }; do
+    [[ "$one_recipient" =~ ^age1[02-9ac-hj-np-z]{58}$ ]] || valid_recipients=false
+  done
+  if [ -n "$recipient" ] && [ "$valid_recipients" = false ]; then
+    case "$recipient" in
+      *AGE-SECRET-KEY-*) say "  ! that is the private key: keep it offline and never put it in GitHub; BACKUP_AGE_RECIPIENT not changed" ;;
+      *) say "  ! not an age public key (age1 followed by 58 characters); BACKUP_AGE_RECIPIENT not changed" ;;
+    esac
+  else
+    set_variable BACKUP_AGE_RECIPIENT "$recipient"
+  fi
 fi
 
 # --- Done -----------------------------------------------------------------------
