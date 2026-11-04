@@ -319,8 +319,8 @@ the device's secure storage and goes only to that provider. A server-side key
 ```
 
 ```bash
-cd packages/wyrd_engine && dart test   # rules, caps, curves, consistency, vectors
-cd app && flutter test                 # data layer, l10n gates, RTL lint, widget tests
+cd packages/wyrd_engine && dart test   # rules engine
+cd app && flutter test                 # data, l10n, RTL lint, widgets
 cd app && flutter analyze --fatal-infos
 ```
 
@@ -333,10 +333,7 @@ both languages, then frame the results. A small script converts the renders to W
 Python 3 with Pillow):
 
 ```bash
-cd app
-flutter test --dart-define=SCREENSHOTS=true --update-goldens test/screenshots/readme_screenshots_test.dart
-flutter test --dart-define=SCREENSHOTS=true --update-goldens test/screenshots/readme_art_test.dart
-cd .. && python3 tool/readme_images.py
+./tool/readme_images.sh
 ```
 
 ### Localization

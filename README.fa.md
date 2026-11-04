@@ -334,8 +334,8 @@ Anthropic، OpenAI، Google Gemini یا سرویس سازگارِ خودش را 
 ```
 
 ```bash
-cd packages/wyrd_engine && dart test   # rules, caps, curves, consistency, vectors
-cd app && flutter test                 # data layer, l10n gates, RTL lint, widget tests
+cd packages/wyrd_engine && dart test   # rules engine
+cd app && flutter test                 # data, l10n, RTL lint, widgets
 cd app && flutter analyze --fatal-infos
 ```
 
@@ -352,10 +352,7 @@ CI همه‌ی این‌ها را به‌علاوه‌ی ساخت وب با هر
 <div dir="ltr">
 
 ```bash
-cd app
-flutter test --dart-define=SCREENSHOTS=true --update-goldens test/screenshots/readme_screenshots_test.dart
-flutter test --dart-define=SCREENSHOTS=true --update-goldens test/screenshots/readme_art_test.dart
-cd .. && python3 tool/readme_images.py
+./tool/readme_images.sh
 ```
 
 </div>
