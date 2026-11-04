@@ -337,6 +337,7 @@ chronicles, notification_prefs } }`. Loop while `has_more`.
 | `report_content(target_type, target_id, reason, details?)` | public guilds auto-hide at 3 reporters |
 | `register_push_token(token, platform)` | moves a device token to the current user |
 | `unregister_push_token(token)` | deletes the token if it is the caller's (sign-out); silent otherwise |
+| `set_notification_prefs(categories, quiet_hours_start?, quiet_hours_end?)` | merges known category switches (true/false) and sets quiet hours for the caller; the app mirrors its Notifications settings with it |
 | `export_my_data()` | all user-owned rows as JSON |
 | `delete_my_account()` | anonymises authored guild content ("Former member"), then deletes the user |
 
