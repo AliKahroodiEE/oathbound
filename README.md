@@ -34,22 +34,27 @@ exactly why you grew.
 
 ## Status
 
-Milestone **M0 — Foundation** is implemented; **M1 — Connected** is in progress.
+Milestones **M0 Foundation** and **M1 Connected** are implemented; M2–M4 (public guilds,
+premium, store releases) are next.
 
 | Area | State |
 | --- | --- |
-| Research, product spec, progression rules, design system, UX, architecture | ✅ [`docs/`](docs/) |
-| Progression engine (Dart) with 103 tests and shared conformance vectors | ✅ [`packages/oathbound_engine`](packages/oathbound_engine) |
+| Research, product spec, progression rules, design system, UX, architecture + ADRs | ✅ [`docs/`](docs/) |
+| Progression engine in Dart (103 tests) and TypeScript (46 tests), bound by shared conformance vectors | ✅ |
 | Local-first app: character sheet, quests (daily/contracts/objectives, recurrence, subtasks, timer, reminders), reward reveal with explanations, ledger, week/month/year chronicle, settings, onboarding | ✅ [`app/`](app/) |
-| English + Persian, full RTL, Jalali/Gregorian, native/Latin digits | ✅ |
+| English + Persian, full RTL, Jalali/Gregorian, native/Latin digits, auto-direction for user text | ✅ |
 | Adaptive layouts: phone (bottom bar), tablet (rail), desktop/web (sidebar, multi-column) | ✅ |
-| Backend: schema, row-level security, sync and progression RPCs, AI evaluation and chronicle functions | 🚧 [`backend/`](backend/) |
-| Accounts, sync, guilds in the client | 🚧 |
+| Backend: schema, row-level security, sync and progression RPCs, Claude evaluation and chronicle functions, push notifications | ✅ [`backend/`](backend/) |
+| Client accounts, sync, server evaluation, guilds (feed, reactions, comments, challenges) | ✅ |
 
-Verified in this environment: engine and app test suites, static analysis, and the web build
-exercised in a browser in English and Persian at phone, tablet and desktop widths. Android, iOS,
-macOS and Windows builds need their platform toolchains (Android SDK, Xcode, Visual Studio)
-and have not yet been built.
+**Verified here:** all engine, app and backend test suites; static analysis; all migrations and
+73 security/behaviour checks against an offline Postgres (PGlite); type-checks of every Edge
+Function; the web build exercised in a browser in English and Persian at phone, tablet and
+desktop widths.
+
+**Not yet verified:** a live Supabase project, real Claude and FCM calls, and native builds for
+Android, iOS, macOS and Windows (they need the Android SDK, Xcode and Visual Studio).
+Persian copy needs review by a native speaker before release.
 
 ## Repository layout
 
