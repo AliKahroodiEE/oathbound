@@ -17,26 +17,44 @@ of truth — no raw colours, sizes or durations in feature code.
 5. **Calm motion.** Motion explains change (a bar filling, a card settling). Nothing loops
    for attention. Reduced-motion users get instant state changes.
 
+## Version 2 (2026-11): livelier, still dark fantasy
+
+v2 keeps the stone-and-ember identity but adds energy:
+
+- **Saturated attribute pigments** and two sparing secondary accents: `arcane` `#8B6CFF`
+  (radar fill, chronicle, class pills) and `gold` `#E2B45C` (titles, medals, milestones).
+  `emberGlow` `#FF8A4C` completes the ember gradient (`crimson → ember → emberGlow`).
+- **Gradients instead of flat fills:** stone-lit card surfaces (lighter at the top), ember
+  gradients on progress, primary buttons and the quick-add button, one radial backdrop glow
+  behind all tabs, and a static radial burst behind the reward total.
+- **Softer, modern shapes:** cards 18 px, controls 14 px, pills for buttons, chips, tab and
+  navigation indicators.
+- **Game-like components:** circular XP ring around the portrait, hexagonal attribute radar
+  (mirrored in RTL), tinted attribute and stat tiles, category badges on quest cards.
+- **Performance budget:** no blur filters or backdrop blurs; soft shadows only on a few hero
+  elements (FAB, level badge, primary button, completed seals); custom painters isolated with
+  `RepaintBoundary`; animations are single tweens that respect reduced motion.
+
 ## 2. Colour tokens
 
 ### Surfaces and ink
 
 | Token | Hex | Use | Contrast vs `void` |
 | --- | --- | --- | --- |
-| `void` | `#0B0B10` | App background | — |
-| `abyss` | `#12131A` | Lowest surface, sidebars | — |
-| `slate` | `#202A38` | Cards, panels | — |
-| `slateHigh` | `#2A3546` | Hover, selected rows, inputs | — |
-| `hairline` | `#343F52` | 1 px borders, dividers | 1.9 : 1 (decorative) |
-| `wine` | `#5A2630` | Secondary containers, selected chips | — |
-| `crimson` | `#A71924` | Primary action fill, XP fill, key events | 2.6 : 1 (fills only) |
-| `ember` | `#E0525C` | Crimson used as text/icon on dark | 5.2 : 1 |
-| `bone` | `#ECE6DA` | Headings, high-emphasis text, on-crimson text | 15.6 : 1 |
-| `ash` | `#C4C7D0` | Body text | 11.4 : 1 |
-| `ashMuted` | `#8A8F9C` | Secondary text, captions | 6.0 : 1 |
-| `ashFaint` | `#5E6372` | Disabled, decorative glyphs only | 3.2 : 1 |
+| `void` | `#09090E` | App background | — |
+| `abyss` | `#111320` | Lowest surface, sidebars | — |
+| `slate` | `#181C2B` | Cards, panels | — |
+| `slateHigh` | `#222839` | Hover, selected rows, inputs | — |
+| `hairline` | `#2C3346` | 1 px borders, dividers | 1.9 : 1 (decorative) |
+| `wine` | `#4A1A26` | Secondary containers, selected chips | — |
+| `crimson` | `#C0202D` | Primary action fill, XP fill, key events | fills only (bone on crimson 5.1 : 1) |
+| `ember` | `#FF5A64` | Crimson used as text/icon on dark | 6.4 : 1 |
+| `bone` | `#F1EBDF` | Headings, high-emphasis text, on-crimson text | 15.6 : 1 |
+| `ash` | `#C9CCD6` | Body text | 11.4 : 1 |
+| `ashMuted` | `#8E94A3` | Secondary text, captions | 6.0 : 1 |
+| `ashFaint` | `#5A6074` | Disabled, decorative glyphs only | 3.2 : 1 |
 
-Text on `crimson` uses `bone` (6.3 : 1). Body text never uses `ashFaint`.
+Text on `crimson` uses `bone` (5.1 : 1). Body text never uses `ashFaint`.
 
 ### Attributes
 Muted pigments, distinguishable for common colour-vision deficiencies when paired with
@@ -44,15 +62,15 @@ their sigils (colour is never the only signal).
 
 | Attribute | Token | Hex | Sigil |
 | --- | --- | --- | --- |
-| Strength | `attrStrength` | `#B5543C` rust | upward chevron over bar |
-| Intelligence | `attrIntelligence` | `#5B7FB8` steel | open eye in diamond |
-| Discipline | `attrDiscipline` | `#9A8A6A` tarnished brass | vertical blade between rails |
-| Creativity | `attrCreativity` | `#8A5FA8` amethyst | spiral quill |
-| Vitality | `attrVitality` | `#4E8C6A` moss | leaf in circle |
-| Social | `attrSocial` | `#C07A8A` rose | three linked rings |
+| Strength | `attrStrength` | `#F0663E` rust | upward chevron over bar |
+| Intelligence | `attrIntelligence` | `#5B95FF` steel | open eye in diamond |
+| Discipline | `attrDiscipline` | `#D9B260` tarnished brass | vertical blade between rails |
+| Creativity | `attrCreativity` | `#B476FF` amethyst | spiral quill |
+| Vitality | `attrVitality` | `#3FCB8E` moss | leaf in circle |
+| Social | `attrSocial` | `#FF73A8` rose | three linked rings |
 
 ### Feedback
-`success` = `attrVitality`, `warning` `#C8933A`, `danger` = `ember`, `info` = `attrIntelligence`.
+`success` = `attrVitality`, `warning` `#F0A93B`, `danger` = `ember`, `info` = `attrIntelligence`.
 
 ## 3. Typography
 
@@ -76,8 +94,8 @@ runtime.
 ## 4. Space, shape, elevation
 
 - **Spacing scale (4-pt):** `xs 4`, `sm 8`, `md 12`, `lg 16`, `xl 24`, `xxl 32`, `xxxl 48`.
-- **Radius:** `sharp 2` (chips, bars), `soft 6` (cards, inputs, buttons), `seal 999` (only
-  avatars and seals).
+- **Radius (v2):** `sharp 8` (small badges), `soft 14` (inputs, tiles), `card 18` (cards),
+  `pill 999` (buttons, chips, indicators, bars).
 - **Borders:** 1 px `hairline`; focused elements get a 1 px `ember` outline plus a 2 px
   outer glow at 24 % alpha (also the keyboard focus ring).
 - **Elevation:** expressed by surface step (`void → abyss → slate → slateHigh`), never by
