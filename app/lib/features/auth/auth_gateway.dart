@@ -34,6 +34,10 @@ abstract interface class AuthGateway {
   Future<void> signInWithGitHub();
 
   Future<void> signOut();
+
+  /// Deletes the account and everything stored with it on the server
+  /// (`public.delete_my_account()`).
+  Future<void> deleteAccount();
 }
 
 /// The gateway for this build, or null when no backend is configured.
@@ -112,4 +116,7 @@ class SupabaseAuthGateway implements AuthGateway {
 
   @override
   Future<void> signOut() => _auth.signOut();
+
+  @override
+  Future<void> deleteAccount() => _client.rpc<void>('delete_my_account');
 }

@@ -1539,6 +1539,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authErrNetwork => 'Can\'t reach the server. Check your connection and try again.';
 
   @override
+  String get deleteAccount => 'Delete account';
+
+  @override
+  String get deleteAccountBody =>
+      'This permanently deletes your account and everything we store for it, then signs you out and clears this device. Your comments in guilds stay, shown as from a former member. This can\'t be undone.';
+
+  @override
+  String get accountDeleted => 'Your account has been deleted.';
+
+  @override
   String get createAccount => 'Create account';
 
   @override

@@ -57,6 +57,9 @@ class FakeAuthGateway implements AuthGateway {
 
   @override
   Future<void> signOut() => _record('signOut');
+
+  @override
+  Future<void> deleteAccount() => _record('deleteAccount');
 }
 
 /// Shows [page] at `/start`, with `/character` and `/onboarding` pages to

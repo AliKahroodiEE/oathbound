@@ -1527,6 +1527,16 @@ class AppLocalizationsFa extends AppLocalizations {
   String get authErrNetwork => 'به سرور دسترسی نداریم. اتصالت را بررسی کن و دوباره امتحان کن.';
 
   @override
+  String get deleteAccount => 'حذف حساب';
+
+  @override
+  String get deleteAccountBody =>
+      'این کار حسابت و هر چه برایش نگه داشته‌ایم را برای همیشه پاک می‌کند، بعد از حساب خارج می‌شوی و این دستگاه هم پاک می‌شود. نظرهایت در انجمن‌ها با نام «عضو پیشین» می‌مانند. این کار برگشت‌پذیر نیست.';
+
+  @override
+  String get accountDeleted => 'حسابت حذف شد.';
+
+  @override
   String get createAccount => 'ساخت حساب';
 
   @override

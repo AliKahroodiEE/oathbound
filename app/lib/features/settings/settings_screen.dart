@@ -15,6 +15,7 @@ import '../../data/remote/backend.dart';
 import '../../data/repositories/settings_repository.dart';
 import '../../design/components/panel.dart';
 import '../../design/tokens.dart';
+import '../auth/delete_account_button.dart';
 import 'ai_provider_screen.dart';
 
 /// Settings (requirements §4.10).
@@ -416,6 +417,7 @@ class SettingsScreen extends ConsumerWidget {
                                 child: Text(user != null ? l10n.signOut : l10n.signIn),
                               ),
                             ],
+                            if (user != null) ...[const SizedBox(height: AppSpace.xs), const DeleteAccountButton()],
                           ],
                         );
                       },
