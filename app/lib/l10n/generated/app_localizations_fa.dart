@@ -1399,6 +1399,13 @@ class AppLocalizationsFa extends AppLocalizations {
   String get sectionAppearance => 'ظاهر';
 
   @override
+  String get installHintTitle => 'برنامه را به صفحه‌ی اصلی اضافه کن';
+
+  @override
+  String get installHintBody =>
+      'دکمه‌ی Share را بزن (شاید زیر ••• باشد) و بعد «Add to Home Screen» را انتخاب کن. وقتی از صفحه‌ی اصلی بازش کنی، برنامه تمام‌صفحه اجرا می‌شود و می‌تواند برایت اعلان بفرستد.';
+
+  @override
   String get reducedMotion => 'کاهش حرکت';
 
   @override

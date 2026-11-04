@@ -481,6 +481,8 @@
   "@quietHoursValue": { "placeholders": { "from": { "type": "String" }, "to": { "type": "String" } } },
   "notificationsWebNote": "In the browser, reminders appear only while the app is open.",
   "sectionAppearance": "Appearance",
+  "installHintTitle": "Add Wyrd to your Home Screen",
+  "installHintBody": "Tap Share (it may be under •••), then Add to Home Screen. Opened from there, Wyrd runs full screen and can send you notifications.",
   "reducedMotion": "Reduce motion",
   "reducedEffects": "Reduce visual effects",
   "themeLabel": "Theme",

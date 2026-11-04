@@ -2642,6 +2642,18 @@ abstract class AppLocalizations {
   /// **'Appearance'**
   String get sectionAppearance;
 
+  /// No description provided for @installHintTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Wyrd to your Home Screen'**
+  String get installHintTitle;
+
+  /// No description provided for @installHintBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap Share (it may be under •••), then Add to Home Screen. Opened from there, Wyrd runs full screen and can send you notifications.'**
+  String get installHintBody;
+
   /// No description provided for @reducedMotion.
   ///
   /// In en, this message translates to:

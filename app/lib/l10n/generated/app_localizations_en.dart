@@ -1411,6 +1411,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sectionAppearance => 'Appearance';
 
   @override
+  String get installHintTitle => 'Add Wyrd to your Home Screen';
+
+  @override
+  String get installHintBody =>
+      'Tap Share (it may be under •••), then Add to Home Screen. Opened from there, Wyrd runs full screen and can send you notifications.';
+
+  @override
   String get reducedMotion => 'Reduce motion';
 
   @override
