@@ -16,6 +16,7 @@ import '../../data/repositories/settings_repository.dart';
 import '../../design/components/panel.dart';
 import '../../design/tokens.dart';
 import '../auth/delete_account_button.dart';
+import '../notifications/push_tile.dart';
 import 'ai_provider_screen.dart';
 import 'theme_picker.dart';
 
@@ -344,14 +345,21 @@ class SettingsScreen extends ConsumerWidget {
                       contentPadding: EdgeInsetsDirectional.zero,
                       title: Text(l10n.notifGuild),
                       value: profile.notifGuild,
-                      onChanged: (v) => setProfile((p) => p.copyWith(notifGuild: v)),
+                      onChanged: (v) {
+                        if (v) ref.read(pushServiceProvider).enable(); // Ask inside the tap.
+                        setProfile((p) => p.copyWith(notifGuild: v));
+                      },
                     ),
                     SwitchListTile(
                       contentPadding: EdgeInsetsDirectional.zero,
                       title: Text(l10n.notifWeekly),
                       value: profile.notifWeekly,
-                      onChanged: (v) => setProfile((p) => p.copyWith(notifWeekly: v)),
+                      onChanged: (v) {
+                        if (v) ref.read(pushServiceProvider).enable(); // Ask inside the tap.
+                        setProfile((p) => p.copyWith(notifWeekly: v));
+                      },
                     ),
+                    const PushDeviceTile(),
                     ListTile(
                       contentPadding: EdgeInsetsDirectional.zero,
                       title: Text(l10n.quietHours),

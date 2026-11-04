@@ -1363,6 +1363,40 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notifWeekly => 'Weekly chronicle';
 
   @override
+  String get pushDevice => 'Notifications on this device';
+
+  @override
+  String get pushDeviceOn => 'On. Notifications reach you here even while Wyrd is closed.';
+
+  @override
+  String get pushDeviceOff => 'Off. Allow them so news reaches you while Wyrd is closed.';
+
+  @override
+  String get pushDeviceBlocked => 'Blocked. Allow notifications for Wyrd in your browser or system settings.';
+
+  @override
+  String get pushAllow => 'Allow';
+
+  @override
+  String get pushUnsupported => 'This browser can\'t receive notifications.';
+
+  @override
+  String get pushInstallHint =>
+      'On iPhone, add Wyrd to your Home Screen (Share, then Add to Home Screen) and open it from there to get notifications.';
+
+  @override
+  String get pushInAppFallback => 'Something new is waiting for you.';
+
+  @override
+  String get pushOpen => 'Open';
+
+  @override
+  String get pushChannelName => 'Guild and chronicle';
+
+  @override
+  String get pushChannelDescription => 'Reactions, comments and your weekly chronicle.';
+
+  @override
   String get quietHours => 'Quiet hours';
 
   @override

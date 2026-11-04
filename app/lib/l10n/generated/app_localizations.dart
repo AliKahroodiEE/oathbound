@@ -2552,6 +2552,72 @@ abstract class AppLocalizations {
   /// **'Weekly chronicle'**
   String get notifWeekly;
 
+  /// No description provided for @pushDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications on this device'**
+  String get pushDevice;
+
+  /// No description provided for @pushDeviceOn.
+  ///
+  /// In en, this message translates to:
+  /// **'On. Notifications reach you here even while Wyrd is closed.'**
+  String get pushDeviceOn;
+
+  /// No description provided for @pushDeviceOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Off. Allow them so news reaches you while Wyrd is closed.'**
+  String get pushDeviceOff;
+
+  /// No description provided for @pushDeviceBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Blocked. Allow notifications for Wyrd in your browser or system settings.'**
+  String get pushDeviceBlocked;
+
+  /// No description provided for @pushAllow.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow'**
+  String get pushAllow;
+
+  /// No description provided for @pushUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'This browser can\'t receive notifications.'**
+  String get pushUnsupported;
+
+  /// No description provided for @pushInstallHint.
+  ///
+  /// In en, this message translates to:
+  /// **'On iPhone, add Wyrd to your Home Screen (Share, then Add to Home Screen) and open it from there to get notifications.'**
+  String get pushInstallHint;
+
+  /// No description provided for @pushInAppFallback.
+  ///
+  /// In en, this message translates to:
+  /// **'Something new is waiting for you.'**
+  String get pushInAppFallback;
+
+  /// No description provided for @pushOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get pushOpen;
+
+  /// No description provided for @pushChannelName.
+  ///
+  /// In en, this message translates to:
+  /// **'Guild and chronicle'**
+  String get pushChannelName;
+
+  /// No description provided for @pushChannelDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Reactions, comments and your weekly chronicle.'**
+  String get pushChannelDescription;
+
   /// No description provided for @quietHours.
   ///
   /// In en, this message translates to:

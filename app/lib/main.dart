@@ -12,6 +12,7 @@ import 'data/db/database.dart';
 import 'data/demo/demo_seed.dart';
 import 'data/remote/backend.dart';
 import 'data/repositories/settings_repository.dart';
+import 'features/notifications/push_provider.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -39,7 +40,7 @@ Future<void> main() async {
         initialThemeProvider.overrideWithValue(profile.theme),
         initialRegionalPrefsProvider.overrideWithValue(regionalPrefs),
       ],
-      child: const WyrdApp(),
+      child: const PushHost(child: WyrdApp()), // Push, when configured; never delays the first frame.
     ),
   );
 }
