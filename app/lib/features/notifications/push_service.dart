@@ -18,7 +18,8 @@ enum PushStatus {
   /// Push is not offered: not configured, signed out, or both switches off.
   hidden,
 
-  /// This browser cannot receive push (on iPhone: until Wyrd is on the Home Screen).
+  /// This browser cannot receive push (on iPhone: until Wyrd is on the Home
+  /// Screen), or this browser or phone gets no push token.
   unsupported,
 
   /// The switches want push, but the system permission is not granted yet.
@@ -286,7 +287,16 @@ class PushService {
       _show(permission == PushPermission.blocked ? PushStatus.blocked : PushStatus.off);
       return;
     }
-    final token = await messaging.token();
+    final String? token;
+    try {
+      token = await messaging.token();
+    } on Object catch (error) {
+      // No push service behind this browser (Brave with it switched off) or
+      // phone (no Google Play services): Allow could not get any further.
+      debugPrint('Push token unavailable: $error');
+      _show(PushStatus.unsupported);
+      return;
+    }
     if (token == null) {
       _show(PushStatus.off);
       return;

@@ -14,6 +14,10 @@ class FakeMessaging implements PushMessaging {
   PushPermission current = PushPermission.askable;
   PushPermission answer = PushPermission.granted;
   String currentToken = 'token-1';
+
+  /// Thrown by [token], as where no push service answers (Brave with it
+  /// switched off, a phone without Google Play services).
+  Object? tokenError;
   int prompts = 0;
   int deletions = 0;
 
@@ -48,6 +52,8 @@ class FakeMessaging implements PushMessaging {
   @override
   Future<String?> token() async {
     calls++;
+    final error = tokenError;
+    if (error != null) throw error;
     return current == PushPermission.granted ? currentToken : null;
   }
 
@@ -207,6 +213,23 @@ void main() {
       await settle();
       expect(push.status.value, PushStatus.unsupported);
       expect(registry.registered, isEmpty);
+    });
+
+    test('a device that gets no token shows as unsupported', () async {
+      messaging
+        ..current = PushPermission.granted
+        ..tokenError = Exception('AbortError: Registration failed - push service error');
+      create(platform: 'web')
+        ..setUser('u1')
+        ..setPreferences(_both);
+      await settle();
+      expect(push.status.value, PushStatus.unsupported);
+      expect(registry.registered, isEmpty);
+
+      messaging.tokenError = null; // A later visit tries again.
+      await push.settingsOpened();
+      expect(push.status.value, PushStatus.on);
+      expect(registry.registered, [('token-1', 'web')]);
     });
 
     test('builds without Firebase stay inert', () async {
@@ -525,6 +548,21 @@ void main() {
       await tester.pump();
       expect(messaging.prompts, 1);
       expect(find.text(l10n.pushDeviceOn), findsOneWidget);
+    });
+
+    testWidgets('stops offering Allow once allowed but no token comes', (tester) async {
+      messaging.tokenError = Exception('AbortError: Registration failed - push service error');
+      create(platform: 'web')
+        ..setUser('u1')
+        ..setPreferences(_both);
+      await pumpRow(tester);
+      expect(find.text(l10n.pushDeviceOff), findsOneWidget);
+
+      await tester.tap(find.text(l10n.pushAllow));
+      await tester.pump();
+      expect(messaging.prompts, 1);
+      expect(find.text(l10n.pushAllow), findsNothing);
+      expect(find.text(l10n.pushUnsupported), findsOneWidget);
     });
 
     testWidgets('points to the settings once blocked, without an Allow button', (tester) async {
