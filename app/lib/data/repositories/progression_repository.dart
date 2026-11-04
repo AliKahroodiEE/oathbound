@@ -157,6 +157,7 @@ class ProgressionRepository {
     bool provisional = false,
     int weeklyTarget = 4,
     int firstWeekday = DateTime.monday,
+    EvaluationProposal? aiProposal,
   }) async {
     final now = _now();
     final day = dayKey(now);
@@ -166,16 +167,20 @@ class ProgressionRepository {
             .getSingleOrNull();
     if (existing != null) return null;
 
-    final proposal = HeuristicEvaluator.evaluate(
-      HeuristicInput(
-        title: quest.title,
-        notes: quest.notes,
-        tier: quest.tier,
-        categoryHint: quest.category,
-        declaredMinutes: declaredMinutes,
-        estimatedMinutes: quest.estimatedMinutes,
-      ),
-    );
+    // A proposal from the user's own AI provider, when available;
+    // otherwise the built-in heuristic. The engine decides either way.
+    final proposal =
+        aiProposal ??
+        HeuristicEvaluator.evaluate(
+          HeuristicInput(
+            title: quest.title,
+            notes: quest.notes,
+            tier: quest.tier,
+            categoryHint: quest.category,
+            declaredMinutes: declaredMinutes,
+            estimatedMinutes: quest.estimatedMinutes,
+          ),
+        );
     final facts = CompletionFacts(
       tier: quest.tier,
       createdAt: quest.createdAt,
@@ -302,6 +307,19 @@ class ProgressionRepository {
         await _writeEvaluation(completion.id, completion.localDay, proposal, result, provisional: false);
         await _writeGrants(completion.id, completion.localDay, result, provisional: false);
       });
+
+  /// Active completions with [similarityKey] since [since] (AI context).
+  Future<int> similarCountSince(String similarityKey, DateTime since) async {
+    final row = await _db
+        .customSelect(
+          'SELECT COUNT(*) AS n FROM evaluations e JOIN completions c ON c.id = e.completion_id '
+          "WHERE c.state = 'active' AND e.similarity_key = ? AND e.local_day >= ?",
+          variables: [Variable(similarityKey), Variable(dayKey(since))],
+          readsFrom: {_db.evaluations, _db.completions},
+        )
+        .getSingle();
+    return row.read<int>('n');
+  }
 
   Future<void> setRestDay(String day, bool rest) =>
       _db.into(_db.dayMarks).insertOnConflictUpdate(DayMarksCompanion.insert(localDay: day, rest: Value(rest)));

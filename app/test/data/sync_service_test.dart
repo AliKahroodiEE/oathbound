@@ -32,8 +32,19 @@ class FakeApi implements RemoteApi {
   @override
   Future<Map<String, Object?>> pull(int cursor) async => pullResponse;
 
+  Map<String, Object?>? lastClientProposal;
+  String? lastClientModel;
+
   @override
-  Future<Map<String, Object?>?> evaluate(String completionId) async => evaluation;
+  Future<Map<String, Object?>?> evaluate(
+    String completionId, {
+    Map<String, Object?>? clientProposal,
+    String? clientModel,
+  }) async {
+    lastClientProposal = clientProposal;
+    lastClientModel = clientModel;
+    return evaluation;
+  }
 
   @override
   Future<void> updateProfile(Map<String, Object?> fields) async => profiles.add(fields);
@@ -76,7 +87,7 @@ void main() {
     quests = QuestRepository(db);
     progression = ProgressionRepository(db);
     api = FakeApi();
-    sync = SyncService(db, api, progression);
+    sync = SyncService(db, api, progression, clientModel: () async => 'my-model');
   });
   tearDown(() => db.close());
 
@@ -186,5 +197,21 @@ void main() {
     final c = SyncService.hlcFor(DateTime.utc(2026, 11, 4, 8, 0, 1), 1, 'aaaaaaaa');
     expect(a.compareTo(b), lessThan(0));
     expect(b.compareTo(c), lessThan(0));
+  });
+
+  test('proposals from the user\'s own AI are sent to the server, heuristics are not', () async {
+    final q = await quests.create(const QuestDraft(title: 'Write report'));
+    final own = EvaluationProposal.fromJson({...serverProposal(), 'source': 'ai'});
+    await progression.complete(q, provisional: true, aiProposal: own);
+    api.evaluation = {'result': serverResult(7), 'proposal': serverProposal()};
+    await sync.syncOnce();
+    expect(api.lastClientProposal, isNotNull);
+    expect(api.lastClientProposal!.containsKey('source'), isFalse);
+    expect(api.lastClientModel, 'my-model');
+
+    final q2 = await quests.create(const QuestDraft(title: 'Read'));
+    await progression.complete(q2, provisional: true);
+    await sync.syncOnce();
+    expect(api.lastClientProposal, isNull);
   });
 }

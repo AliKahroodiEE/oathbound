@@ -27,7 +27,12 @@ class SyncReport {
 /// merge fields last-writer-wins; completions are insert-only; the
 /// server's evaluation supersedes the provisional local one.
 class SyncService {
-  SyncService(this._db, this._api, this._progression);
+  SyncService(this._db, this._api, this._progression, {Future<String?> Function()? clientModel})
+    : _clientModel = clientModel; // ignore: prefer_initializing_formals
+
+  /// Model name of the user's own AI provider, sent with proposals made
+  /// on this device so the server can record it.
+  final Future<String?> Function()? _clientModel;
 
   final AppDatabase _db;
   final RemoteApi _api;
@@ -203,7 +208,18 @@ class SyncService {
     final remaining = <String>[];
     for (final id in pending) {
       try {
-        final res = await _api.evaluate(id);
+        // Proposals made with the user's own AI travel with the request;
+        // the server validates and bounds them (it never sees the key).
+        final local = await (_db.select(_db.evaluations)..where((e) => e.completionId.equals(id))).getSingleOrNull();
+        Map<String, Object?>? clientProposal;
+        if (local != null && local.source == 'ai') {
+          clientProposal = Map<String, Object?>.from(jsonDecode(local.proposalJson) as Map)..remove('source');
+        }
+        final res = await _api.evaluate(
+          id,
+          clientProposal: clientProposal,
+          clientModel: clientProposal == null ? null : await _clientModel?.call(),
+        );
         final result = res?['result'];
         final proposal = res?['proposal'];
         if (result is Map && proposal is Map) {

@@ -19,7 +19,12 @@ final syncCoordinatorProvider = Provider<void>((ref) {
   if (user == null || client == null) return;
 
   final db = ref.watch(databaseProvider);
-  final service = SyncService(db, SupabaseRemoteApi(client), ref.watch(progressionRepositoryProvider));
+  final service = SyncService(
+    db,
+    SupabaseRemoteApi(client),
+    ref.watch(progressionRepositoryProvider),
+    clientModel: () async => (await ref.read(aiSettingsRepositoryProvider).config())?.model,
+  );
   var running = false;
   var again = false;
   Timer? debounce;
