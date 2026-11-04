@@ -242,6 +242,7 @@ and committed separately.
 | `20261104001000_push_token_unregister.sql` | `unregister_push_token`: sign-out removes this device's token from the account |
 | `20261104001010_notification_prefs_rpc.sql` | `set_notification_prefs`: the app's notification switches and quiet hours |
 | `20261104001020_reaction_signals.sql` | reactions leave the Realtime publication; each change touches its feed event |
+| `20261104001030_reaction_rate_limit.sql` | `react` / `unreact`: at most 60 reaction changes per user per minute |
 
 New migrations: create with `supabase migration new <name>`. Never edit an
 applied one. Every new table needs `enable row level security`, and every
@@ -317,7 +318,7 @@ chronicles, notification_prefs } }`. Loop while `has_more`.
 | `remove_member(guild_id, user_id)` | master: anyone but self; officer: members |
 | `guild_roster(guild_id)` | display data of co-members |
 | `my_guilds()` | the caller's guilds with their own sharing / mute preferences (co-members cannot read these) |
-| `react(event_id, kind)` / `unreact(event_id, kind)` | kinds: `honour`, `steel`, `flame`, `laurel` |
+| `react(event_id, kind)` / `unreact(event_id, kind)` | kinds: `honour`, `steel`, `flame`, `laurel`; 60 changes per minute per user (calls that change nothing are free) |
 | `add_comment(event_id, body)` / `delete_comment(comment_id)` | 1–1000 chars; 30 per hour per guild; slow mode |
 | `create_challenge(guild_id, title, metric, target, ends_at, starts_at = now(), description = '', metric_category?, metric_attribute?)` | officers; ≤ 5 active |
 | `block_user(user_id)` / `unblock_user(user_id)` | |

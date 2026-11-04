@@ -745,6 +745,47 @@ async function smoke(db, { profileFields }) {
     touched?.reactions_changed_at != null && retouched?.reactions_changed_at != null,
     `after react: ${touched?.reactions_changed_at}; after unreact: ${retouched?.reactions_changed_at}`);
   await one(db, 'authenticated', B, `select public.react($1, 'honour')`, [event.id]);
+
+  // Reaction changes are rate-limited per user (…_reaction_rate_limit.sql):
+  // 60 a minute pass and the next one is refused without a trace; calls that
+  // change nothing, other members and the next minute are not affected.
+  const failure = async (promise) => {
+    try {
+      await promise;
+      return null;
+    } catch (error) {
+      return error;
+    }
+  };
+  const toggle = (uid, on, kind = 'flame') =>
+    failure(one(db, 'authenticated', uid, `select public.${on ? 'react' : 'unreact'}($1, $2)`, [event.id, kind]));
+  const flamesOfB = async () => (await one(db, 'postgres', null, `select count(*)::int as n from public.reactions
+    where event_id = $1 and user_id = $2 and kind = 'flame'`, [event.id, B])).n;
+  await db.query('delete from private.reaction_rate');
+  let burstError = null;
+  for (let i = 0; i < 60 && burstError === null; i++) burstError = await toggle(B, i % 2 === 0);
+  await db.query(`update public.feed_events set reactions_changed_at = '2000-01-01T00:00:00Z' where id = $1`, [event.id]);
+  const refused = await toggle(B, true);
+  const signalAfter = await one(db, 'postgres', null,
+    `select reactions_changed_at = '2000-01-01T00:00:00Z' as untouched from public.feed_events where id = $1`, [event.id]);
+  check('60 reaction changes a minute pass; the 61st is refused (54000, rate_limited)',
+    burstError === null && refused?.code === '54000' && refused?.hint === 'rate_limited',
+    `burst: ${burstError?.message ?? 'all accepted'}; 61st: ${refused?.message ?? 'accepted'}`);
+  check('a refused reaction change leaves no reaction and touches no feed event',
+    (await flamesOfB()) === 0 && signalAfter.untouched === true, `untouched=${signalAfter.untouched}`);
+  const noChange = [await toggle(B, false), await toggle(B, true, 'honour')];
+  check('reaction calls that change nothing are neither counted nor refused', noChange.every((e) => e === null),
+    noChange.map((e) => e?.message ?? 'ok').join('; '));
+  const otherMember = await toggle(A, true, 'steel');
+  check('the reaction limit is per user', otherMember === null, otherMember?.message ?? '');
+  await toggle(A, false, 'steel');
+  await db.query(`update private.reaction_rate set window_start = window_start - interval '1 minute' where user_id = $1`,
+    [B]);
+  const nextMinute = await toggle(B, true);
+  check('the reaction limit lifts once the minute is over', nextMinute === null && (await flamesOfB()) === 1,
+    nextMinute?.message ?? '');
+  await toggle(B, false);
+
   await expectError('non-members cannot comment',
     one(db, 'authenticated', C, `select * from public.add_comment($1, 'hi')`, [event.id]), /not found/);
   await expectError('empty comments are rejected',
