@@ -1982,6 +1982,24 @@ abstract class AppLocalizations {
   /// **'The guild reached {percent} of “{challenge}”'**
   String feedMilestone(String percent, String challenge);
 
+  /// No description provided for @feedMemberJoined.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} joined the guild'**
+  String feedMemberJoined(Object name);
+
+  /// No description provided for @feedChallengeCreated.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} started “{challenge}”'**
+  String feedChallengeCreated(Object challenge, Object name);
+
+  /// No description provided for @formerMember.
+  ///
+  /// In en, this message translates to:
+  /// **'Former member'**
+  String get formerMember;
+
   /// No description provided for @challengeProgress.
   ///
   /// In en, this message translates to:

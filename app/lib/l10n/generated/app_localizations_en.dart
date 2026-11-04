@@ -1057,6 +1057,19 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String feedMemberJoined(Object name) {
+    return '$name joined the guild';
+  }
+
+  @override
+  String feedChallengeCreated(Object challenge, Object name) {
+    return '$name started “$challenge”';
+  }
+
+  @override
+  String get formerMember => 'Former member';
+
+  @override
   String challengeProgress(String current, String target) {
     return '$current of $target';
   }

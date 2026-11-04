@@ -1046,6 +1046,19 @@ class AppLocalizationsFa extends AppLocalizations {
   }
 
   @override
+  String feedMemberJoined(Object name) {
+    return '$name به انجمن پیوست';
+  }
+
+  @override
+  String feedChallengeCreated(Object challenge, Object name) {
+    return '$name چالش «$challenge» را آغاز کرد';
+  }
+
+  @override
+  String get formerMember => 'عضو پیشین';
+
+  @override
   String challengeProgress(String current, String target) {
     return '$current از $target';
   }

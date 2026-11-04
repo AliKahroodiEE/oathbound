@@ -7,6 +7,7 @@ import '../features/auth/auth_screen.dart';
 import '../features/character/character_screen.dart';
 import '../features/chronicle/chronicle_screen.dart';
 import '../features/chronicle/ledger_screen.dart';
+import '../features/guilds/guild_hall_screen.dart';
 import '../features/guilds/guilds_screen.dart';
 import '../features/onboarding/onboarding_screen.dart';
 import '../features/quests/quest_editor_screen.dart';
@@ -68,7 +69,18 @@ final routerProvider = Provider<GoRouter>((ref) {
             routes: [GoRoute(path: '/quests', builder: (_, _) => const QuestsScreen())],
           ),
           StatefulShellBranch(
-            routes: [GoRoute(path: '/guilds', builder: (_, _) => const GuildsScreen())],
+            routes: [
+              GoRoute(
+                path: '/guilds',
+                builder: (_, _) => const GuildsScreen(),
+                routes: [
+                  GoRoute(
+                    path: ':id',
+                    builder: (_, state) => GuildHallScreen(guildId: state.pathParameters['id']!),
+                  ),
+                ],
+              ),
+            ],
           ),
           StatefulShellBranch(
             routes: [
