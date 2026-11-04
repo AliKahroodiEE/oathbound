@@ -46,6 +46,7 @@ class Quest {
     this.recurrence = Recurrence.none,
     this.intention,
     this.shareLevel = ShareLevel.private,
+    this.remindAt,
   });
 
   factory Quest.fromRow(QuestRow r) => Quest(
@@ -62,6 +63,7 @@ class Quest {
     recurrence: Recurrence.values.asNameMap()[r.recurrence] ?? Recurrence.none,
     intention: r.intention,
     shareLevel: ShareLevel.parse(r.shareLevel),
+    remindAt: r.remindAt,
     createdAt: r.createdAt,
     updatedAt: r.updatedAt,
   );
@@ -81,6 +83,9 @@ class Quest {
   final Recurrence recurrence;
   final String? intention;
   final ShareLevel shareLevel;
+
+  /// Reminder time as minutes after local midnight, or null.
+  final int? remindAt;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -118,6 +123,7 @@ class Quest {
     'recurrence': recurrence.name,
     'intention': intention,
     'share_level': shareLevel.name,
+    'remind_at': remindAt,
     'created_at': createdAt.toUtc().toIso8601String(),
     'updated_at': updatedAt.toUtc().toIso8601String(),
   };
@@ -137,6 +143,7 @@ class QuestDraft {
     this.intention,
     this.shareLevel = ShareLevel.private,
     this.parentId,
+    this.remindAt,
   });
 
   factory QuestDraft.fromQuest(Quest q) => QuestDraft(
@@ -151,6 +158,7 @@ class QuestDraft {
     intention: q.intention,
     shareLevel: q.shareLevel,
     parentId: q.parentId,
+    remindAt: q.remindAt,
   );
 
   final String title;
@@ -164,6 +172,7 @@ class QuestDraft {
   final String? intention;
   final ShareLevel shareLevel;
   final String? parentId;
+  final int? remindAt;
 }
 
 /// A quest as shown in a list, with today's completion state.

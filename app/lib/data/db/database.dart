@@ -25,6 +25,9 @@ class Quests extends Table {
   TextColumn get recurrence => text().withDefault(const Constant('none'))();
   TextColumn get intention => text().nullable()();
   TextColumn get shareLevel => text().withDefault(const Constant('private'))();
+
+  /// Reminder time as minutes after local midnight (schema v2).
+  IntColumn get remindAt => integer().nullable()();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
   DateTimeColumn get deletedAt => dateTime().nullable()();
@@ -170,7 +173,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _open());
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -179,6 +182,9 @@ class AppDatabase extends _$AppDatabase {
       await customStatement('CREATE INDEX idx_completions_quest ON completions (quest_id, occurrence_day)');
       await customStatement('CREATE INDEX idx_ledger_day ON ledger_entries (local_day)');
       await customStatement('CREATE INDEX idx_evaluations_day ON evaluations (local_day)');
+    },
+    onUpgrade: (m, from, to) async {
+      if (from < 2) await m.addColumn(quests, quests.remindAt);
     },
     beforeOpen: (details) async {
       await customStatement('PRAGMA foreign_keys = ON');

@@ -183,6 +183,7 @@ class QuestRepository {
               recurrence: Value(d.recurrence.name),
               intention: Value(_blankToNull(d.intention)),
               shareLevel: Value(d.shareLevel.name),
+              remindAt: Value(d.remindAt),
               createdAt: now,
               updatedAt: now,
             ),
@@ -206,6 +207,7 @@ class QuestRepository {
         recurrence: Value(d.recurrence.name),
         intention: Value(_blankToNull(d.intention)),
         shareLevel: Value(d.shareLevel.name),
+        remindAt: Value(d.remindAt),
         updatedAt: Value(_now()),
       ),
     );
