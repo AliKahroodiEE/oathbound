@@ -2966,6 +2966,12 @@ abstract class AppLocalizations {
   /// **'Can\'t reach the server. Check your connection and try again.'**
   String get authErrNetwork;
 
+  /// No description provided for @authErrCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign-in was cancelled.'**
+  String get authErrCancelled;
+
   /// No description provided for @deleteAccount.
   ///
   /// In en, this message translates to:

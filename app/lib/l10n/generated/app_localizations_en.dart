@@ -1583,6 +1583,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authErrNetwork => 'Can\'t reach the server. Check your connection and try again.';
 
   @override
+  String get authErrCancelled => 'Sign-in was cancelled.';
+
+  @override
   String get deleteAccount => 'Delete account';
 
   @override

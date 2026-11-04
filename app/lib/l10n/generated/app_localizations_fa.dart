@@ -1571,6 +1571,9 @@ class AppLocalizationsFa extends AppLocalizations {
   String get authErrNetwork => 'به سرور دسترسی نداریم. اتصالت را بررسی کن و دوباره امتحان کن.';
 
   @override
+  String get authErrCancelled => 'ورود لغو شد.';
+
+  @override
   String get deleteAccount => 'حذف حساب';
 
   @override

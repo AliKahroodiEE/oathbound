@@ -539,6 +539,7 @@
   "authErrAccountExists": "An account with this email already exists. Sign in instead.",
   "authErrProvider": "This sign-in option isn't available right now.",
   "authErrNetwork": "Can't reach the server. Check your connection and try again.",
+  "authErrCancelled": "Sign-in was cancelled.",
   "deleteAccount": "Delete account",
   "deleteAccountBody": "This permanently deletes your account and everything we store for it, then signs you out and clears this device. Your comments in guilds stay, shown as from a former member. This can't be undone.",
   "accountDeleted": "Your account has been deleted.",
