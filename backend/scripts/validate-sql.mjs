@@ -24,6 +24,10 @@
  *    idempotency, sync_pull cursors, apply_progression driven by the real
  *    TypeScript engine (idempotency, stale-day protection, privacy
  *    projection, challenges), undo, social RPCs, export/deletion, cron jobs.
+ * 5. Exercises the internal Edge Function calls (pg_cron's chronicle dispatch,
+ *    the notification triggers) against stand-ins for pg_net and Vault: no-op
+ *    without them, then request URL, headers and payload, idempotent Vault
+ *    credentials, the legacy-key fallback and a failing pg_net.
  *
  * Exit code 0 means every migration applied and every check passed.
  */
