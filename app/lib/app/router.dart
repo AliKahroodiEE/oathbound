@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:oathbound_engine/oathbound_engine.dart';
 
+import '../features/auth/auth_screen.dart';
 import '../features/character/character_screen.dart';
 import '../features/chronicle/chronicle_screen.dart';
 import '../features/chronicle/ledger_screen.dart';
@@ -55,6 +56,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: _rootKey,
         builder: (_, state) => QuestEditorScreen(questId: state.pathParameters['id']),
       ),
+      GoRoute(path: '/auth', parentNavigatorKey: _rootKey, builder: (_, _) => const AuthScreen()),
       GoRoute(path: '/settings', parentNavigatorKey: _rootKey, builder: (_, _) => const SettingsScreen()),
       StatefulShellRoute.indexedStack(
         builder: (_, _, shell) => AdaptiveShell(shell: shell),
