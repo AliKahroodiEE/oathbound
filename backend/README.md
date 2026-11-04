@@ -161,10 +161,12 @@ Without pg_net or the secrets every internal call is a no-op.
 `…_notify_triggers.sql` posts every new reaction, comment and challenge
 milestone to `notify` through pg_net (after commit, with the secret key as
 `apikey`), in the Database Webhook shape `{ type, table, schema, record,
-old_record }`. No dashboard webhooks are needed; do not create them for these
-tables, or members are notified twice. A failing pg_net never fails the
-user's write. Other senders POST `{ user_id, category, template_key, params,
-guild_id? }` directly.
+old_record }`. No dashboard webhooks are needed. Earlier instructions had
+owners create three (INSERT on these tables → `/functions/v1/notify`);
+`…_drop_notify_webhooks.sql` removes them so pushes are not sent twice. Do not
+create new ones: the migration runs only once. A failing pg_net never fails
+the user's write. Other senders POST `{ user_id, category, template_key,
+params, guild_id? }` directly.
 
 ## Flutter configuration
 
@@ -205,18 +207,24 @@ vectors (`dart run tool/generate_vectors.dart` in the Dart package).
 
 `validate-sql.mjs` stubs only what Supabase provides (`auth.users`,
 `auth.uid()` from the `request.jwt.claim.sub` GUC, the anon / authenticated /
-service_role roles and a new project's default privileges, which expose
-nothing) and drives `apply_progression` with the real TypeScript engine. It
-also:
+service_role roles, the empty `supabase_realtime` publication and a new
+project's default privileges, which expose nothing) and drives
+`apply_progression` with the real TypeScript engine. It also:
 
 * checks the grants against every `.from()`, `.rpc()` and Realtime call in
   `app/lib` (role `authenticated`) and `supabase/functions` (role
   `service_role`): a call without its grant, a grant nothing uses, anything
-  for `anon` and any function `PUBLIC` can execute fail the run;
+  for `anon` and any function `PUBLIC` can execute fail the run, and so does
+  a Realtime publication that holds anything but the watched tables;
+* requires UPDATE on every profile field the app syncs (the map
+  `_serverProfile` in `sync_coordinator.dart` returns, conditional and
+  null-aware entries included); an entry it cannot read fails the run;
 * applies the migrations a second time with the old platform defaults
   (everything granted to all three roles) and requires identical privileges;
 * exercises pg_cron's dispatch and the notification triggers against
-  stand-ins for pg_net and Vault (URL, headers, payload, failure isolation).
+  stand-ins for pg_net and Vault (URL, headers, payload, failure isolation),
+  and checks that old dashboard webhooks to `notify` are dropped while the
+  triggers stay (a `supabase_functions` stand-in).
 
 It does not exercise real pg_cron, pg_net, Vault, Realtime or Storage.
 
@@ -239,9 +247,11 @@ and committed separately.
 | `20261104000900_data_api_grants.sql` | the complete Data API surface: exactly what the app and the functions use |
 | `20261104000910_cron_secret_key.sql` | internal Edge Function calls with a secret key from Vault, `set_function_credentials` |
 | `20261104000920_notify_triggers.sql` | pg_net triggers on reactions, comments and milestones → `notify` |
-| `20261104001000_push_token_unregister.sql` | users may delete their own device's push token (sign-out) |
+| `20261104001000_push_token_unregister.sql` | `unregister_push_token`: sign-out removes this device's token from the account |
 | `20261104001010_notification_prefs_rpc.sql` | `set_notification_prefs`: the app's notification switches and quiet hours |
-| `20261104001020_reaction_signals.sql` | reactions leave the Realtime publication; each change touches its feed event |
+| `20261104001020_reaction_signals.sql` | reactions and the personal tables leave the Realtime publication (`feed_events`, `comments`, `challenges` stay); each reaction change touches its feed event |
+| `20261104001030_reaction_rate_limit.sql` | `react` / `unreact`: at most 60 reaction changes per user per minute |
+| `20261104001040_drop_notify_webhooks.sql` | drops dashboard webhooks that still post these inserts to `notify` (double pushes) |
 
 New migrations: create with `supabase migration new <name>`. Never edit an
 applied one. Every new table needs `enable row level security`, and every
@@ -255,11 +265,17 @@ until the grants match the code.
 | Role | Gets |
 | --- | --- |
 | `anon` | nothing: guests never reach the server (ADR-003) |
-| `authenticated` (the app) | SELECT on `guilds`, `feed_events`, `reactions`, `comments`, `challenges` (guild hall and its Realtime feed); SELECT(id) and UPDATE of the settings columns on `profiles`; SELECT(token) and DELETE on its own `push_tokens` rows; EXECUTE on the user RPCs below |
+| `authenticated` (the app) | SELECT on `guilds`, `feed_events`, `reactions`, `comments`, `challenges` (guild hall and its Realtime feed); SELECT(id) and UPDATE of the settings columns on `profiles`; EXECUTE on the user RPCs below |
 | `service_role` (secret keys, the functions) | SELECT on the tables the functions read; INSERT on `notification_deliveries`; INSERT/UPDATE on `chronicles`; DELETE on `push_tokens`; EXECUTE on the service RPCs |
 
 * Personal data reaches the app only through `sync_pull`; every client write
   goes through a SECURITY DEFINER RPC that checks the caller.
+* Device tokens are credentials for the push service: clients never read
+  `push_tokens` and change it only through `register_push_token` and
+  `unregister_push_token`; `export_my_data` lists devices without tokens.
+* Realtime publishes only what the guild hall watches: `feed_events`,
+  `comments` and `challenges`. Reactions signal through their feed event,
+  and personal tables are not published at all.
 * RLS still guards the rows: guild data is visible to members, public guild
   metadata to signed-in users. Feed events, reactions and comments from users
   the viewer blocked are filtered out (FR-7); the blocked party cannot see
@@ -314,12 +330,13 @@ chronicles, notification_prefs } }`. Loop while `has_more`.
 | `remove_member(guild_id, user_id)` | master: anyone but self; officer: members |
 | `guild_roster(guild_id)` | display data of co-members |
 | `my_guilds()` | the caller's guilds with their own sharing / mute preferences (co-members cannot read these) |
-| `react(event_id, kind)` / `unreact(event_id, kind)` | kinds: `honour`, `steel`, `flame`, `laurel` |
+| `react(event_id, kind)` / `unreact(event_id, kind)` | kinds: `honour`, `steel`, `flame`, `laurel`; 60 changes per minute per user (calls that change nothing are free) |
 | `add_comment(event_id, body)` / `delete_comment(comment_id)` | 1–1000 chars; 30 per hour per guild; slow mode |
 | `create_challenge(guild_id, title, metric, target, ends_at, starts_at = now(), description = '', metric_category?, metric_attribute?)` | officers; ≤ 5 active |
 | `block_user(user_id)` / `unblock_user(user_id)` | |
 | `report_content(target_type, target_id, reason, details?)` | public guilds auto-hide at 3 reporters |
 | `register_push_token(token, platform)` | moves a device token to the current user |
+| `unregister_push_token(token)` | deletes the token if it is the caller's (sign-out); silent otherwise |
 | `export_my_data()` | all user-owned rows as JSON |
 | `delete_my_account()` | anonymises authored guild content ("Former member"), then deletes the user |
 

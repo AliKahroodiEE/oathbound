@@ -7,27 +7,33 @@
  *
  * 1. Creates a stub of what the Supabase platform provides: `auth.users`,
  *    `auth.uid()` reading the `request.jwt.claim.sub` GUC, the roles anon /
- *    authenticated / service_role (BYPASSRLS) and the default privileges of a
- *    project created after 2026-05-30, which expose nothing in `public` to
- *    the Data API without an explicit GRANT.
+ *    authenticated / service_role (BYPASSRLS), the empty supabase_realtime
+ *    publication and the default privileges of a project created after
+ *    2026-05-30, which expose nothing in `public` to the Data API without an
+ *    explicit GRANT.
  * 2. Applies every file in supabase/migrations/ in order. pg_cron / pg_net
  *    do not exist in PGlite; the cron migration skips scheduling itself.
  * 3. Checks the Data API grants (…_data_api_grants.sql) against the calls in
  *    app/lib and supabase/functions (scripts/data-api-surface.mjs): every
  *    table, column, RPC and Realtime table they use is granted to the role
  *    that uses it (authenticated for the app, service_role for the
- *    functions), nothing else is, anon gets nothing and no function is
- *    executable by PUBLIC. A second database with the old platform defaults
- *    (everything granted to all three roles) must end with the same
- *    privileges.
+ *    functions), nothing else is, anon gets nothing, no function is
+ *    executable by PUBLIC and Realtime publishes exactly the watched tables.
+ *    Every profile field the app syncs (_serverProfile's map, conditional
+ *    entries included) must be updatable by authenticated.
+ *    A second database with the old platform defaults (everything granted
+ *    to all three roles, no publication) must end with the same privileges.
  * 4. Runs smoke checks as the real roles: RLS isolation, sync_push LWW and
  *    idempotency, sync_pull cursors, apply_progression driven by the real
  *    TypeScript engine (idempotency, stale-day protection, privacy
- *    projection, challenges), undo, social RPCs, export/deletion, cron jobs.
+ *    projection, challenges), undo, social RPCs, device tokens,
+ *    export/deletion, cron jobs.
  * 5. Exercises the internal Edge Function calls (pg_cron's chronicle dispatch,
  *    the notification triggers) against stand-ins for pg_net and Vault: no-op
  *    without them, then request URL, headers and payload, idempotent Vault
- *    credentials, the legacy-key fallback and a failing pg_net.
+ *    credentials, the legacy-key fallback and a failing pg_net. Old
+ *    dashboard webhooks to notify (a supabase_functions stand-in) are
+ *    dropped, the notification triggers are not.
  *
  * Exit code 0 means every migration applied and every check passed.
  */
@@ -36,9 +42,10 @@ import { fileURLToPath } from 'node:url';
 import { PGlite } from '@electric-sql/pglite';
 
 import * as engine from '../supabase/functions/_shared/engine/index.ts';
-import { listSources, returnedMapKeys, scanDataApi } from './data-api-surface.mjs';
+import { listSources, returnedMapKeys, returnedMapKeysIn, scanDataApi } from './data-api-surface.mjs';
 
 const MIGRATIONS = fileURLToPath(new URL('../supabase/migrations/', import.meta.url));
+const DROP_NOTIFY_WEBHOOKS = '20261104001040_drop_notify_webhooks.sql';
 const REPO = fileURLToPath(new URL('../../', import.meta.url));
 const APP_LIB = fileURLToPath(new URL('../../app/lib/', import.meta.url));
 const FUNCTIONS = fileURLToPath(new URL('../supabase/functions/', import.meta.url));
@@ -77,6 +84,13 @@ const NEW_PROJECT_DEFAULTS = /* sql */ `
   alter default privileges in schema public
     grant truncate, references, trigger, maintain on tables to anon, authenticated, service_role;
   alter default privileges in schema public grant update on sequences to anon, authenticated, service_role;
+`;
+
+// Supabase creates this publication empty; Realtime streams the tables in
+// it. The old-project database below has none, so the migrations' paths for
+// a missing publication are applied as well.
+const REALTIME_PUBLICATION = /* sql */ `
+  create publication supabase_realtime;
 `;
 
 // Older projects (and a local stack without auto_expose_new_tables = false).
@@ -287,6 +301,33 @@ async function heldPrivilegeKinds(db, role) {
   return rows;
 }
 
+// The entry shapes returnedMapKeys reads (and the ones it skips or reports)
+// in the Dart map literal _serverProfile returns.
+const PROFILE_MAP_SAMPLE = `
+Future<Map<String, Object?>> _serverProfile(Ref ref, UserProfile p) async {
+  final zone = await zoneOf(p); // isn't in the map: {'not_a_field': 1}
+  return {
+    // Comments may hold quotes ('x': y), commas, colons: and "strings".
+    if (p.name.isNotEmpty) 'display_name': p.name.length > 40 ? p.name.substring(0, 40) : p.name,
+    if (p.region != null && (p.strict || !p.legacy)) 'region': p.region,
+    if (p.jalali) 'calendar': 'jalali' else 'week_start': 6,
+    'time_zone': ?zone,
+    "locale": 'fa, en',
+    'motivation': {'tone': p.tone, 'drivers': [p.a, p.b]},
+    ...p.extra,
+    if (p.more != null) ...?p.more,
+    /* 'commented_out': 1, /* nested */ */
+    for (final f in flags) f: true,
+    kHandle: handle,
+    'ai_evaluation_enabled': f(p.ai, (p.a, p.b)),
+  };
+}
+`;
+const PROFILE_MAP_SAMPLE_KEYS = {
+  keys: ['display_name', 'region', 'calendar', 'week_start', 'time_zone', 'locale', 'motivation', 'ai_evaluation_enabled'],
+  unreadable: ['for (final f in flags) f: true', 'kHandle: handle'],
+};
+
 async function publicFunctions(db) {
   const { rows } = await db.query(/* sql */ `
     select p.oid, p.proname as name, p.oid::regprocedure::text as signature,
@@ -365,6 +406,15 @@ async function checkDataApi(db) {
     check(`${role} holds no table privilege ${who} ${uses}`, extra.length === 0, extra.join(', '));
   }
 
+  // Realtime streams exactly what is watched: a published table nobody can
+  // or does subscribe to only adds WAL decoding work.
+  const { rows: published } = await db.query(`select tablename from pg_publication_tables
+    where pubname = 'supabase_realtime' and schemaname = 'public' order by 1`);
+  const watched = [...new Set([...app.realtime, ...functions.realtime].map((w) => w.table))].sort();
+  check('the Realtime publication holds exactly the tables the app watches',
+    published.map((r) => r.tablename).join(',') === watched.join(','),
+    `published: ${published.map((r) => r.tablename).join(', ') || 'none'}; watched: ${watched.join(', ')}`);
+
   // Service RPCs stay with the server; the user API stays with signed-in users.
   const serverOnly = new Set(functions.rpcs.map((c) => c.name).filter((n) => !app.rpcs.some((c) => c.name === n)));
   const leaked = fns.filter((f) => serverOnly.has(f.name) && f.authenticated).map((f) => f.signature);
@@ -396,25 +446,34 @@ async function checkDataApi(db) {
   check('no Data API role can use a sequence', sequences.length === 0,
     sequences.map((s) => `${s.rolname} on ${s.relname}`).join(', '));
 
-  // The profile fields the app syncs (sync_coordinator.dart → remote_api.dart).
-  const fields = returnedMapKeys(APP_PROFILE_FIELDS, '_serverProfile');
-  const notUpdatable = [];
-  for (const field of fields ?? []) {
+  // The profile fields the app syncs (sync_coordinator.dart → remote_api.dart),
+  // read by returnedMapKeys, which first has to read a sample of every entry
+  // shape correctly.
+  const sample = returnedMapKeysIn(PROFILE_MAP_SAMPLE, '_serverProfile');
+  check('returnedMapKeys reads plain, conditional and null-aware entries, skips spreads, reports the rest',
+    JSON.stringify(sample) === JSON.stringify(PROFILE_MAP_SAMPLE_KEYS)
+      && returnedMapKeysIn('void _other() {}', '_serverProfile') === null,
+    JSON.stringify(sample));
+  const profile = returnedMapKeys(APP_PROFILE_FIELDS, '_serverProfile');
+  const fields = profile?.keys ?? [];
+  const problems = profile === null
+    ? ['no _serverProfile(…) { … return { … }; } in sync_coordinator.dart; extend returnedMapKeys']
+    : profile.unreadable.map((e) => `cannot read the entry "${e}"; extend returnedMapKeys in data-api-surface.mjs`);
+  for (const field of fields) {
     const r = await db.query(
       `select exists (select 1 from pg_attribute where attrelid = 'public.profiles'::regclass and attname = $1
                        and not attisdropped)
               and has_column_privilege('authenticated', 'public.profiles', $1, 'UPDATE') as ok`, [field]);
-    if (!r.rows[0].ok) notUpdatable.push(field);
+    if (!r.rows[0].ok) problems.push(`cannot update profiles.${field}`);
   }
   check('authenticated may update every profile field the app syncs',
-    fields !== null && fields.length > 0 && notUpdatable.length === 0,
-    fields === null ? '_serverProfile() not found in sync_coordinator.dart' : notUpdatable.join(', ') || fields.join(', '));
+    fields.length > 0 && problems.length === 0, problems.join('; ') || fields.join(', '));
 
   // Informational: user RPCs granted for features the app does not call yet.
   const unused = fns.filter((f) => f.authenticated && !app.rpcs.some((c) => c.name === f.name)
     && !['is_guild_member', 'guild_role_of', 'is_guild_officer', 'is_blocked_by_me'].includes(f.name)).map((f) => f.name);
   if (unused.length > 0) console.log(`  info user RPCs not called from app/lib yet: ${unused.join(', ')}`);
-  return { fields: fields ?? [] };
+  return { fields };
 }
 
 // ---------------------------------------------------------------------------
@@ -524,6 +583,27 @@ async function smoke(db, { profileFields }) {
   await expectError('notification settings change only through set_notification_prefs',
     as(db, 'authenticated', A, (tx) => tx.query('update public.notification_prefs set daily_cap = 50 where user_id = $1', [A])),
     /permission denied/);
+
+  // Device tokens (push_platform.dart) are push credentials: clients reach
+  // them only through register_push_token and unregister_push_token, and
+  // unregistering removes the caller's own token, never another account's.
+  const tokenA = 'fcm-token-of-device-a';
+  const tokenB = 'fcm-token-of-device-b';
+  await one(db, 'authenticated', A, `select public.register_push_token($1, 'android')`, [tokenA]);
+  await one(db, 'authenticated', B, `select public.register_push_token($1, 'web')`, [tokenB]);
+  await expectError('clients cannot read device tokens',
+    rows(db, 'authenticated', A, 'select token from public.push_tokens'), /permission denied/);
+  await expectError('clients cannot delete device tokens directly',
+    as(db, 'authenticated', A, (tx) => tx.query('delete from public.push_tokens')), /permission denied/);
+  await one(db, 'authenticated', A, 'select public.unregister_push_token($1)', [tokenB]);
+  const afterForeign = await rows(db, 'postgres', null, 'select token from public.push_tokens order by token');
+  await one(db, 'authenticated', A, 'select public.unregister_push_token($1)', [tokenA]);
+  const afterOwn = await rows(db, 'postgres', null, 'select token from public.push_tokens order by token');
+  check('unregister_push_token removes the caller\'s own token but not another user\'s',
+    afterForeign.map((t) => t.token).join(',') === `${tokenA},${tokenB}`
+      && afterOwn.map((t) => t.token).join(',') === tokenB,
+    `after A unregisters B's token: ${afterForeign.map((t) => t.token).join(',')}; `
+      + `after its own: ${afterOwn.map((t) => t.token).join(',')}`);
 
   // --- curves ---------------------------------------------------------------
   const curveRows = await rows(db, 'postgres', null, `
@@ -723,6 +803,47 @@ async function smoke(db, { profileFields }) {
     touched?.reactions_changed_at != null && retouched?.reactions_changed_at != null,
     `after react: ${touched?.reactions_changed_at}; after unreact: ${retouched?.reactions_changed_at}`);
   await one(db, 'authenticated', B, `select public.react($1, 'honour')`, [event.id]);
+
+  // Reaction changes are rate-limited per user (…_reaction_rate_limit.sql):
+  // 60 a minute pass and the next one is refused without a trace; calls that
+  // change nothing, other members and the next minute are not affected.
+  const failure = async (promise) => {
+    try {
+      await promise;
+      return null;
+    } catch (error) {
+      return error;
+    }
+  };
+  const toggle = (uid, on, kind = 'flame') =>
+    failure(one(db, 'authenticated', uid, `select public.${on ? 'react' : 'unreact'}($1, $2)`, [event.id, kind]));
+  const flamesOfB = async () => (await one(db, 'postgres', null, `select count(*)::int as n from public.reactions
+    where event_id = $1 and user_id = $2 and kind = 'flame'`, [event.id, B])).n;
+  await db.query('delete from private.reaction_rate');
+  let burstError = null;
+  for (let i = 0; i < 60 && burstError === null; i++) burstError = await toggle(B, i % 2 === 0);
+  await db.query(`update public.feed_events set reactions_changed_at = '2000-01-01T00:00:00Z' where id = $1`, [event.id]);
+  const refused = await toggle(B, true);
+  const signalAfter = await one(db, 'postgres', null,
+    `select reactions_changed_at = '2000-01-01T00:00:00Z' as untouched from public.feed_events where id = $1`, [event.id]);
+  check('60 reaction changes a minute pass; the 61st is refused (54000, rate_limited)',
+    burstError === null && refused?.code === '54000' && refused?.hint === 'rate_limited',
+    `burst: ${burstError?.message ?? 'all accepted'}; 61st: ${refused?.message ?? 'accepted'}`);
+  check('a refused reaction change leaves no reaction and touches no feed event',
+    (await flamesOfB()) === 0 && signalAfter.untouched === true, `untouched=${signalAfter.untouched}`);
+  const noChange = [await toggle(B, false), await toggle(B, true, 'honour')];
+  check('reaction calls that change nothing are neither counted nor refused', noChange.every((e) => e === null),
+    noChange.map((e) => e?.message ?? 'ok').join('; '));
+  const otherMember = await toggle(A, true, 'steel');
+  check('the reaction limit is per user', otherMember === null, otherMember?.message ?? '');
+  await toggle(A, false, 'steel');
+  await db.query(`update private.reaction_rate set window_start = window_start - interval '1 minute' where user_id = $1`,
+    [B]);
+  const nextMinute = await toggle(B, true);
+  check('the reaction limit lifts once the minute is over', nextMinute === null && (await flamesOfB()) === 1,
+    nextMinute?.message ?? '');
+  await toggle(B, false);
+
   await expectError('non-members cannot comment',
     one(db, 'authenticated', C, `select * from public.add_comment($1, 'hi')`, [event.id]), /not found/);
   await expectError('empty comments are rejected',
@@ -928,6 +1049,30 @@ async function internalCalls(db) {
     where tgname in ('reactions_notify', 'comments_notify', 'feed_events_notify') order by 1`);
   check('notification triggers on reactions, comments and feed_events',
     triggers.map((r) => r.t).join(',') === 'comments,feed_events,reactions', triggers.map((r) => r.t).join(','));
+
+  // A project set up from the old README also has dashboard webhooks to
+  // notify: triggers running supabase_functions.http_request (a stand-in
+  // here). Applied there, …_drop_notify_webhooks.sql drops exactly those.
+  const hallTriggers = async () => (await rows(db, 'postgres', null, `select tgname from pg_trigger
+    where tgrelid in ('public.reactions'::regclass, 'public.comments'::regclass, 'public.feed_events'::regclass)
+      and not tgisinternal order by 1`)).map((r) => r.tgname);
+  const ownTriggers = await hallTriggers();
+  const hook = (table, name, url) => `create trigger "${name}" after insert on public.${table} for each row
+    execute function supabase_functions.http_request('${url}', 'POST', '{"Content-type":"application/json"}', '{}', '5000');`;
+  await db.exec(`
+    create schema supabase_functions;
+    create function supabase_functions.http_request() returns trigger language plpgsql as $$ begin return null; end $$;
+    ${hook('reactions', 'notify-reactions', `${PROJECT_URL}/functions/v1/notify`)}
+    ${hook('comments', 'notify-comments', `${PROJECT_URL}/functions/v1/notify`)}
+    ${hook('feed_events', 'notify-milestones', `${PROJECT_URL}/functions/v1/notify`)}
+    ${hook('reactions', 'audit-reactions', 'https://hooks.example.test/reactions')}`);
+  await db.exec(readFileSync(MIGRATIONS + DROP_NOTIFY_WEBHOOKS, 'utf8'));
+  const afterDrop = await hallTriggers();
+  check('dashboard webhooks to notify are dropped; our triggers and other webhooks stay',
+    afterDrop.join(',') === [...ownTriggers, 'audit-reactions'].sort().join(','),
+    `before: ${ownTriggers.join(',')}; after: ${afterDrop.join(',')}`);
+  await db.exec('drop schema supabase_functions cascade');
+
   const offline = await one(db, 'postgres', null, `select private.call_edge_function('notify', '{}') as id`);
   check('internal calls are a no-op without pg_net and Vault', offline.id === null);
 
@@ -1017,7 +1162,7 @@ async function internalCalls(db) {
 }
 
 async function main() {
-  const db = await freshDatabase(NEW_PROJECT_DEFAULTS);
+  const db = await freshDatabase(NEW_PROJECT_DEFAULTS + REALTIME_PUBLICATION);
   console.log('Applying migrations (new project: nothing exposed without a GRANT)');
   await applyMigrations(db);
 
