@@ -106,7 +106,9 @@ class SettingsScreen extends ConsumerWidget {
                     ],
                     const SizedBox(height: AppSpace.lg),
                     DropdownButtonFormField<int>(
-                      initialValue: weekdays.containsKey(regional.firstWeekday) ? regional.firstWeekday : DateTime.monday,
+                      initialValue: weekdays.containsKey(regional.firstWeekday)
+                          ? regional.firstWeekday
+                          : DateTime.monday,
                       decoration: InputDecoration(labelText: l10n.firstDayOfWeek),
                       items: [
                         for (final e in weekdays.entries)
@@ -158,9 +160,11 @@ class SettingsScreen extends ConsumerWidget {
                         if (!v && profile.pauseStartedDay != null) {
                           final days = <String>[];
                           final end = parseDayKey(todayKey);
-                          for (var d = parseDayKey(profile.pauseStartedDay!);
-                              !d.isAfter(end);
-                              d = DateTime.utc(d.year, d.month, d.day + 1)) {
+                          for (
+                            var d = parseDayKey(profile.pauseStartedDay!);
+                            !d.isAfter(end);
+                            d = DateTime.utc(d.year, d.month, d.day + 1)
+                          ) {
                             days.add(dayKey(d));
                           }
                           await ref.read(progressionRepositoryProvider).markPausedDays(days);
@@ -302,10 +306,7 @@ class SettingsScreen extends ConsumerWidget {
                           initialTime: _tod(profile.quietStartMinutes),
                         );
                         if (start == null || !context.mounted) return;
-                        final end = await showTimePicker(
-                          context: context,
-                          initialTime: _tod(profile.quietEndMinutes),
-                        );
+                        final end = await showTimePicker(context: context, initialTime: _tod(profile.quietEndMinutes));
                         if (end == null) return;
                         await setProfile(
                           (p) => p.copyWith(
@@ -359,9 +360,7 @@ class SettingsScreen extends ConsumerWidget {
                       label: Text(l10n.exportData),
                       onPressed: () async {
                         final data = await ref.read(dataRepositoryProvider).exportAll();
-                        await Clipboard.setData(
-                          ClipboardData(text: const JsonEncoder.withIndent('  ').convert(data)),
-                        );
+                        await Clipboard.setData(ClipboardData(text: const JsonEncoder.withIndent('  ').convert(data)));
                         if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.exportReady)));
                         }
@@ -405,7 +404,6 @@ class SettingsScreen extends ConsumerWidget {
 
   static TimeOfDay _tod(int minutes) => TimeOfDay(hour: minutes ~/ 60, minute: minutes % 60);
 
-  static String _hm(String Function(String) digits, int minutes) => digits(
-    '${(minutes ~/ 60).toString().padLeft(2, '0')}:${(minutes % 60).toString().padLeft(2, '0')}',
-  );
+  static String _hm(String Function(String) digits, int minutes) =>
+      digits('${(minutes ~/ 60).toString().padLeft(2, '0')}:${(minutes % 60).toString().padLeft(2, '0')}');
 }

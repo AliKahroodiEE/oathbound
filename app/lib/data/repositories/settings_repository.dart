@@ -127,8 +127,7 @@ class UserProfile {
 
   factory UserProfile.fromJson(Map<String, Object?> j) {
     T? as<T>(String k) => j[k] is T ? j[k] as T : null;
-    List<String> strings(String k) =>
-        (j[k] is List) ? (j[k]! as List).whereType<String>().toList() : const [];
+    List<String> strings(String k) => (j[k] is List) ? (j[k]! as List).whereType<String>().toList() : const [];
     return UserProfile(
       characterName: as<String>('characterName') ?? '',
       portrait: as<String>('portrait') ?? 'tower',
@@ -161,9 +160,8 @@ class SettingsRepository {
   static const _profileKey = 'profile';
   static const _regionalKey = 'regional';
 
-  Stream<UserProfile> watchProfile() => _watch(_profileKey).map(
-    (v) => v == null ? const UserProfile() : UserProfile.fromJson(v),
-  );
+  Stream<UserProfile> watchProfile() =>
+      _watch(_profileKey).map((v) => v == null ? const UserProfile() : UserProfile.fromJson(v));
 
   Future<UserProfile> profile() async {
     final v = await _read(_profileKey);
@@ -172,16 +170,14 @@ class SettingsRepository {
 
   Future<void> saveProfile(UserProfile p) => _write(_profileKey, p.toJson());
 
-  Future<void> updateProfile(UserProfile Function(UserProfile) change) async =>
-      saveProfile(change(await profile()));
+  Future<void> updateProfile(UserProfile Function(UserProfile) change) async => saveProfile(change(await profile()));
 
   /// Regional settings; defaults follow the device locale until chosen.
-  Stream<RegionalSettings> watchRegional(Locale deviceLocale) =>
-      _watch(_regionalKey).map(
-        (v) =>
-            (v == null ? null : RegionalSettings.fromJson(v)) ??
-            RegionalSettings.defaultsFor(LocaleRegistry.resolve(deviceLocale)),
-      );
+  Stream<RegionalSettings> watchRegional(Locale deviceLocale) => _watch(_regionalKey).map(
+    (v) =>
+        (v == null ? null : RegionalSettings.fromJson(v)) ??
+        RegionalSettings.defaultsFor(LocaleRegistry.resolve(deviceLocale)),
+  );
 
   Future<RegionalSettings?> regional() async {
     final v = await _read(_regionalKey);
@@ -191,17 +187,14 @@ class SettingsRepository {
   Future<void> saveRegional(RegionalSettings s) => _write(_regionalKey, s.toJson());
 
   Future<Map<String, Object?>?> _read(String key) async {
-    final row = await (_db.select(_db.keyValues)..where((t) => t.key.equals(key)))
-        .getSingleOrNull();
+    final row = await (_db.select(_db.keyValues)..where((t) => t.key.equals(key))).getSingleOrNull();
     return row == null ? null : jsonDecode(row.value) as Map<String, Object?>;
   }
 
-  Stream<Map<String, Object?>?> _watch(String key) =>
-      (_db.select(_db.keyValues)..where((t) => t.key.equals(key)))
-          .watchSingleOrNull()
-          .map((row) => row == null ? null : jsonDecode(row.value) as Map<String, Object?>);
+  Stream<Map<String, Object?>?> _watch(String key) => (_db.select(_db.keyValues)..where((t) => t.key.equals(key)))
+      .watchSingleOrNull()
+      .map((row) => row == null ? null : jsonDecode(row.value) as Map<String, Object?>);
 
-  Future<void> _write(String key, Map<String, Object?> value) => _db
-      .into(_db.keyValues)
-      .insertOnConflictUpdate(KeyValuesCompanion.insert(key: key, value: jsonEncode(value)));
+  Future<void> _write(String key, Map<String, Object?> value) =>
+      _db.into(_db.keyValues).insertOnConflictUpdate(KeyValuesCompanion.insert(key: key, value: jsonEncode(value)));
 }

@@ -72,10 +72,7 @@ void main() {
   });
 
   test('recurring quests recur daily and earn the follow-through bonus', () async {
-    final q = await quests.create(const QuestDraft(
-      title: 'Meditation 10 min',
-      recurrence: Recurrence.daily,
-    ));
+    final q = await quests.create(const QuestDraft(title: 'Meditation 10 min', recurrence: Recurrence.daily));
     final first = await progression.complete(q);
     expect(first!.result.hasAdjustment(AdjustmentCode.followThrough), isTrue);
     now = now.add(const Duration(days: 1));

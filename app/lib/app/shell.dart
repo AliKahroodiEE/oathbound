@@ -126,7 +126,10 @@ class AdaptiveShell extends StatelessWidget {
           ),
         );
     }
-    return CallbackShortcuts(bindings: shortcuts, child: Focus(autofocus: true, child: body));
+    return CallbackShortcuts(
+      bindings: shortcuts,
+      child: Focus(autofocus: true, child: body),
+    );
   }
 }
 
@@ -168,11 +171,7 @@ class _Sidebar extends StatelessWidget {
             ),
             const SizedBox(height: AppSpace.lg),
             for (var i = 0; i < destinations.length; i++)
-              _SidebarItem(
-                destination: destinations[i],
-                selected: i == selected,
-                onTap: () => onSelect(i),
-              ),
+              _SidebarItem(destination: destinations[i], selected: i == selected, onTap: () => onSelect(i)),
             const Spacer(),
             const Divider(),
             _SidebarItem(

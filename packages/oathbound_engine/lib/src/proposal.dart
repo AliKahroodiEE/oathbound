@@ -11,11 +11,7 @@ class AttributeWeight {
   /// proposals (clients render a localized default instead).
   final String reason;
 
-  Map<String, Object?> toJson() => {
-    'attribute': attribute.name,
-    'weight': weight,
-    'reason': reason,
-  };
+  Map<String, Object?> toJson() => {'attribute': attribute.name, 'weight': weight, 'reason': reason};
 
   @override
   String toString() => 'AttributeWeight(${attribute.name}, $weight)';
@@ -61,13 +57,7 @@ class EvaluationProposal {
       final weight = item['weight'];
       if (attribute == null || weight is! num || !weight.isFinite) continue;
       final reason = item['reason'];
-      attributes.add(
-        AttributeWeight(
-          attribute,
-          weight.toDouble(),
-          reason is String ? reason : '',
-        ),
-      );
+      attributes.add(AttributeWeight(attribute, weight.toDouble(), reason is String ? reason : ''));
     }
     final difficulty = json['difficulty'];
     final minutes = json['estimatedMinutes'];
@@ -80,17 +70,12 @@ class EvaluationProposal {
     final category = QuestCategory.parse(json['category']);
     return EvaluationProposal(
       category: category,
-      similarityKey: normaliseSimilarityKey(
-        key is String ? key : '',
-        category,
-      ),
+      similarityKey: normaliseSimilarityKey(key is String ? key : '', category),
       difficulty: difficulty.round(),
       estimatedMinutes: minutes.round(),
       attributes: attributes,
       trivial: json['trivial'] == true,
-      confidence: confidence is num && confidence.isFinite
-          ? confidence.toDouble()
-          : 0.5,
+      confidence: confidence is num && confidence.isFinite ? confidence.toDouble() : 0.5,
       summary: summary is String ? summary : '',
       source: ProposalSource.parse(json['source']),
     );

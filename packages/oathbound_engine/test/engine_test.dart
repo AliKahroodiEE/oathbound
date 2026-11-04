@@ -19,11 +19,7 @@ EvaluationProposal _proposal({
   difficulty: difficulty,
   estimatedMinutes: minutes,
   attributes:
-      attributes ??
-      const [
-        AttributeWeight(Attribute.intelligence, 0.75),
-        AttributeWeight(Attribute.discipline, 0.25),
-      ],
+      attributes ?? const [AttributeWeight(Attribute.intelligence, 0.75), AttributeWeight(Attribute.discipline, 0.25)],
   trivial: trivial,
   confidence: confidence,
   source: source,
@@ -52,10 +48,7 @@ CompletionFacts _facts({
 void main() {
   group('worked example (rules §5)', () {
     test('90 minutes of electronics study yields 31 INT + 14 DIS', () {
-      final r = ProgressionEngine.evaluate(
-        proposal: _proposal(),
-        facts: _facts(),
-      );
+      final r = ProgressionEngine.evaluate(proposal: _proposal(), facts: _facts());
       expect(r.amountFor(Attribute.intelligence), 31);
       expect(r.amountFor(Attribute.discipline), 14);
       expect(r.totalXp, 45);
@@ -73,36 +66,24 @@ void main() {
 
   group('effective minutes', () {
     test('timer beats declared minutes', () {
-      final r = ProgressionEngine.evaluate(
-        proposal: _proposal(),
-        facts: _facts(declared: 200, tracked: 30),
-      );
+      final r = ProgressionEngine.evaluate(proposal: _proposal(), facts: _facts(declared: 200, tracked: 30));
       expect(r.effectiveMinutes, 30);
       expect(r.hasAdjustment(AdjustmentCode.durationPlausibility), isFalse);
     });
 
     test('implausible declarations are limited to twice the estimate', () {
-      final r = ProgressionEngine.evaluate(
-        proposal: _proposal(minutes: 20),
-        facts: _facts(declared: 180),
-      );
+      final r = ProgressionEngine.evaluate(proposal: _proposal(minutes: 20), facts: _facts(declared: 180));
       expect(r.effectiveMinutes, 40);
       expect(r.hasAdjustment(AdjustmentCode.durationPlausibility), isTrue);
     });
 
     test('the plausibility limit never drops below 15 minutes', () {
-      final r = ProgressionEngine.evaluate(
-        proposal: _proposal(minutes: 3),
-        facts: _facts(declared: 15),
-      );
+      final r = ProgressionEngine.evaluate(proposal: _proposal(minutes: 3), facts: _facts(declared: 15));
       expect(r.effectiveMinutes, 15);
     });
 
     test('daily tasks are capped at 240 minutes', () {
-      final r = ProgressionEngine.evaluate(
-        proposal: _proposal(minutes: 600),
-        facts: _facts(declared: 600),
-      );
+      final r = ProgressionEngine.evaluate(proposal: _proposal(minutes: 600), facts: _facts(declared: 600));
       expect(r.effectiveMinutes, 240);
       expect(r.hasAdjustment(AdjustmentCode.tierMinutesCap), isTrue);
     });
@@ -129,10 +110,7 @@ void main() {
 
   group('anti-exploitation', () {
     test('a trivial task grants at most 3 XP and no follow-through', () {
-      final r = ProgressionEngine.evaluate(
-        proposal: _proposal(minutes: 2, trivial: true),
-        facts: _facts(declared: 2),
-      );
+      final r = ProgressionEngine.evaluate(proposal: _proposal(minutes: 2, trivial: true), facts: _facts(declared: 2));
       expect(r.trivial, isTrue);
       expect(r.totalXp, lessThanOrEqualTo(3));
       expect(r.hasAdjustment(AdjustmentCode.followThrough), isFalse);
@@ -158,11 +136,7 @@ void main() {
       var day = DayState.empty;
       final totals = <int>[];
       for (var i = 0; i < 6; i++) {
-        final r = ProgressionEngine.evaluate(
-          proposal: _proposal(),
-          facts: _facts(),
-          day: day,
-        );
+        final r = ProgressionEngine.evaluate(proposal: _proposal(), facts: _facts(), day: day);
         totals.add(r.totalXp);
         day = r.applyTo(day);
       }
@@ -173,23 +147,14 @@ void main() {
     });
 
     test('a daily habit is not decayed across days', () {
-      final first = ProgressionEngine.evaluate(
-        proposal: _proposal(),
-        facts: _facts(),
-      );
-      final nextDay = ProgressionEngine.evaluate(
-        proposal: _proposal(),
-        facts: _facts(),
-        day: DayState.empty,
-      );
+      final first = ProgressionEngine.evaluate(proposal: _proposal(), facts: _facts());
+      final nextDay = ProgressionEngine.evaluate(proposal: _proposal(), facts: _facts(), day: DayState.empty);
       expect(nextDay.totalXp, first.totalXp);
     });
 
     test('soft cap halves XP above 200 raw per attribute per day', () {
       final r = ProgressionEngine.evaluate(
-        proposal: _proposal(
-          attributes: const [AttributeWeight(Attribute.intelligence, 1)],
-        ),
+        proposal: _proposal(attributes: const [AttributeWeight(Attribute.intelligence, 1)]),
         facts: _facts(created: _evening, completed: _evening),
         day: const DayState(rawXp: {Attribute.intelligence: 200}),
       );
@@ -199,9 +164,7 @@ void main() {
 
     test('hard cap stops an attribute at 400 effective XP per day', () {
       final r = ProgressionEngine.evaluate(
-        proposal: _proposal(
-          attributes: const [AttributeWeight(Attribute.intelligence, 1)],
-        ),
+        proposal: _proposal(attributes: const [AttributeWeight(Attribute.intelligence, 1)]),
         facts: _facts(created: _evening, completed: _evening),
         day: const DayState(rawXp: {Attribute.intelligence: 600}),
       );
@@ -220,10 +183,7 @@ void main() {
     });
 
     test('low-confidence AI proposals are discounted, heuristics are not', () {
-      final ai = ProgressionEngine.evaluate(
-        proposal: _proposal(confidence: 0.2),
-        facts: _facts(),
-      );
+      final ai = ProgressionEngine.evaluate(proposal: _proposal(confidence: 0.2), facts: _facts());
       final heuristic = ProgressionEngine.evaluate(
         proposal: _proposal(confidence: 0.2, source: ProposalSource.heuristic),
         facts: _facts(),
@@ -234,14 +194,8 @@ void main() {
     });
 
     test('out-of-range difficulty is clamped', () {
-      final hi = ProgressionEngine.evaluate(
-        proposal: _proposal(difficulty: 99),
-        facts: _facts(),
-      );
-      final five = ProgressionEngine.evaluate(
-        proposal: _proposal(difficulty: 5),
-        facts: _facts(),
-      );
+      final hi = ProgressionEngine.evaluate(proposal: _proposal(difficulty: 99), facts: _facts());
+      final five = ProgressionEngine.evaluate(proposal: _proposal(difficulty: 5), facts: _facts());
       expect(hi.totalXp, five.totalXp);
     });
   });
@@ -323,18 +277,9 @@ void main() {
     });
 
     test('an implementation intention adds 5 %', () {
-      final plain = ProgressionEngine.evaluate(
-        proposal: _proposal(),
-        facts: _facts(),
-      );
-      final intended = ProgressionEngine.evaluate(
-        proposal: _proposal(),
-        facts: _facts(intention: true),
-      );
-      expect(
-        intended.amountFor(Attribute.discipline),
-        greaterThan(plain.amountFor(Attribute.discipline)),
-      );
+      final plain = ProgressionEngine.evaluate(proposal: _proposal(), facts: _facts());
+      final intended = ProgressionEngine.evaluate(proposal: _proposal(), facts: _facts(intention: true));
+      expect(intended.amountFor(Attribute.discipline), greaterThan(plain.amountFor(Attribute.discipline)));
     });
   });
 
@@ -394,14 +339,8 @@ void main() {
     });
 
     test('rejects structurally invalid output', () {
-      expect(
-        () => EvaluationProposal.fromJson({'attributes': 'nope'}),
-        throwsFormatException,
-      );
-      expect(
-        () => EvaluationProposal.fromJson({'attributes': <Object>[]}),
-        throwsFormatException,
-      );
+      expect(() => EvaluationProposal.fromJson({'attributes': 'nope'}), throwsFormatException);
+      expect(() => EvaluationProposal.fromJson({'attributes': <Object>[]}), throwsFormatException);
     });
   });
 }

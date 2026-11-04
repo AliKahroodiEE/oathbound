@@ -17,18 +17,8 @@ class LocaleTypography {
     const arabicScriptLanguages = {'fa', 'ar', 'ur', 'ps', 'ku'};
     final arabic = arabicScriptLanguages.contains(locale.languageCode);
     return arabic
-        ? const LocaleTypography._(
-            body: 'Vazirmatn',
-            display: 'Vazirmatn',
-            fallback: ['Inter'],
-            arabicScript: true,
-          )
-        : const LocaleTypography._(
-            body: 'Inter',
-            display: 'Cinzel',
-            fallback: ['Vazirmatn'],
-            arabicScript: false,
-          );
+        ? const LocaleTypography._(body: 'Vazirmatn', display: 'Vazirmatn', fallback: ['Inter'], arabicScript: true)
+        : const LocaleTypography._(body: 'Inter', display: 'Cinzel', fallback: ['Vazirmatn'], arabicScript: false);
   }
 
   final String body;
@@ -75,12 +65,6 @@ class LocaleTypography {
   }
 
   /// Tabular numerals for counters and XP values.
-  TextStyle numeral(double size, {Color color = AppColors.bone}) => _style(
-    body,
-    size,
-    size * 1.25,
-    FontWeight.w600,
-    color: color,
-    features: const [FontFeature.tabularFigures()],
-  );
+  TextStyle numeral(double size, {Color color = AppColors.bone}) =>
+      _style(body, size, size * 1.25, FontWeight.w600, color: color, features: const [FontFeature.tabularFigures()]);
 }

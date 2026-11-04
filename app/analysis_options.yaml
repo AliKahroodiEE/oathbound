@@ -23,3 +23,6 @@ linter:
     avoid_print: true
     use_key_in_widget_constructors: true
     sort_child_properties_last: true
+
+formatter:
+  page_width: 120

@@ -92,9 +92,7 @@ class _QuestEditorScreenState extends ConsumerState<QuestEditorScreen> {
     category: _category,
     priority: _priority,
     dueAt: _due,
-    estimatedMinutes: int.tryParse(
-      HeuristicEvaluator.normaliseText(_estimate.text).replaceAll(RegExp(r'[^0-9]'), ''),
-    ),
+    estimatedMinutes: int.tryParse(HeuristicEvaluator.normaliseText(_estimate.text).replaceAll(RegExp(r'[^0-9]'), '')),
     recurrence: _tier == QuestTier.objective ? Recurrence.none : _recurrence,
     intention: _intention.text,
     shareLevel: _share,
@@ -162,11 +160,7 @@ class _QuestEditorScreenState extends ConsumerState<QuestEditorScreen> {
               ),
         actions: [
           if (_editing)
-            IconButton(
-              tooltip: l10n.actionDelete,
-              icon: const Icon(Icons.delete_outline),
-              onPressed: _delete,
-            ),
+            IconButton(tooltip: l10n.actionDelete, icon: const Icon(Icons.delete_outline), onPressed: _delete),
         ],
       ),
       body: Form(
@@ -194,7 +188,10 @@ class _QuestEditorScreenState extends ConsumerState<QuestEditorScreen> {
                   showSelectedIcon: false,
                   segments: [
                     for (final t in QuestTier.values)
-                      ButtonSegment(value: t, label: Text(l10n.tierName(t), textAlign: TextAlign.center)),
+                      ButtonSegment(
+                        value: t,
+                        label: Text(l10n.tierName(t), textAlign: TextAlign.center),
+                      ),
                   ],
                   selected: {_tier},
                   onSelectionChanged: (s) => setState(() => _tier = s.first),
@@ -389,8 +386,7 @@ class _SubtasksPanel extends ConsumerStatefulWidget {
 
 class _SubtasksPanelState extends ConsumerState<_SubtasksPanel> {
   final _controller = TextEditingController();
-  late final Stream<List<SubtaskRow>> _stream =
-      ref.read(questRepositoryProvider).watchSubtasks(widget.questId);
+  late final Stream<List<SubtaskRow>> _stream = ref.read(questRepositoryProvider).watchSubtasks(widget.questId);
 
   @override
   void dispose() {

@@ -8,11 +8,10 @@ import '../tokens.dart';
 
 /// Month-grid date picker that follows the user's calendar setting
 /// (Gregorian or Jalali) and week start, independent of UI language.
-Future<DateTime?> showCalendarDatePicker(BuildContext context, {DateTime? initial}) =>
-    showDialog<DateTime>(
-      context: context,
-      builder: (_) => _CalendarDialog(initial: initial ?? DateTime.now()),
-    );
+Future<DateTime?> showCalendarDatePicker(BuildContext context, {DateTime? initial}) => showDialog<DateTime>(
+  context: context,
+  builder: (_) => _CalendarDialog(initial: initial ?? DateTime.now()),
+);
 
 class _CalendarDialog extends ConsumerStatefulWidget {
   const _CalendarDialog({required this.initial});
@@ -40,13 +39,11 @@ class _CalendarDialogState extends ConsumerState<_CalendarDialog> {
         : DateTime(_selected.year, _selected.month);
   }
 
-  int _daysInMonth(bool jalali) => jalali
-      ? Jalali.fromDateTime(_month).monthLength
-      : DateUtils.getDaysInMonth(_month.year, _month.month);
+  int _daysInMonth(bool jalali) =>
+      jalali ? Jalali.fromDateTime(_month).monthLength : DateUtils.getDaysInMonth(_month.year, _month.month);
 
-  DateTime _dayAt(bool jalali, int day) => jalali
-      ? Jalali.fromDateTime(_month).copy(day: day).toDateTime()
-      : DateTime(_month.year, _month.month, day);
+  DateTime _dayAt(bool jalali, int day) =>
+      jalali ? Jalali.fromDateTime(_month).copy(day: day).toDateTime() : DateTime(_month.year, _month.month, day);
 
   @override
   Widget build(BuildContext context) {
@@ -60,8 +57,7 @@ class _CalendarDialogState extends ConsumerState<_CalendarDialog> {
     final leading = (_month.weekday - firstWeekday) % 7;
     final today = DateUtils.dateOnly(DateTime.now());
     final headers = [
-      for (var i = 0; i < 7; i++)
-        f.weekdayShort(DateTime(2026, 11, 2).add(Duration(days: (firstWeekday - 1 + i) % 7))),
+      for (var i = 0; i < 7; i++) f.weekdayShort(DateTime(2026, 11, 2).add(Duration(days: (firstWeekday - 1 + i) % 7))),
     ];
 
     return Dialog(
@@ -76,7 +72,9 @@ class _CalendarDialogState extends ConsumerState<_CalendarDialog> {
                 children: [
                   IconButton(
                     tooltip: l10n.previousPeriod,
-                    icon: Icon(Directionality.of(context) == TextDirection.rtl ? Icons.chevron_right : Icons.chevron_left),
+                    icon: Icon(
+                      Directionality.of(context) == TextDirection.rtl ? Icons.chevron_right : Icons.chevron_left,
+                    ),
                     onPressed: () => setState(() => _month = f.addMonths(_month, -1)),
                   ),
                   Expanded(
@@ -84,7 +82,9 @@ class _CalendarDialogState extends ConsumerState<_CalendarDialog> {
                   ),
                   IconButton(
                     tooltip: l10n.nextPeriod,
-                    icon: Icon(Directionality.of(context) == TextDirection.rtl ? Icons.chevron_left : Icons.chevron_right),
+                    icon: Icon(
+                      Directionality.of(context) == TextDirection.rtl ? Icons.chevron_left : Icons.chevron_right,
+                    ),
                     onPressed: () => setState(() => _month = f.addMonths(_month, 1)),
                   ),
                 ],
@@ -96,7 +96,9 @@ class _CalendarDialogState extends ConsumerState<_CalendarDialog> {
                 physics: const NeverScrollableScrollPhysics(),
                 children: [
                   for (final h in headers)
-                    Center(child: Text(h, style: text.bodySmall, overflow: TextOverflow.clip, maxLines: 1)),
+                    Center(
+                      child: Text(h, style: text.bodySmall, overflow: TextOverflow.clip, maxLines: 1),
+                    ),
                   for (var i = 0; i < leading; i++) const SizedBox.shrink(),
                   for (var d = 1; d <= days; d++)
                     Builder(
@@ -109,9 +111,7 @@ class _CalendarDialogState extends ConsumerState<_CalendarDialog> {
                           child: Material(
                             color: selected ? AppColors.crimson : Colors.transparent,
                             shape: CircleBorder(
-                              side: isToday && !selected
-                                  ? const BorderSide(color: AppColors.ember)
-                                  : BorderSide.none,
+                              side: isToday && !selected ? const BorderSide(color: AppColors.ember) : BorderSide.none,
                             ),
                             child: InkWell(
                               customBorder: const CircleBorder(),
@@ -119,9 +119,7 @@ class _CalendarDialogState extends ConsumerState<_CalendarDialog> {
                               child: Center(
                                 child: Text(
                                   f.digits('$d'),
-                                  style: text.bodyMedium?.copyWith(
-                                    color: selected ? AppColors.bone : AppColors.ash,
-                                  ),
+                                  style: text.bodyMedium?.copyWith(color: selected ? AppColors.bone : AppColors.ash),
                                 ),
                               ),
                             ),
@@ -135,14 +133,8 @@ class _CalendarDialogState extends ConsumerState<_CalendarDialog> {
               Row(
                 children: [
                   Expanded(child: Text(f.date(_selected), style: text.bodySmall)),
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: Text(l10n.actionCancel),
-                  ),
-                  FilledButton(
-                    onPressed: () => Navigator.of(context).pop(_selected),
-                    child: Text(l10n.actionDone),
-                  ),
+                  TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(l10n.actionCancel)),
+                  FilledButton(onPressed: () => Navigator.of(context).pop(_selected), child: Text(l10n.actionDone)),
                 ],
               ),
             ],

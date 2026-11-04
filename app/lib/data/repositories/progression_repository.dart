@@ -59,11 +59,13 @@ class ProgressionRepository {
       where.write(' AND local_day < ?');
       vars.add(Variable(toDayExclusive));
     }
-    final rows = await _db.customSelect(
-      'SELECT attribute, SUM(amount) AS total FROM ledger_entries WHERE $where GROUP BY attribute',
-      variables: vars,
-      readsFrom: {_db.ledgerEntries},
-    ).get();
+    final rows = await _db
+        .customSelect(
+          'SELECT attribute, SUM(amount) AS total FROM ledger_entries WHERE $where GROUP BY attribute',
+          variables: vars,
+          readsFrom: {_db.ledgerEntries},
+        )
+        .get();
     final totals = <Attribute, int>{};
     for (final r in rows) {
       final a = Attribute.tryParse(r.read<String>('attribute'));
@@ -74,12 +76,14 @@ class ProgressionRepository {
 
   /// Engine day state rebuilt from today's active evaluations.
   Future<DayState> dayState(String day) async {
-    final rows = await _db.customSelect(
-      'SELECT e.result_json FROM evaluations e JOIN completions c ON c.id = e.completion_id '
-      "WHERE e.local_day = ? AND c.state = 'active'",
-      variables: [Variable(day)],
-      readsFrom: {_db.evaluations, _db.completions},
-    ).get();
+    final rows = await _db
+        .customSelect(
+          'SELECT e.result_json FROM evaluations e JOIN completions c ON c.id = e.completion_id '
+          "WHERE e.local_day = ? AND c.state = 'active'",
+          variables: [Variable(day)],
+          readsFrom: {_db.evaluations, _db.completions},
+        )
+        .get();
     var state = DayState.empty;
     for (final r in rows) {
       state = decodeResult(r.read<String>('result_json')).applyTo(state);
@@ -89,11 +93,13 @@ class ProgressionRepository {
 
   /// Local days with at least one non-trivial active completion.
   Future<Set<DateTime>> activeDays() async {
-    final rows = await _db.customSelect(
-      'SELECT DISTINCT e.local_day FROM evaluations e JOIN completions c ON c.id = e.completion_id '
-      "WHERE c.state = 'active' AND e.trivial = 0",
-      readsFrom: {_db.evaluations, _db.completions},
-    ).get();
+    final rows = await _db
+        .customSelect(
+          'SELECT DISTINCT e.local_day FROM evaluations e JOIN completions c ON c.id = e.completion_id '
+          "WHERE c.state = 'active' AND e.trivial = 0",
+          readsFrom: {_db.evaluations, _db.completions},
+        )
+        .get();
     return {for (final r in rows) parseDayKey(r.read<String>('local_day'))};
   }
 
@@ -102,17 +108,21 @@ class ProgressionRepository {
     int weeklyTarget = 4,
     int firstWeekday = DateTime.monday,
   }) async {
-    final counts = await _db.customSelect(
-      "SELECT q.tier AS tier, COUNT(*) AS n FROM completions c JOIN quests q ON q.id = c.quest_id "
-      "WHERE c.state = 'active' GROUP BY q.tier",
-      readsFrom: {_db.completions, _db.quests},
-    ).get();
+    final counts = await _db
+        .customSelect(
+          "SELECT q.tier AS tier, COUNT(*) AS n FROM completions c JOIN quests q ON q.id = c.quest_id "
+          "WHERE c.state = 'active' GROUP BY q.tier",
+          readsFrom: {_db.completions, _db.quests},
+        )
+        .get();
     final byTier = {for (final r in counts) r.read<String>('tier'): r.read<int>('n')};
-    final minutes = await _db.customSelect(
-      'SELECT COALESCE(SUM(e.effective_minutes), 0) AS m FROM evaluations e '
-      "JOIN completions c ON c.id = e.completion_id WHERE c.state = 'active'",
-      readsFrom: {_db.evaluations, _db.completions},
-    ).getSingle();
+    final minutes = await _db
+        .customSelect(
+          'SELECT COALESCE(SUM(e.effective_minutes), 0) AS m FROM evaluations e '
+          "JOIN completions c ON c.id = e.completion_id WHERE c.state = 'active'",
+          readsFrom: {_db.evaluations, _db.completions},
+        )
+        .getSingle();
     final totals = await attributeTotals();
     final total = totals.values.fold(0, (a, b) => a + b);
     final weekly = Consistency.weekly(
@@ -150,20 +160,22 @@ class ProgressionRepository {
   }) async {
     final now = _now();
     final day = dayKey(now);
-    final existing = await (_db.select(_db.completions)
-          ..where((c) =>
-              c.questId.equals(quest.id) & c.occurrenceDay.equals(day) & c.state.equals('active')))
-        .getSingleOrNull();
+    final existing =
+        await (_db.select(_db.completions)
+              ..where((c) => c.questId.equals(quest.id) & c.occurrenceDay.equals(day) & c.state.equals('active')))
+            .getSingleOrNull();
     if (existing != null) return null;
 
-    final proposal = HeuristicEvaluator.evaluate(HeuristicInput(
-      title: quest.title,
-      notes: quest.notes,
-      tier: quest.tier,
-      categoryHint: quest.category,
-      declaredMinutes: declaredMinutes,
-      estimatedMinutes: quest.estimatedMinutes,
-    ));
+    final proposal = HeuristicEvaluator.evaluate(
+      HeuristicInput(
+        title: quest.title,
+        notes: quest.notes,
+        tier: quest.tier,
+        categoryHint: quest.category,
+        declaredMinutes: declaredMinutes,
+        estimatedMinutes: quest.estimatedMinutes,
+      ),
+    );
     final facts = CompletionFacts(
       tier: quest.tier,
       createdAt: quest.createdAt,
@@ -174,32 +186,33 @@ class ProgressionRepository {
       isRecurringOccurrence: quest.isRecurring,
       hasImplementationIntention: quest.hasIntention,
     );
-    final result = ProgressionEngine.evaluate(
-      proposal: proposal,
-      facts: facts,
-      day: await dayState(day),
-    );
+    final result = ProgressionEngine.evaluate(proposal: proposal, facts: facts, day: await dayState(day));
 
     final totalsBefore = await attributeTotals();
     final away = Consistency.daysAway(await activeDays(), now);
     final completionId = _uuid.v7();
 
     await _db.transaction(() async {
-      await _db.into(_db.completions).insert(CompletionsCompanion.insert(
-        id: completionId,
-        questId: quest.id,
-        occurrenceDay: day,
-        localDay: day,
-        completedAt: now,
-        declaredMinutes: Value(declaredMinutes),
-        trackedMinutes: Value(trackedMinutes),
-        createdAt: now,
-      ));
+      await _db
+          .into(_db.completions)
+          .insert(
+            CompletionsCompanion.insert(
+              id: completionId,
+              questId: quest.id,
+              occurrenceDay: day,
+              localDay: day,
+              completedAt: now,
+              declaredMinutes: Value(declaredMinutes),
+              trackedMinutes: Value(trackedMinutes),
+              createdAt: now,
+            ),
+          );
       await _writeEvaluation(completionId, day, proposal, result, provisional: provisional);
       await _writeGrants(completionId, day, result, provisional: provisional);
       if (!quest.isRecurring) {
-        await (_db.update(_db.quests)..where((q) => q.id.equals(quest.id)))
-            .write(QuestsCompanion(status: const Value('completed'), updatedAt: Value(now)));
+        await (_db.update(_db.quests)..where((q) => q.id.equals(quest.id))).write(
+          QuestsCompanion(status: const Value('completed'), updatedAt: Value(now)),
+        );
       }
       await _enqueue('completion', completionId);
     });
@@ -231,33 +244,37 @@ class ProgressionRepository {
   /// Undoes a completion within 24 hours by appending reversing entries.
   /// Returns false when the window has passed.
   Future<bool> undo(String completionId) async {
-    final c = await (_db.select(_db.completions)..where((c) => c.id.equals(completionId)))
-        .getSingleOrNull();
+    final c = await (_db.select(_db.completions)..where((c) => c.id.equals(completionId))).getSingleOrNull();
     if (c == null || c.state != 'active') return false;
     if (_now().difference(c.completedAt) > const Duration(hours: 24)) return false;
     await _db.transaction(() async {
-      final grants = await (_db.select(_db.ledgerEntries)
-            ..where((l) =>
-                l.completionId.equals(completionId) & l.superseded.equals(false) & l.kind.equals('grant')))
-          .get();
+      final grants = await (_db.select(
+        _db.ledgerEntries,
+      )..where((l) => l.completionId.equals(completionId) & l.superseded.equals(false) & l.kind.equals('grant'))).get();
       for (final g in grants) {
-        await _db.into(_db.ledgerEntries).insert(LedgerEntriesCompanion.insert(
-          id: _uuid.v7(),
-          completionId: Value(completionId),
-          attribute: g.attribute,
-          amount: -g.amount,
-          rawAmount: -g.rawAmount,
-          kind: 'reversal',
-          ruleVersion: g.ruleVersion,
-          localDay: g.localDay,
-          provisional: Value(g.provisional),
-          createdAt: _now(),
-        ));
+        await _db
+            .into(_db.ledgerEntries)
+            .insert(
+              LedgerEntriesCompanion.insert(
+                id: _uuid.v7(),
+                completionId: Value(completionId),
+                attribute: g.attribute,
+                amount: -g.amount,
+                rawAmount: -g.rawAmount,
+                kind: 'reversal',
+                ruleVersion: g.ruleVersion,
+                localDay: g.localDay,
+                provisional: Value(g.provisional),
+                createdAt: _now(),
+              ),
+            );
       }
-      await (_db.update(_db.completions)..where((x) => x.id.equals(completionId)))
-          .write(const CompletionsCompanion(state: Value('undone')));
-      await (_db.update(_db.quests)..where((q) => q.id.equals(c.questId) & q.status.equals('completed')))
-          .write(QuestsCompanion(status: const Value('active'), updatedAt: Value(_now())));
+      await (_db.update(
+        _db.completions,
+      )..where((x) => x.id.equals(completionId))).write(const CompletionsCompanion(state: Value('undone')));
+      await (_db.update(_db.quests)..where((q) => q.id.equals(c.questId) & q.status.equals('completed'))).write(
+        QuestsCompanion(status: const Value('active'), updatedAt: Value(_now())),
+      );
       await _enqueue('completion_undo', completionId);
     });
     return true;
@@ -267,18 +284,19 @@ class ProgressionRepository {
   /// one. Both stay in the ledger; the provisional rows are superseded.
   Future<void> reconcile(String completionId, EvaluationProposal proposal, RewardResult result) =>
       _db.transaction(() async {
-        final eval = await (_db.select(_db.evaluations)..where((e) => e.completionId.equals(completionId)))
-            .getSingleOrNull();
+        final eval = await (_db.select(
+          _db.evaluations,
+        )..where((e) => e.completionId.equals(completionId))).getSingleOrNull();
         if (eval == null) return;
-        await (_db.update(_db.ledgerEntries)..where((l) => l.completionId.equals(completionId)))
-            .write(const LedgerEntriesCompanion(superseded: Value(true)));
+        await (_db.update(_db.ledgerEntries)..where((l) => l.completionId.equals(completionId))).write(
+          const LedgerEntriesCompanion(superseded: Value(true)),
+        );
         await _writeEvaluation(completionId, eval.localDay, proposal, result, provisional: false);
         await _writeGrants(completionId, eval.localDay, result, provisional: false);
       });
 
-  Future<void> setRestDay(String day, bool rest) => _db.into(_db.dayMarks).insertOnConflictUpdate(
-    DayMarksCompanion.insert(localDay: day, rest: Value(rest)),
-  );
+  Future<void> setRestDay(String day, bool rest) =>
+      _db.into(_db.dayMarks).insertOnConflictUpdate(DayMarksCompanion.insert(localDay: day, rest: Value(rest)));
 
   Future<void> markPausedDays(Iterable<String> days) => _db.batch((b) {
     for (final d in days) {
@@ -298,40 +316,43 @@ class ProgressionRepository {
     EvaluationProposal proposal,
     RewardResult result, {
     required bool provisional,
-  }) => _db.into(_db.evaluations).insertOnConflictUpdate(EvaluationsCompanion.insert(
-    completionId: completionId,
-    localDay: day,
-    category: proposal.category.name,
-    similarityKey: result.similarityKey,
-    effectiveMinutes: result.effectiveMinutes,
-    totalXp: result.totalXp,
-    trivial: result.trivial,
-    source: result.source.name,
-    proposalJson: jsonEncode(proposal.toJson()),
-    resultJson: jsonEncode(result.toJson()),
-    provisional: Value(provisional),
-    createdAt: _now(),
-  ));
+  }) => _db
+      .into(_db.evaluations)
+      .insertOnConflictUpdate(
+        EvaluationsCompanion.insert(
+          completionId: completionId,
+          localDay: day,
+          category: proposal.category.name,
+          similarityKey: result.similarityKey,
+          effectiveMinutes: result.effectiveMinutes,
+          totalXp: result.totalXp,
+          trivial: result.trivial,
+          source: result.source.name,
+          proposalJson: jsonEncode(proposal.toJson()),
+          resultJson: jsonEncode(result.toJson()),
+          provisional: Value(provisional),
+          createdAt: _now(),
+        ),
+      );
 
-  Future<void> _writeGrants(
-    String completionId,
-    String day,
-    RewardResult result, {
-    required bool provisional,
-  }) async {
+  Future<void> _writeGrants(String completionId, String day, RewardResult result, {required bool provisional}) async {
     for (final g in result.grants) {
-      await _db.into(_db.ledgerEntries).insert(LedgerEntriesCompanion.insert(
-        id: _uuid.v7(),
-        completionId: Value(completionId),
-        attribute: g.attribute.name,
-        amount: g.amount,
-        rawAmount: g.rawAmount,
-        kind: 'grant',
-        ruleVersion: result.ruleVersion,
-        localDay: day,
-        provisional: Value(provisional),
-        createdAt: _now(),
-      ));
+      await _db
+          .into(_db.ledgerEntries)
+          .insert(
+            LedgerEntriesCompanion.insert(
+              id: _uuid.v7(),
+              completionId: Value(completionId),
+              attribute: g.attribute.name,
+              amount: g.amount,
+              rawAmount: g.rawAmount,
+              kind: 'grant',
+              ruleVersion: result.ruleVersion,
+              localDay: day,
+              provisional: Value(provisional),
+              createdAt: _now(),
+            ),
+          );
     }
   }
 
@@ -359,13 +380,15 @@ class ProgressionRepository {
     return fresh;
   }
 
-  Future<void> _enqueue(String entity, String id) => _db.into(_db.outboxEntries).insert(
-    OutboxEntriesCompanion.insert(
-      entity: entity,
-      entityId: id,
-      op: 'upsert',
-      payload: jsonEncode({'id': id}),
-      createdAt: _now(),
-    ),
-  );
+  Future<void> _enqueue(String entity, String id) => _db
+      .into(_db.outboxEntries)
+      .insert(
+        OutboxEntriesCompanion.insert(
+          entity: entity,
+          entityId: id,
+          op: 'upsert',
+          payload: jsonEncode({'id': id}),
+          createdAt: _now(),
+        ),
+      );
 }

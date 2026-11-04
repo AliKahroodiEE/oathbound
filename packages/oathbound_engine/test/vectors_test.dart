@@ -7,12 +7,8 @@ import 'package:test/test.dart';
 /// Conformance vectors shared with the TypeScript server engine
 /// (ADR-004). Both implementations must reproduce `expected` exactly.
 void main() {
-  final rewards = jsonDecode(
-    File('test/vectors/reward_cases.json').readAsStringSync(),
-  ) as Map<String, Object?>;
-  final curves = jsonDecode(
-    File('test/vectors/curves.json').readAsStringSync(),
-  ) as Map<String, Object?>;
+  final rewards = jsonDecode(File('test/vectors/reward_cases.json').readAsStringSync()) as Map<String, Object?>;
+  final curves = jsonDecode(File('test/vectors/curves.json').readAsStringSync()) as Map<String, Object?>;
 
   test('vectors match the current rule version', () {
     expect(rewards['ruleVersion'], rulesVersion);
@@ -24,16 +20,11 @@ void main() {
       final c = raw! as Map<String, Object?>;
       test(c['name'], () {
         final result = ProgressionEngine.evaluate(
-          proposal: EvaluationProposal.fromJson(
-            c['proposal']! as Map<String, Object?>,
-          ),
+          proposal: EvaluationProposal.fromJson(c['proposal']! as Map<String, Object?>),
           facts: CompletionFacts.fromJson(c['facts']! as Map<String, Object?>),
           day: DayState.fromJson(c['day']! as Map<String, Object?>),
         );
-        expect(
-          jsonDecode(jsonEncode(result.toJson())),
-          c['expected'],
-        );
+        expect(jsonDecode(jsonEncode(result.toJson())), c['expected']);
       });
     }
   });

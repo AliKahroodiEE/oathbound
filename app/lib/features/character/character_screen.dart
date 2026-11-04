@@ -81,7 +81,9 @@ class _CharacterLayout extends StatelessWidget {
     if (widthClass == WidthClass.compact) {
       return ListView(
         padding: padding,
-        children: [column([header, returning, today, attributes, consistency, growth, achievements])],
+        children: [
+          column([header, returning, today, attributes, consistency, growth, achievements]),
+        ],
       );
     }
     if (widthClass == WidthClass.medium) {
@@ -163,10 +165,7 @@ class _Header extends ConsumerWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 2),
-                    Text(
-                      subtitle.isEmpty ? l10n.classUnrevealed : subtitle,
-                      style: text.bodySmall,
-                    ),
+                    Text(subtitle.isEmpty ? l10n.classUnrevealed : subtitle, style: text.bodySmall),
                   ],
                 ),
               ),
@@ -187,14 +186,8 @@ class _Header extends ConsumerWidget {
             runSpacing: AppSpace.xs,
             spacing: AppSpace.md,
             children: [
-              Text(
-                l10n.xpProgress(f.number(level.xpIntoStep), f.number(level.xpForNextStep)),
-                style: text.labelMedium,
-              ),
-              Text(
-                l10n.xpToNextLevel(f.number(level.xpRemaining), f.number(level.step + 1)),
-                style: text.bodySmall,
-              ),
+              Text(l10n.xpProgress(f.number(level.xpIntoStep), f.number(level.xpForNextStep)), style: text.labelMedium),
+              Text(l10n.xpToNextLevel(f.number(level.xpRemaining), f.number(level.step + 1)), style: text.bodySmall),
             ],
           ),
         ],
@@ -210,9 +203,9 @@ class _ReturnCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final text = Theme.of(context).textTheme;
-    Future<void> dismiss() => ref.read(settingsRepositoryProvider).updateProfile(
-      (p) => p.copyWith(returnAcknowledgedDay: dayKey(DateTime.now())),
-    );
+    Future<void> dismiss() => ref
+        .read(settingsRepositoryProvider)
+        .updateProfile((p) => p.copyWith(returnAcknowledgedDay: dayKey(DateTime.now())));
     return Panel(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -409,10 +402,7 @@ class _TodayPanel extends ConsumerWidget {
     return Panel(
       title: l10n.sectionToday,
       padding: const EdgeInsetsDirectional.fromSTEB(AppSpace.sm, AppSpace.lg, AppSpace.sm, AppSpace.sm),
-      trailing: TextButton(
-        onPressed: () => context.go('/quests'),
-        child: Text(l10n.navQuests),
-      ),
+      trailing: TextButton(onPressed: () => context.go('/quests'), child: Text(l10n.navQuests)),
       child: quests.when(
         loading: () => const Skeleton(height: 48),
         error: (_, _) => ErrorState(message: l10n.errorGeneric),
@@ -439,10 +429,7 @@ class _GrowthPanel extends ConsumerWidget {
     final text = Theme.of(context).textTheme;
     return Panel(
       title: l10n.sectionRecentGrowth,
-      trailing: TextButton(
-        onPressed: () => context.go('/chronicle/ledger'),
-        child: Text(l10n.ledgerTitle),
-      ),
+      trailing: TextButton(onPressed: () => context.go('/chronicle/ledger'), child: Text(l10n.ledgerTitle)),
       child: state.recent.isEmpty
           ? EmptyState(message: l10n.growthEmpty, icon: Icons.trending_up)
           : Column(
@@ -455,9 +442,7 @@ class _GrowthPanel extends ConsumerWidget {
                     collapsedShape: const Border(),
                     title: UserText(
                       r.questTitle,
-                      style: text.bodyMedium?.copyWith(
-                        decoration: r.undone ? TextDecoration.lineThrough : null,
-                      ),
+                      style: text.bodyMedium?.copyWith(decoration: r.undone ? TextDecoration.lineThrough : null),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -479,9 +464,7 @@ class _GrowthPanel extends ConsumerWidget {
                       l10n.rewardTotal(f.number(r.result.totalXp)),
                       style: text.labelMedium?.copyWith(color: AppColors.ember),
                     ),
-                    children: [
-                      RewardExplanation(result: r.result, proposal: r.proposal, provisional: r.provisional),
-                    ],
+                    children: [RewardExplanation(result: r.result, proposal: r.proposal, provisional: r.provisional)],
                   ),
               ],
             ),

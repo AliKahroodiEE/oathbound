@@ -28,10 +28,7 @@ class Panel extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (title != null) ...[
-            SectionHeader(title!, trailing: trailing),
-            const SizedBox(height: AppSpace.md),
-          ],
+          if (title != null) ...[SectionHeader(title!, trailing: trailing), const SizedBox(height: AppSpace.md)],
           child,
         ],
       ),
@@ -68,10 +65,7 @@ class SectionHeader extends StatelessWidget {
           ),
           const SizedBox(width: AppSpace.md),
           const Expanded(child: Divider()),
-          if (trailing != null) ...[
-            const SizedBox(width: AppSpace.sm),
-            Flexible(flex: 3, child: trailing!),
-          ],
+          if (trailing != null) ...[const SizedBox(width: AppSpace.sm), Flexible(flex: 3, child: trailing!)],
         ],
       ),
     );

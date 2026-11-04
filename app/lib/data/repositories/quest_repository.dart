@@ -15,9 +15,8 @@ class QuestRepository {
   final DateTime Function() _now;
   static const _uuid = Uuid();
 
-  Stream<void> get _changes => _db.tableUpdates(
-    TableUpdateQuery.onAllTables([_db.quests, _db.subtasks, _db.completions]),
-  );
+  Stream<void> get _changes =>
+      _db.tableUpdates(TableUpdateQuery.onAllTables([_db.quests, _db.subtasks, _db.completions]));
 
   Stream<T> _watch<T>(Future<T> Function() load) async* {
     yield await load();
@@ -36,29 +35,30 @@ class QuestRepository {
   Stream<Quest?> watchById(String id) => _watch(() => byId(id));
 
   Future<List<Quest>> _live() async {
-    final rows = await (_db.select(_db.quests)
-          ..where((q) => q.deletedAt.isNull())
-          ..orderBy([(q) => OrderingTerm.desc(q.priority), (q) => OrderingTerm.asc(q.createdAt)]))
-        .get();
+    final rows =
+        await (_db.select(_db.quests)
+              ..where((q) => q.deletedAt.isNull())
+              ..orderBy([(q) => OrderingTerm.desc(q.priority), (q) => OrderingTerm.asc(q.createdAt)]))
+            .get();
     return rows.map(Quest.fromRow).toList();
   }
 
   Future<Map<String, String>> _completionsOn(String day) async {
-    final rows = await (_db.select(_db.completions)
-          ..where((c) => c.occurrenceDay.equals(day) & c.state.equals('active')))
-        .get();
+    final rows = await (_db.select(
+      _db.completions,
+    )..where((c) => c.occurrenceDay.equals(day) & c.state.equals('active'))).get();
     return {for (final r in rows) r.questId: r.id};
   }
 
   Future<Map<String, (int, int)>> _subtaskCounts() async {
-    final rows = await _db.customSelect(
-      'SELECT quest_id, SUM(done) AS done, COUNT(*) AS total FROM subtasks '
-      'WHERE deleted_at IS NULL GROUP BY quest_id',
-      readsFrom: {_db.subtasks},
-    ).get();
-    return {
-      for (final r in rows) r.read<String>('quest_id'): (r.read<int>('done'), r.read<int>('total')),
-    };
+    final rows = await _db
+        .customSelect(
+          'SELECT quest_id, SUM(done) AS done, COUNT(*) AS total FROM subtasks '
+          'WHERE deleted_at IS NULL GROUP BY quest_id',
+          readsFrom: {_db.subtasks},
+        )
+        .get();
+    return {for (final r in rows) r.read<String>('quest_id'): (r.read<int>('done'), r.read<int>('total'))};
   }
 
   /// Quests for today: recurring occurrences, undated daily quests,
@@ -84,13 +84,15 @@ class QuestRepository {
       }
       if (!include) continue;
       final c = counts[q.id];
-      out.add(QuestView(
-        quest: q,
-        completedToday: done.containsKey(q.id),
-        todayCompletionId: done[q.id],
-        subtasksDone: c?.$1 ?? 0,
-        subtasksTotal: c?.$2 ?? 0,
-      ));
+      out.add(
+        QuestView(
+          quest: q,
+          completedToday: done.containsKey(q.id),
+          todayCompletionId: done[q.id],
+          subtasksDone: c?.$1 ?? 0,
+          subtasksTotal: c?.$2 ?? 0,
+        ),
+      );
     }
     out.sort((a, b) {
       if (a.completedToday != b.completedToday) return a.completedToday ? 1 : -1;
@@ -105,15 +107,18 @@ class QuestRepository {
     final now = _now();
     final today = DateTime(now.year, now.month, now.day);
     final counts = await _subtaskCounts();
-    final list = (await _live())
-        .where((q) =>
-            !q.isRecurring &&
-            q.status == QuestStatus.active &&
-            q.tier != QuestTier.objective &&
-            q.dueAt != null &&
-            q.dueAt!.isAfter(today))
-        .toList()
-      ..sort((a, b) => a.dueAt!.compareTo(b.dueAt!));
+    final list =
+        (await _live())
+            .where(
+              (q) =>
+                  !q.isRecurring &&
+                  q.status == QuestStatus.active &&
+                  q.tier != QuestTier.objective &&
+                  q.dueAt != null &&
+                  q.dueAt!.isAfter(today),
+            )
+            .toList()
+          ..sort((a, b) => a.dueAt!.compareTo(b.dueAt!));
     return [
       for (final q in list)
         QuestView(quest: q, subtasksDone: counts[q.id]?.$1 ?? 0, subtasksTotal: counts[q.id]?.$2 ?? 0),
@@ -131,11 +136,13 @@ class QuestRepository {
     for (final q in all.where((q) => q.tier == tier && q.status == QuestStatus.active)) {
       if (tier == QuestTier.objective) {
         final children = all.where((c) => c.parentId == q.id).toList();
-        out.add(QuestView(
-          quest: q,
-          subtasksDone: children.where((c) => c.status == QuestStatus.completed).length,
-          subtasksTotal: children.length,
-        ));
+        out.add(
+          QuestView(
+            quest: q,
+            subtasksDone: children.where((c) => c.status == QuestStatus.completed).length,
+            subtasksTotal: children.length,
+          ),
+        );
       } else {
         out.add(QuestView(quest: q, subtasksDone: counts[q.id]?.$1 ?? 0, subtasksTotal: counts[q.id]?.$2 ?? 0));
       }
@@ -160,11 +167,37 @@ class QuestRepository {
     final now = _now();
     final id = _uuid.v7();
     await _db.transaction(() async {
-      await _db.into(_db.quests).insert(QuestsCompanion.insert(
-        id: id,
+      await _db
+          .into(_db.quests)
+          .insert(
+            QuestsCompanion.insert(
+              id: id,
+              parentId: Value(d.parentId),
+              tier: d.tier.name,
+              title: d.title.trim(),
+              notes: Value(d.notes.trim()),
+              category: Value(d.category?.name),
+              priority: Value(d.priority),
+              dueAt: Value(_dateOnly(d.dueAt)),
+              estimatedMinutes: Value(d.estimatedMinutes),
+              recurrence: Value(d.recurrence.name),
+              intention: Value(_blankToNull(d.intention)),
+              shareLevel: Value(d.shareLevel.name),
+              createdAt: now,
+              updatedAt: now,
+            ),
+          );
+      await _enqueue('quest', id);
+    });
+    return (await byId(id))!;
+  }
+
+  Future<void> update(String id, QuestDraft d) => _db.transaction(() async {
+    await (_db.update(_db.quests)..where((q) => q.id.equals(id))).write(
+      QuestsCompanion(
         parentId: Value(d.parentId),
-        tier: d.tier.name,
-        title: d.title.trim(),
+        tier: Value(d.tier.name),
+        title: Value(d.title.trim()),
         notes: Value(d.notes.trim()),
         category: Value(d.category?.name),
         priority: Value(d.priority),
@@ -173,77 +206,67 @@ class QuestRepository {
         recurrence: Value(d.recurrence.name),
         intention: Value(_blankToNull(d.intention)),
         shareLevel: Value(d.shareLevel.name),
-        createdAt: now,
-        updatedAt: now,
-      ));
-      await _enqueue('quest', id);
-    });
-    return (await byId(id))!;
-  }
-
-  Future<void> update(String id, QuestDraft d) => _db.transaction(() async {
-    await (_db.update(_db.quests)..where((q) => q.id.equals(id))).write(QuestsCompanion(
-      parentId: Value(d.parentId),
-      tier: Value(d.tier.name),
-      title: Value(d.title.trim()),
-      notes: Value(d.notes.trim()),
-      category: Value(d.category?.name),
-      priority: Value(d.priority),
-      dueAt: Value(_dateOnly(d.dueAt)),
-      estimatedMinutes: Value(d.estimatedMinutes),
-      recurrence: Value(d.recurrence.name),
-      intention: Value(_blankToNull(d.intention)),
-      shareLevel: Value(d.shareLevel.name),
-      updatedAt: Value(_now()),
-    ));
+        updatedAt: Value(_now()),
+      ),
+    );
     await _enqueue('quest', id);
   });
 
   /// Soft delete. Rewards already earned remain in the ledger.
   Future<void> delete(String id) => _db.transaction(() async {
     final now = _now();
-    await (_db.update(_db.quests)..where((q) => q.id.equals(id)))
-        .write(QuestsCompanion(deletedAt: Value(now), updatedAt: Value(now)));
-    await (_db.update(_db.quests)..where((q) => q.parentId.equals(id)))
-        .write(QuestsCompanion(parentId: const Value(null), updatedAt: Value(now)));
+    await (_db.update(
+      _db.quests,
+    )..where((q) => q.id.equals(id))).write(QuestsCompanion(deletedAt: Value(now), updatedAt: Value(now)));
+    await (_db.update(
+      _db.quests,
+    )..where((q) => q.parentId.equals(id))).write(QuestsCompanion(parentId: const Value(null), updatedAt: Value(now)));
     await _enqueue('quest', id);
   });
 
   Future<void> addSubtask(String questId, String title) => _db.transaction(() async {
     final count = await (_db.select(_db.subtasks)..where((s) => s.questId.equals(questId))).get();
     final id = _uuid.v7();
-    await _db.into(_db.subtasks).insert(SubtasksCompanion.insert(
-      id: id,
-      questId: questId,
-      title: title.trim(),
-      position: Value(count.length),
-      updatedAt: _now(),
-    ));
+    await _db
+        .into(_db.subtasks)
+        .insert(
+          SubtasksCompanion.insert(
+            id: id,
+            questId: questId,
+            title: title.trim(),
+            position: Value(count.length),
+            updatedAt: _now(),
+          ),
+        );
     await _enqueue('subtask', id);
   });
 
   Future<void> setSubtaskDone(String id, bool done) => _db.transaction(() async {
-    await (_db.update(_db.subtasks)..where((s) => s.id.equals(id)))
-        .write(SubtasksCompanion(done: Value(done), updatedAt: Value(_now())));
+    await (_db.update(
+      _db.subtasks,
+    )..where((s) => s.id.equals(id))).write(SubtasksCompanion(done: Value(done), updatedAt: Value(_now())));
     await _enqueue('subtask', id);
   });
 
   Future<void> deleteSubtask(String id) => _db.transaction(() async {
     final now = _now();
-    await (_db.update(_db.subtasks)..where((s) => s.id.equals(id)))
-        .write(SubtasksCompanion(deletedAt: Value(now), updatedAt: Value(now)));
+    await (_db.update(
+      _db.subtasks,
+    )..where((s) => s.id.equals(id))).write(SubtasksCompanion(deletedAt: Value(now), updatedAt: Value(now)));
     await _enqueue('subtask', id);
   });
 
-  Future<void> _enqueue(String entity, String id) => _db.into(_db.outboxEntries).insert(
-    OutboxEntriesCompanion.insert(
-      entity: entity,
-      entityId: id,
-      op: 'upsert',
-      payload: jsonEncode({'id': id}),
-      createdAt: _now(),
-    ),
-  );
+  Future<void> _enqueue(String entity, String id) => _db
+      .into(_db.outboxEntries)
+      .insert(
+        OutboxEntriesCompanion.insert(
+          entity: entity,
+          entityId: id,
+          op: 'upsert',
+          payload: jsonEncode({'id': id}),
+          createdAt: _now(),
+        ),
+      );
 
   static DateTime? _dateOnly(DateTime? d) => d == null ? null : DateTime(d.year, d.month, d.day);
   static String? _blankToNull(String? s) => (s == null || s.trim().isEmpty) ? null : s.trim();

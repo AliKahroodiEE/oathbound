@@ -5,12 +5,7 @@ import 'rules.dart' as rules;
 /// One local day's aggregated activity. Days are date-only values built
 /// with [localDay]; time zones are resolved before they reach the engine.
 class DayRecord {
-  const DayRecord({
-    required this.day,
-    this.creditedMinutes = 0,
-    this.vitalityXp = 0,
-    this.restDay = false,
-  });
+  const DayRecord({required this.day, this.creditedMinutes = 0, this.vitalityXp = 0, this.restDay = false});
 
   final DateTime day;
   final int creditedMinutes;
@@ -34,8 +29,7 @@ class WeeklyConsistency {
   final int activeDaysThisWeek;
   final int targetThisWeek;
 
-  bool get keptThisWeek =>
-      targetThisWeek > 0 && activeDaysThisWeek >= targetThisWeek;
+  bool get keptThisWeek => targetThisWeek > 0 && activeDaysThisWeek >= targetThisWeek;
 }
 
 class ChainStatus {
@@ -73,8 +67,7 @@ abstract final class Consistency {
     final currentWeek = weekStartOf(t, firstWeekday);
     final safeTarget = target.clamp(1, 7);
 
-    int activeIn(DateTime start) =>
-        _daysOf(start).where((d) => active.contains(d) && !d.isAfter(t)).length;
+    int activeIn(DateTime start) => _daysOf(start).where((d) => active.contains(d) && !d.isAfter(t)).length;
     int targetFor(DateTime start) {
       final pausedCount = _daysOf(start).where(paused.contains).length;
       return (safeTarget * (7 - pausedCount) / 7).ceil();
@@ -89,17 +82,10 @@ abstract final class Consistency {
       );
     }
 
-    final first = weekStartOf(
-      active.reduce((a, b) => a.isBefore(b) ? a : b),
-      firstWeekday,
-    );
+    final first = weekStartOf(active.reduce((a, b) => a.isBefore(b) ? a : b), firstWeekday);
     var run = 0;
     var best = 0;
-    for (
-      var week = first;
-      !week.isAfter(currentWeek);
-      week = week.add(const Duration(days: 7))
-    ) {
+    for (var week = first; !week.isAfter(currentWeek); week = week.add(const Duration(days: 7))) {
       final weekTarget = targetFor(week);
       final kept = weekTarget > 0 && activeIn(week) >= weekTarget;
       if (kept) {
@@ -164,19 +150,13 @@ abstract final class Consistency {
   /// never reduce it. Days without records count as calm days.
   static int condition(Iterable<DayRecord> records, DateTime today) {
     final t = localDay(today);
-    final byDay = <DateTime, DayRecord>{
-      for (final r in records) localDay(r.day): r,
-    };
+    final byDay = <DateTime, DayRecord>{for (final r in records) localDay(r.day): r};
     if (byDay.isEmpty) return rules.conditionMax;
 
     var value = rules.conditionMax;
     int clamp(int v) => v.clamp(rules.conditionMin, rules.conditionMax);
     final start = byDay.keys.reduce((a, b) => a.isBefore(b) ? a : b);
-    for (
-      var d = start;
-      d.isBefore(t);
-      d = DateTime.utc(d.year, d.month, d.day + 1)
-    ) {
+    for (var d = start; d.isBefore(t); d = DateTime.utc(d.year, d.month, d.day + 1)) {
       final r = byDay[d];
       final minutes = r?.creditedMinutes ?? 0;
       value = clamp(value + _dayDelta(minutes));
@@ -188,8 +168,7 @@ abstract final class Consistency {
       }
     }
     final todayRecord = byDay[t];
-    if (todayRecord != null &&
-        todayRecord.creditedMinutes > rules.strainThresholdMinutes) {
+    if (todayRecord != null && todayRecord.creditedMinutes > rules.strainThresholdMinutes) {
       value = clamp(value - _strain(todayRecord.creditedMinutes));
     }
     return value;
@@ -211,17 +190,13 @@ abstract final class Consistency {
     return t.difference(last).inDays;
   }
 
-  static int _dayDelta(int minutes) => minutes > rules.strainThresholdMinutes
-      ? -_strain(minutes)
-      : rules.recoveryPerCalmDay;
+  static int _dayDelta(int minutes) =>
+      minutes > rules.strainThresholdMinutes ? -_strain(minutes) : rules.recoveryPerCalmDay;
 
-  static int _strain(int minutes) => math.min(
-    rules.strainMaxPerDay,
-    ((minutes - rules.strainThresholdMinutes) ~/ 10) * rules.strainPer10Minutes,
-  );
+  static int _strain(int minutes) =>
+      math.min(rules.strainMaxPerDay, ((minutes - rules.strainThresholdMinutes) ~/ 10) * rules.strainPer10Minutes);
 
   static Iterable<DateTime> _daysOf(DateTime weekStart) => [
-    for (var i = 0; i < 7; i++)
-      DateTime.utc(weekStart.year, weekStart.month, weekStart.day + i),
+    for (var i = 0; i < 7; i++) DateTime.utc(weekStart.year, weekStart.month, weekStart.day + i),
   ];
 }

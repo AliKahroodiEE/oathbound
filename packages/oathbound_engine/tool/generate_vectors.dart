@@ -72,22 +72,138 @@ final cases = <String, (Map<String, Object?>, Map<String, Object?>, Map<String, 
   'daily_budget': (proposal(), facts(), {'creditedMinutes': 930}),
   'budget_exhausted': (proposal(), facts(), {'creditedMinutes': 960}),
   'trivial_floor': (proposal(minutes: 2, trivial: true, key: 'other.tea', category: 'other'), facts(declared: 2), {}),
-  'trivial_limit': (proposal(minutes: 2, trivial: true, key: 'other.tea', category: 'other'), facts(declared: 2), {'trivialCount': 10}),
+  'trivial_limit': (
+    proposal(minutes: 2, trivial: true, key: 'other.tea', category: 'other'),
+    facts(declared: 2),
+    {'trivialCount': 10},
+  ),
   'short_is_trivial': (proposal(minutes: 4), facts(declared: 4), {}),
-  'repetition_second': (proposal(), facts(), {'similarityCounts': {'study.electronics': 1}}),
-  'repetition_fifth': (proposal(), facts(), {'similarityCounts': {'study.electronics': 4}}),
-  'repetition_floor': (proposal(), facts(), {'similarityCounts': {'study.electronics': 9}}),
+  'repetition_second': (
+    proposal(),
+    facts(),
+    {
+      'similarityCounts': {'study.electronics': 1},
+    },
+  ),
+  'repetition_fifth': (
+    proposal(),
+    facts(),
+    {
+      'similarityCounts': {'study.electronics': 4},
+    },
+  ),
+  'repetition_floor': (
+    proposal(),
+    facts(),
+    {
+      'similarityCounts': {'study.electronics': 9},
+    },
+  ),
   'low_confidence_ai': (proposal(confidence: 0.3), facts(), {}),
   'low_confidence_heuristic': (proposal(confidence: 0.3, source: 'heuristic'), facts(), {}),
-  'soft_cap': (proposal(attributes: [['intelligence', 1.0]]), facts(created: unplanned), {'rawXp': {'intelligence': 200}}),
-  'straddle_soft_cap': (proposal(attributes: [['intelligence', 1.0]]), facts(created: unplanned), {'rawXp': {'intelligence': 180}}),
-  'hard_cap': (proposal(attributes: [['intelligence', 1.0]]), facts(created: unplanned), {'rawXp': {'intelligence': 600}}),
-  'discipline_cap_with_bonus': (proposal(), facts(), {'rawXp': {'discipline': 395}}),
-  'weights_dedupe': (proposal(attributes: [['strength', 0.2], ['strength', 0.6], ['vitality', 0.2]], category: 'fitness', key: 'fitness.run'), facts(declared: 40), {}),
-  'weights_top_three': (proposal(attributes: [['strength', 0.3], ['vitality', 0.25], ['discipline', 0.2], ['social', 0.15], ['creativity', 0.1]], category: 'fitness', key: 'fitness.match'), facts(declared: 60), {}),
-  'weights_drop_small': (proposal(attributes: [['creativity', 0.95], ['social', 0.05]], category: 'creative', key: 'creative.sketch'), facts(declared: 45), {}),
-  'weights_unnormalised': (proposal(attributes: [['social', 3], ['vitality', 1]], category: 'social', key: 'social.dinner'), facts(declared: 120), {}),
-  'weights_defaulted': (proposal(attributes: [['strength', -1]], category: 'fitness', key: 'fitness.gym'), facts(declared: 60), {}),
+  'soft_cap': (
+    proposal(
+      attributes: [
+        ['intelligence', 1.0],
+      ],
+    ),
+    facts(created: unplanned),
+    {
+      'rawXp': {'intelligence': 200},
+    },
+  ),
+  'straddle_soft_cap': (
+    proposal(
+      attributes: [
+        ['intelligence', 1.0],
+      ],
+    ),
+    facts(created: unplanned),
+    {
+      'rawXp': {'intelligence': 180},
+    },
+  ),
+  'hard_cap': (
+    proposal(
+      attributes: [
+        ['intelligence', 1.0],
+      ],
+    ),
+    facts(created: unplanned),
+    {
+      'rawXp': {'intelligence': 600},
+    },
+  ),
+  'discipline_cap_with_bonus': (
+    proposal(),
+    facts(),
+    {
+      'rawXp': {'discipline': 395},
+    },
+  ),
+  'weights_dedupe': (
+    proposal(
+      attributes: [
+        ['strength', 0.2],
+        ['strength', 0.6],
+        ['vitality', 0.2],
+      ],
+      category: 'fitness',
+      key: 'fitness.run',
+    ),
+    facts(declared: 40),
+    {},
+  ),
+  'weights_top_three': (
+    proposal(
+      attributes: [
+        ['strength', 0.3],
+        ['vitality', 0.25],
+        ['discipline', 0.2],
+        ['social', 0.15],
+        ['creativity', 0.1],
+      ],
+      category: 'fitness',
+      key: 'fitness.match',
+    ),
+    facts(declared: 60),
+    {},
+  ),
+  'weights_drop_small': (
+    proposal(
+      attributes: [
+        ['creativity', 0.95],
+        ['social', 0.05],
+      ],
+      category: 'creative',
+      key: 'creative.sketch',
+    ),
+    facts(declared: 45),
+    {},
+  ),
+  'weights_unnormalised': (
+    proposal(
+      attributes: [
+        ['social', 3],
+        ['vitality', 1],
+      ],
+      category: 'social',
+      key: 'social.dinner',
+    ),
+    facts(declared: 120),
+    {},
+  ),
+  'weights_defaulted': (
+    proposal(
+      attributes: [
+        ['strength', -1],
+      ],
+      category: 'fitness',
+      key: 'fitness.gym',
+    ),
+    facts(declared: 60),
+    {},
+  ),
   'difficulty_clamped_high': (proposal(difficulty: 99), facts(), {}),
   'difficulty_clamped_low': (proposal(difficulty: 0), facts(), {}),
   'difficulty_1': (proposal(difficulty: 1, minutes: 15), facts(declared: 15), {}),
@@ -105,28 +221,19 @@ void main() {
       facts: CompletionFacts.fromJson(f),
       day: DayState.fromJson(d),
     );
-    out.add({
-      'name': entry.key,
-      'proposal': p,
-      'facts': f,
-      'day': d,
-      'expected': result.toJson(),
-    });
+    out.add({'name': entry.key, 'proposal': p, 'facts': f, 'day': d, 'expected': result.toJson()});
   }
   final curves = {
     'levelCosts': [for (var n = 1; n <= 50; n++) Curves.xpToAdvanceLevel(n)],
     'rankCosts': [for (var n = 1; n <= 50; n++) Curves.xpToAdvanceRank(n)],
     'levelAt': {
-      for (final xp in [0, 99, 100, 382, 383, 5000, 50000, 250000])
-        '$xp': Curves.level(xp).step,
+      for (final xp in [0, 99, 100, 382, 383, 5000, 50000, 250000]) '$xp': Curves.level(xp).step,
     },
   };
   const encoder = JsonEncoder.withIndent('  ');
-  File('test/vectors/reward_cases.json').writeAsStringSync(
-    '${encoder.convert({'ruleVersion': rulesVersion, 'cases': out})}\n',
-  );
-  File('test/vectors/curves.json').writeAsStringSync(
-    '${encoder.convert({'ruleVersion': rulesVersion, ...curves})}\n',
-  );
+  File(
+    'test/vectors/reward_cases.json',
+  ).writeAsStringSync('${encoder.convert({'ruleVersion': rulesVersion, 'cases': out})}\n');
+  File('test/vectors/curves.json').writeAsStringSync('${encoder.convert({'ruleVersion': rulesVersion, ...curves})}\n');
   stdout.writeln('Wrote ${out.length} reward cases and curve vectors.');
 }

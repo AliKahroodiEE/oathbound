@@ -48,8 +48,7 @@ class _ChronicleScreenState extends ConsumerState<ChronicleScreen> {
   }
 
   String _label(AppFormatters f, PeriodRange r) => switch (_period) {
-    ChroniclePeriod.week =>
-      '${f.dayMonth(r.start)} – ${f.dayMonth(r.end.subtract(const Duration(days: 1)))}',
+    ChroniclePeriod.week => '${f.dayMonth(r.start)} – ${f.dayMonth(r.end.subtract(const Duration(days: 1)))}',
     ChroniclePeriod.month => f.monthYear(r.start),
     ChroniclePeriod.year => f.year(r.start),
   };
@@ -125,7 +124,9 @@ class _ChronicleScreenState extends ConsumerState<ChronicleScreen> {
               ];
               if (!wide) {
                 return Column(
-                  children: [for (final p in panels) ...[p, const SizedBox(height: AppSpace.lg)]],
+                  children: [
+                    for (final p in panels) ...[p, const SizedBox(height: AppSpace.lg)],
+                  ],
                 );
               }
               return Column(
@@ -137,7 +138,16 @@ class _ChronicleScreenState extends ConsumerState<ChronicleScreen> {
                     children: [
                       Expanded(flex: 3, child: panels[1]),
                       const SizedBox(width: AppSpace.lg),
-                      Expanded(flex: 2, child: Column(children: [panels[2], const SizedBox(height: AppSpace.lg), panels[3]])),
+                      Expanded(
+                        flex: 2,
+                        child: Column(
+                          children: [
+                            panels[2],
+                            const SizedBox(height: AppSpace.lg),
+                            panels[3],
+                          ],
+                        ),
+                      ),
                     ],
                   ),
                 ],
@@ -210,10 +220,7 @@ class _SummaryPanel extends ConsumerWidget {
                       width: w,
                       child: Container(
                         padding: const EdgeInsetsDirectional.all(AppSpace.md),
-                        decoration: const BoxDecoration(
-                          color: AppColors.abyss,
-                          borderRadius: AppRadius.softAll,
-                        ),
+                        decoration: const BoxDecoration(color: AppColors.abyss, borderRadius: AppRadius.softAll),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -233,8 +240,12 @@ class _SummaryPanel extends ConsumerWidget {
             const SizedBox(height: AppSpace.lg),
             Row(
               children: [
-                Expanded(child: _AreaLabel(caption: l10n.strongestArea, attribute: strongest)),
-                Expanded(child: _AreaLabel(caption: l10n.quietestArea, attribute: stats.quietest!)),
+                Expanded(
+                  child: _AreaLabel(caption: l10n.strongestArea, attribute: strongest),
+                ),
+                Expanded(
+                  child: _AreaLabel(caption: l10n.quietestArea, attribute: stats.quietest!),
+                ),
               ],
             ),
           ],
@@ -302,7 +313,10 @@ class _XpChartPanel extends ConsumerWidget {
       }
     }
     final ordered = rtl ? buckets.reversed.toList() : buckets;
-    final maxY = ordered.fold<int>(0, (m, b) => [m, b.$2.values.fold(0, (a, c) => a + c)].reduce((a, c) => a > c ? a : c));
+    final maxY = ordered.fold<int>(
+      0,
+      (m, b) => [m, b.$2.values.fold(0, (a, c) => a + c)].reduce((a, c) => a > c ? a : c),
+    );
     final labelEvery = ordered.length > 16 ? 5 : 1;
     final valueAxis = AxisTitles(
       sideTitles: SideTitles(
@@ -320,7 +334,9 @@ class _XpChartPanel extends ConsumerWidget {
       child: SizedBox(
         height: 220,
         child: maxY == 0
-            ? Center(child: EmptyState(message: l10n.chronicleEmpty, icon: Icons.bar_chart))
+            ? Center(
+                child: EmptyState(message: l10n.chronicleEmpty, icon: Icons.bar_chart),
+              )
             : BarChart(
                 BarChartData(
                   maxY: (maxY * 1.15).ceilToDouble(),
@@ -359,10 +375,7 @@ class _XpChartPanel extends ConsumerWidget {
                   ),
                   barGroups: [
                     for (var i = 0; i < ordered.length; i++)
-                      BarChartGroupData(
-                        x: i,
-                        barRods: [_stackedRod(ordered[i].$2, ordered.length)],
-                      ),
+                      BarChartGroupData(x: i, barRods: [_stackedRod(ordered[i].$2, ordered.length)]),
                   ],
                 ),
               ),
@@ -434,7 +447,9 @@ class _DistributionPanel extends ConsumerWidget {
           if (stats.minutesByCategory.isNotEmpty) ...[
             const Divider(),
             const SizedBox(height: AppSpace.sm),
-            for (final e in (stats.minutesByCategory.entries.toList()..sort((a, b) => b.value.compareTo(a.value))).take(5))
+            for (final e in (stats.minutesByCategory.entries.toList()..sort((a, b) => b.value.compareTo(a.value))).take(
+              5,
+            ))
               Padding(
                 padding: const EdgeInsetsDirectional.only(bottom: AppSpace.xs),
                 child: Row(
@@ -513,7 +528,10 @@ class _RhythmPanel extends ConsumerWidget {
                     Container(
                       width: 10,
                       height: 10,
-                      decoration: BoxDecoration(color: c, border: Border.all(color: AppColors.hairline, width: 0.5)),
+                      decoration: BoxDecoration(
+                        color: c,
+                        border: Border.all(color: AppColors.hairline, width: 0.5),
+                      ),
                     ),
                     const SizedBox(width: AppSpace.xs),
                     Text(label, style: text.bodySmall),

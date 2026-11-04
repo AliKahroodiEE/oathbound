@@ -55,10 +55,8 @@ abstract final class LocaleRegistry {
 
   static List<Locale> get supportedLocales => [for (final m in all) m.locale];
 
-  static LocaleMeta of(Locale locale) => all.firstWhere(
-    (m) => m.locale.languageCode == locale.languageCode,
-    orElse: () => all.first,
-  );
+  static LocaleMeta of(Locale locale) =>
+      all.firstWhere((m) => m.locale.languageCode == locale.languageCode, orElse: () => all.first);
 
   /// Best supported match for the device locale.
   static Locale resolve(Locale? device) {

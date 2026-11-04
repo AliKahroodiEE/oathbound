@@ -24,8 +24,7 @@ enum ShareLevel {
   completionOnly,
   private;
 
-  static ShareLevel parse(String? v) =>
-      ShareLevel.values.asNameMap()[v] ?? ShareLevel.private;
+  static ShareLevel parse(String? v) => ShareLevel.values.asNameMap()[v] ?? ShareLevel.private;
 }
 
 enum QuestStatus { active, completed, archived }
@@ -103,9 +102,7 @@ class Quest {
   }
 
   /// End of the planned day, used as the engine's due instant.
-  DateTime? get dueInstant => dueAt == null
-      ? null
-      : DateTime(dueAt!.year, dueAt!.month, dueAt!.day, 23, 59, 59);
+  DateTime? get dueInstant => dueAt == null ? null : DateTime(dueAt!.year, dueAt!.month, dueAt!.day, 23, 59, 59);
 
   Map<String, Object?> toSyncJson() => {
     'id': id,
@@ -209,9 +206,7 @@ class RewardRecord {
     questTitle: questTitle,
     questTier: questTier,
     result: decodeResult(evaluation.resultJson),
-    proposal: EvaluationProposal.fromJson(
-      jsonDecode(evaluation.proposalJson) as Map<String, Object?>,
-    ),
+    proposal: EvaluationProposal.fromJson(jsonDecode(evaluation.proposalJson) as Map<String, Object?>),
     provisional: evaluation.provisional,
     createdAt: evaluation.createdAt,
     undone: undone,
@@ -230,16 +225,12 @@ class RewardRecord {
 RewardResult decodeResult(String json) {
   final m = jsonDecode(json) as Map<String, Object?>;
   return RewardResult(
-    grants: [
-      for (final g in (m['grants']! as List<Object?>))
-        Grant.fromJson(g! as Map<String, Object?>),
-    ],
+    grants: [for (final g in (m['grants']! as List<Object?>)) Grant.fromJson(g! as Map<String, Object?>)],
     effectiveMinutes: (m['effectiveMinutes']! as num).round(),
     trivial: m['trivial'] == true,
     similarityKey: m['similarityKey']! as String,
     adjustments: [
-      for (final a in (m['adjustments']! as List<Object?>))
-        Adjustment.fromJson(a! as Map<String, Object?>),
+      for (final a in (m['adjustments']! as List<Object?>)) Adjustment.fromJson(a! as Map<String, Object?>),
     ],
     ruleVersion: m['ruleVersion']! as String,
     source: ProposalSource.parse(m['source']),

@@ -6,11 +6,7 @@ import 'rules.dart' as rules;
 /// into and required for the next step. Progress bars use these numbers
 /// directly — never an inflated proportion.
 class CurveProgress {
-  const CurveProgress({
-    required this.step,
-    required this.xpIntoStep,
-    required this.xpForNextStep,
-  });
+  const CurveProgress({required this.step, required this.xpIntoStep, required this.xpForNextStep});
 
   final int step;
   final int xpIntoStep;
@@ -35,17 +31,14 @@ class CurveProgress {
 
 abstract final class Curves {
   /// XP needed to go from character level [n] to n + 1.
-  static int xpToAdvanceLevel(int n) =>
-      (rules.levelCurveBase * math.pow(n, rules.levelCurveExponent)).round();
+  static int xpToAdvanceLevel(int n) => (rules.levelCurveBase * math.pow(n, rules.levelCurveExponent)).round();
 
   /// XP needed to go from attribute rank [n] to n + 1.
-  static int xpToAdvanceRank(int n) =>
-      (rules.rankCurveBase * math.pow(n, rules.rankCurveExponent)).round();
+  static int xpToAdvanceRank(int n) => (rules.rankCurveBase * math.pow(n, rules.rankCurveExponent)).round();
 
   static CurveProgress level(int totalXp) => _walk(totalXp, xpToAdvanceLevel);
 
-  static CurveProgress rank(int attributeXp) =>
-      _walk(attributeXp, xpToAdvanceRank);
+  static CurveProgress rank(int attributeXp) => _walk(attributeXp, xpToAdvanceRank);
 
   /// Total XP required to reach [level] from zero.
   static int totalXpForLevel(int level) {
@@ -63,10 +56,6 @@ abstract final class Curves {
       remaining -= cost(step);
       step++;
     }
-    return CurveProgress(
-      step: step,
-      xpIntoStep: remaining,
-      xpForNextStep: cost(step),
-    );
+    return CurveProgress(step: step, xpIntoStep: remaining, xpForNextStep: cost(step));
   }
 }

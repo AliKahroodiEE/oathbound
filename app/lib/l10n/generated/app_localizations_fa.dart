@@ -145,7 +145,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String xpToday(String xp) {
-    return '+$xp امروز';
+    return '‎+$xp امروز';
   }
 
   @override
@@ -582,7 +582,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String rewardTotal(String xp) {
-    return '+$xp تجربه';
+    return '‎+$xp تجربه';
   }
 
   @override
@@ -1064,7 +1064,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String feedCompletedFull(String name, String title, String xp) {
-    return '$name «$title» را انجام داد · +$xp تجربه';
+    return '$name «$title» را انجام داد · ‎+$xp تجربه';
   }
 
   @override

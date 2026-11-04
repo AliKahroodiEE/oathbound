@@ -36,88 +36,51 @@ abstract final class ProgressionEngine {
     var base = minutes <= 0
         ? 0.0
         : rules.baseXpConstant *
-              math.pow(
-                minutes / rules.durationReferenceMinutes,
-                rules.durationExponent,
-              ) *
+              math.pow(minutes / rules.durationReferenceMinutes, rules.durationExponent) *
               rules.difficultyMultiplier[difficulty]! *
               tierFactor;
     if (facts.tier != QuestTier.daily) {
-      adjustments.add(
-        Adjustment(AdjustmentCode.tierBonus, {
-          'tier': facts.tier.name,
-          'multiplier': tierFactor,
-        }),
-      );
+      adjustments.add(Adjustment(AdjustmentCode.tierBonus, {'tier': facts.tier.name, 'multiplier': tierFactor}));
     }
 
     // §5.4 Trivial tasks.
-    final trivial =
-        proposal.trivial || minutes < rules.trivialMinutesThreshold;
+    final trivial = proposal.trivial || minutes < rules.trivialMinutesThreshold;
     if (trivial) {
       if (day.trivialCount >= rules.trivialDailyLimit) {
         base = 0;
-        adjustments.add(
-          const Adjustment(AdjustmentCode.trivialLimit, {
-            'limit': rules.trivialDailyLimit,
-          }),
-        );
+        adjustments.add(const Adjustment(AdjustmentCode.trivialLimit, {'limit': rules.trivialDailyLimit}));
       } else if (base > rules.trivialMaxXp) {
         base = rules.trivialMaxXp;
-        adjustments.add(
-          const Adjustment(AdjustmentCode.trivialFloor, {
-            'max': rules.trivialMaxXp,
-          }),
-        );
+        adjustments.add(const Adjustment(AdjustmentCode.trivialFloor, {'max': rules.trivialMaxXp}));
       }
     }
 
     // §5.5 Repetition.
-    final key = normaliseSimilarityKey(
-      proposal.similarityKey,
-      proposal.category,
-    );
+    final key = normaliseSimilarityKey(proposal.similarityKey, proposal.category);
     final repeats = day.similarityCounts[key] ?? 0;
     final repetition = repetitionMultiplier(repeats);
     if (repeats > 0) {
-      adjustments.add(
-        Adjustment(AdjustmentCode.repetition, {
-          'count': repeats + 1,
-          'multiplier': repetition,
-        }),
-      );
+      adjustments.add(Adjustment(AdjustmentCode.repetition, {'count': repeats + 1, 'multiplier': repetition}));
     }
 
     // §5.6 Confidence.
     var confidenceFactor = 1.0;
-    if (proposal.source == ProposalSource.ai &&
-        confidence < rules.lowConfidenceThreshold) {
+    if (proposal.source == ProposalSource.ai && confidence < rules.lowConfidenceThreshold) {
       confidenceFactor = rules.lowConfidenceMultiplier;
-      adjustments.add(
-        const Adjustment(AdjustmentCode.lowConfidence, {
-          'multiplier': rules.lowConfidenceMultiplier,
-        }),
-      );
+      adjustments.add(const Adjustment(AdjustmentCode.lowConfidence, {'multiplier': rules.lowConfidenceMultiplier}));
     }
 
     // §5.7 Distribute.
     final adjusted = base * repetition * confidenceFactor;
-    final raw = <Attribute, double>{
-      for (final e in weights.entries) e.key: adjusted * e.value,
-    };
+    final raw = <Attribute, double>{for (final e in weights.entries) e.key: adjusted * e.value};
 
     // §5.8 Follow-through bonus.
     if (!trivial && adjusted > 0 && _followedThrough(facts)) {
-      final rate =
-          rules.followThroughRate +
-          (facts.hasImplementationIntention ? rules.intentionRate : 0);
+      final rate = rules.followThroughRate + (facts.hasImplementationIntention ? rules.intentionRate : 0);
       final bonus = math.max(adjusted * rate, rules.followThroughMinimum);
       raw[Attribute.discipline] = (raw[Attribute.discipline] ?? 0) + bonus;
       adjustments.add(
-        Adjustment(AdjustmentCode.followThrough, {
-          'rate': rate,
-          'intention': facts.hasImplementationIntention,
-        }),
+        Adjustment(AdjustmentCode.followThrough, {'rate': rate, 'intention': facts.hasImplementationIntention}),
       );
     }
 
@@ -129,17 +92,11 @@ abstract final class ProgressionEngine {
       final rawAmount = value.round();
       if (rawAmount <= 0) continue;
       final before = day.rawXp[attribute] ?? 0;
-      final amount =
-          (cappedXp(before + rawAmount) - cappedXp(before.toDouble())).round();
+      final amount = (cappedXp(before + rawAmount) - cappedXp(before.toDouble())).round();
       if (amount < rawAmount) {
-        final saturated =
-            before + rawAmount >=
-            rules.softCapXp + 2 * (rules.hardCapXp - rules.softCapXp);
+        final saturated = before + rawAmount >= rules.softCapXp + 2 * (rules.hardCapXp - rules.softCapXp);
         adjustments.add(
-          Adjustment(
-            saturated ? AdjustmentCode.hardCap : AdjustmentCode.softCap,
-            {'attribute': attribute.name},
-          ),
+          Adjustment(saturated ? AdjustmentCode.hardCap : AdjustmentCode.softCap, {'attribute': attribute.name}),
         );
       }
       if (amount > 0) grants.add(Grant(attribute, amount, rawAmount));
@@ -174,9 +131,7 @@ abstract final class ProgressionEngine {
         return byWeight != 0 ? byWeight : a.key.index.compareTo(b.key.index);
       });
     final top = ranked.take(rules.maxWeightedAttributes).toList();
-    var kept = top
-        .where((e) => e.value / total >= rules.minAttributeWeight)
-        .toList();
+    var kept = top.where((e) => e.value / total >= rules.minAttributeWeight).toList();
     if (kept.isEmpty) kept = [top.first];
     final keptTotal = kept.fold(0.0, (a, e) => a + e.value);
     return {for (final e in kept) e.key: e.value / keptTotal};
@@ -185,9 +140,7 @@ abstract final class ProgressionEngine {
   /// Repetition multiplier for a completion with [priorToday] earlier
   /// same-key completions on the same local day.
   static double repetitionMultiplier(int priorToday) =>
-      priorToday < rules.repetitionMultipliers.length
-      ? rules.repetitionMultipliers[priorToday]
-      : rules.repetitionFloor;
+      priorToday < rules.repetitionMultipliers.length ? rules.repetitionMultipliers[priorToday] : rules.repetitionFloor;
 
   /// Effective XP for [rawToday] raw XP in one attribute on one day.
   static double cappedXp(num rawToday) {
@@ -196,30 +149,17 @@ abstract final class ProgressionEngine {
     return math.min(rawToday.toDouble(), soft) + 0.5 * over;
   }
 
-  static int _effectiveMinutes(
-    CompletionFacts facts,
-    int estimate,
-    DayState day,
-    List<Adjustment> adjustments,
-  ) {
+  static int _effectiveMinutes(CompletionFacts facts, int estimate, DayState day, List<Adjustment> adjustments) {
     int minutes;
     final tracked = facts.trackedMinutes;
     final declared = facts.declaredMinutes;
     if (tracked != null && tracked >= 1) {
       minutes = tracked;
     } else if (declared != null && declared > 0) {
-      final limit = math.max(
-        rules.plausibilityFactor * estimate,
-        rules.plausibilityFloorMinutes,
-      );
+      final limit = math.max(rules.plausibilityFactor * estimate, rules.plausibilityFloorMinutes);
       if (declared > limit) {
         minutes = limit;
-        adjustments.add(
-          Adjustment(AdjustmentCode.durationPlausibility, {
-            'declared': declared,
-            'credited': limit,
-          }),
-        );
+        adjustments.add(Adjustment(AdjustmentCode.durationPlausibility, {'declared': declared, 'credited': limit}));
       } else {
         minutes = declared;
       }
@@ -230,31 +170,20 @@ abstract final class ProgressionEngine {
     final cap = rules.tierMinutesCap[facts.tier]!;
     if (minutes > cap) {
       minutes = cap;
-      adjustments.add(
-        Adjustment(AdjustmentCode.tierMinutesCap, {'cap': cap}),
-      );
+      adjustments.add(Adjustment(AdjustmentCode.tierMinutesCap, {'cap': cap}));
     }
 
-    final remaining = math.max(
-      0,
-      rules.dailyMinutesBudget - day.creditedMinutes,
-    );
+    final remaining = math.max(0, rules.dailyMinutesBudget - day.creditedMinutes);
     if (minutes > remaining) {
       minutes = remaining;
-      adjustments.add(
-        const Adjustment(AdjustmentCode.dailyBudget, {
-          'budget': rules.dailyMinutesBudget,
-        }),
-      );
+      adjustments.add(const Adjustment(AdjustmentCode.dailyBudget, {'budget': rules.dailyMinutesBudget}));
     }
     return minutes;
   }
 
   static bool _followedThrough(CompletionFacts facts) {
     final planned =
-        facts.isRecurringOccurrence ||
-        facts.completedAt.difference(facts.createdAt) >=
-            rules.plannedAheadThreshold;
+        facts.isRecurringOccurrence || facts.completedAt.difference(facts.createdAt) >= rules.plannedAheadThreshold;
     final due = facts.dueAt;
     final onTime = due == null || !facts.completedAt.isAfter(due);
     return planned && onTime;

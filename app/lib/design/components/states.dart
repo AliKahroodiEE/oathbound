@@ -28,7 +28,11 @@ class EmptyState extends StatelessWidget {
         children: [
           Icon(icon, size: 32, color: AppColors.ashFaint),
           const SizedBox(height: AppSpace.md),
-          Text(message, style: text.bodyMedium?.copyWith(color: AppColors.ashMuted), textAlign: TextAlign.center),
+          Text(
+            message,
+            style: text.bodyMedium?.copyWith(color: AppColors.ashMuted),
+            textAlign: TextAlign.center,
+          ),
           if (actionLabel != null && onAction != null) ...[
             const SizedBox(height: AppSpace.md),
             TextButton(onPressed: onAction, child: Text(actionLabel!)),
@@ -58,8 +62,7 @@ class ErrorState extends StatelessWidget {
       child: Row(
         children: [
           Expanded(child: Text(message, style: Theme.of(context).textTheme.bodyMedium)),
-          if (onRetry != null && retryLabel != null)
-            TextButton(onPressed: onRetry, child: Text(retryLabel!)),
+          if (onRetry != null && retryLabel != null) TextButton(onPressed: onRetry, child: Text(retryLabel!)),
         ],
       ),
     );
@@ -78,10 +81,7 @@ class Skeleton extends StatefulWidget {
 }
 
 class _SkeletonState extends State<Skeleton> with SingleTickerProviderStateMixin {
-  late final AnimationController _c = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 1600),
-  );
+  late final AnimationController _c = AnimationController(vsync: this, duration: const Duration(milliseconds: 1600));
 
   @override
   void didChangeDependencies() {
@@ -123,10 +123,7 @@ class LoadingPanels extends StatelessWidget {
       padding: const EdgeInsetsDirectional.all(AppSpace.lg),
       child: Column(
         children: [
-          for (var i = 0; i < count; i++) ...[
-            const Skeleton(height: 96),
-            const SizedBox(height: AppSpace.lg),
-          ],
+          for (var i = 0; i < count; i++) ...[const Skeleton(height: 96), const SizedBox(height: AppSpace.lg)],
         ],
       ),
     ),

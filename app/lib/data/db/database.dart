@@ -176,15 +176,9 @@ class AppDatabase extends _$AppDatabase {
   MigrationStrategy get migration => MigrationStrategy(
     onCreate: (m) async {
       await m.createAll();
-      await customStatement(
-        'CREATE INDEX idx_completions_quest ON completions (quest_id, occurrence_day)',
-      );
-      await customStatement(
-        'CREATE INDEX idx_ledger_day ON ledger_entries (local_day)',
-      );
-      await customStatement(
-        'CREATE INDEX idx_evaluations_day ON evaluations (local_day)',
-      );
+      await customStatement('CREATE INDEX idx_completions_quest ON completions (quest_id, occurrence_day)');
+      await customStatement('CREATE INDEX idx_ledger_day ON ledger_entries (local_day)');
+      await customStatement('CREATE INDEX idx_evaluations_day ON evaluations (local_day)');
     },
     beforeOpen: (details) async {
       await customStatement('PRAGMA foreign_keys = ON');
@@ -193,9 +187,6 @@ class AppDatabase extends _$AppDatabase {
 
   static QueryExecutor _open() => driftDatabase(
     name: 'oathbound',
-    web: DriftWebOptions(
-      sqlite3Wasm: Uri.parse('sqlite3.wasm'),
-      driftWorker: Uri.parse('drift_worker.js'),
-    ),
+    web: DriftWebOptions(sqlite3Wasm: Uri.parse('sqlite3.wasm'), driftWorker: Uri.parse('drift_worker.js')),
   );
 }

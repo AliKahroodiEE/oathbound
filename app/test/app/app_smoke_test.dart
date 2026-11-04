@@ -28,10 +28,7 @@ Future<void> _pump(WidgetTester tester, AppDatabase db, {Size size = const Size(
   addTearDown(tester.view.reset);
   await tester.pumpWidget(
     ProviderScope(
-      overrides: [
-        databaseProvider.overrideWithValue(db),
-        initialOnboardedProvider.overrideWithValue(true),
-      ],
+      overrides: [databaseProvider.overrideWithValue(db), initialOnboardedProvider.overrideWithValue(true)],
       child: const OathboundApp(),
     ),
   );

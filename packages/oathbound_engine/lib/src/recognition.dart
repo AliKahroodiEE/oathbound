@@ -40,54 +40,22 @@ class AchievementDef {
 /// Achievements are recognition, not currency: they never grant XP.
 abstract final class Achievements {
   static final List<AchievementDef> catalog = [
-    AchievementDef(
-      'first_oath',
-      (s) => s.totalCompletions >= 1,
-      titleId: 'sworn',
-    ),
+    AchievementDef('first_oath', (s) => s.totalCompletions >= 1, titleId: 'sworn'),
     AchievementDef('deeds_10', (s) => s.totalCompletions >= 10),
-    AchievementDef(
-      'deeds_100',
-      (s) => s.totalCompletions >= 100,
-      titleId: 'centurion',
-    ),
+    AchievementDef('deeds_100', (s) => s.totalCompletions >= 100, titleId: 'centurion'),
     AchievementDef('deeds_1000', (s) => s.totalCompletions >= 1000),
     AchievementDef('first_contract', (s) => s.contractsCompleted >= 1),
-    AchievementDef(
-      'first_objective',
-      (s) => s.objectivesCompleted >= 1,
-      titleId: 'pathfinder',
-    ),
+    AchievementDef('first_objective', (s) => s.objectivesCompleted >= 1, titleId: 'pathfinder'),
     AchievementDef('level_5', (s) => s.level >= 5),
     AchievementDef('level_10', (s) => s.level >= 10, titleId: 'seasoned'),
     AchievementDef('level_25', (s) => s.level >= 25),
     for (final a in Attribute.values)
-      AchievementDef(
-        'rank_10_${a.name}',
-        (s) => (s.ranks[a] ?? 1) >= 10,
-        titleId: _rankTitles[a],
-      ),
+      AchievementDef('rank_10_${a.name}', (s) => (s.ranks[a] ?? 1) >= 10, titleId: _rankTitles[a]),
     AchievementDef('kept_weeks_4', (s) => s.bestWeekStreak >= 4),
-    AchievementDef(
-      'kept_weeks_12',
-      (s) => s.bestWeekStreak >= 12,
-      titleId: 'steadfast',
-    ),
-    AchievementDef(
-      'kept_weeks_52',
-      (s) => s.bestWeekStreak >= 52,
-      titleId: 'oathkeeper',
-    ),
-    AchievementDef(
-      'the_return',
-      (s) => s.returnedAfterLongGap,
-      titleId: 'returned',
-    ),
-    AchievementDef(
-      'balanced',
-      (s) => Attribute.values.every((a) => (s.ranks[a] ?? 1) >= 3),
-      titleId: 'whole',
-    ),
+    AchievementDef('kept_weeks_12', (s) => s.bestWeekStreak >= 12, titleId: 'steadfast'),
+    AchievementDef('kept_weeks_52', (s) => s.bestWeekStreak >= 52, titleId: 'oathkeeper'),
+    AchievementDef('the_return', (s) => s.returnedAfterLongGap, titleId: 'returned'),
+    AchievementDef('balanced', (s) => Attribute.values.every((a) => (s.ranks[a] ?? 1) >= 3), titleId: 'whole'),
     AchievementDef('hours_100', (s) => s.totalCreditedMinutes >= 6000),
   ];
 
@@ -107,10 +75,7 @@ abstract final class Achievements {
   };
 
   /// Achievements newly earned compared with [alreadyUnlocked].
-  static List<AchievementDef> newlyUnlocked(
-    AchievementStats stats,
-    Set<String> alreadyUnlocked,
-  ) => [
+  static List<AchievementDef> newlyUnlocked(AchievementStats stats, Set<String> alreadyUnlocked) => [
     for (final a in catalog)
       if (!alreadyUnlocked.contains(a.id) && a.isUnlocked(stats)) a,
   ];
@@ -123,17 +88,7 @@ abstract final class Achievements {
   }
 }
 
-enum CharacterClass {
-  scholar,
-  warden,
-  artisan,
-  vanguard,
-  envoy,
-  druid,
-  explorer,
-  strategist,
-  arcanist,
-}
+enum CharacterClass { scholar, warden, artisan, vanguard, envoy, druid, explorer, strategist, arcanist }
 
 /// Emergent class from the last 90 days of attribute XP (rules §9.3).
 /// Classes are identity only and never change XP.
@@ -150,11 +105,8 @@ abstract final class Classes {
         return c != 0 ? c : a.index.compareTo(b.index);
       });
     final top = ranked.first;
-    final present = Attribute.values
-        .where((a) => share(a) >= rules.explorerMinShare)
-        .length;
-    if (share(top) < rules.explorerMaxTopShare &&
-        present >= rules.explorerMinAttributes) {
+    final present = Attribute.values.where((a) => share(a) >= rules.explorerMinShare).length;
+    if (share(top) < rules.explorerMaxTopShare && present >= rules.explorerMinAttributes) {
       return CharacterClass.explorer;
     }
 

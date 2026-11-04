@@ -151,23 +151,16 @@ extension GameContentL10n on AppLocalizations {
         f.number(num.tryParse(param('credited')) ?? 0),
         f.number(num.tryParse(param('declared')) ?? 0),
       ),
-      AdjustmentCode.tierMinutesCap =>
-        adj_tier_minutes_cap(f.number(num.tryParse(param('cap')) ?? 0)),
+      AdjustmentCode.tierMinutesCap => adj_tier_minutes_cap(f.number(num.tryParse(param('cap')) ?? 0)),
       AdjustmentCode.dailyBudget => adj_daily_budget,
-      AdjustmentCode.tierBonus =>
-        adj_tier_bonus(tierName(QuestTier.parse(a.params['tier']))),
+      AdjustmentCode.tierBonus => adj_tier_bonus(tierName(QuestTier.parse(a.params['tier']))),
       AdjustmentCode.trivialFloor => adj_trivial_floor,
       AdjustmentCode.trivialLimit => adj_trivial_limit,
-      AdjustmentCode.repetition =>
-        adj_repetition(f.number(num.tryParse(param('count')) ?? 0)),
+      AdjustmentCode.repetition => adj_repetition(f.number(num.tryParse(param('count')) ?? 0)),
       AdjustmentCode.lowConfidence => adj_low_confidence,
-      AdjustmentCode.followThrough => a.params['intention'] == true
-          ? adj_follow_through_intention
-          : adj_follow_through,
-      AdjustmentCode.softCap =>
-        adj_soft_cap(attr() == null ? '' : attributeName(attr()!)),
-      AdjustmentCode.hardCap =>
-        adj_hard_cap(attr() == null ? '' : attributeName(attr()!)),
+      AdjustmentCode.followThrough => a.params['intention'] == true ? adj_follow_through_intention : adj_follow_through,
+      AdjustmentCode.softCap => adj_soft_cap(attr() == null ? '' : attributeName(attr()!)),
+      AdjustmentCode.hardCap => adj_hard_cap(attr() == null ? '' : attributeName(attr()!)),
       AdjustmentCode.weightsDefaulted => adj_weights_defaulted,
       _ => a.code,
     };

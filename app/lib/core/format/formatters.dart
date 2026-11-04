@@ -18,9 +18,7 @@ class AppFormatters {
 
   /// Converts every digit in [input] to the configured digit style.
   String digits(String input) {
-    final zero = settings.digits == DigitStyle.native
-        ? settings.meta.nativeZeroCodeUnit
-        : 0x30;
+    final zero = settings.digits == DigitStyle.native ? settings.meta.nativeZeroCodeUnit : 0x30;
     final out = StringBuffer();
     for (final unit in input.runes) {
       final value = _digitValue(unit);
@@ -48,15 +46,12 @@ class AppFormatters {
   String signedNumber(num value) => value > 0 ? '\u200E+${number(value)}' : number(value);
 
   String percent(double fraction) {
-    final f = NumberFormat.percentPattern(
-      settings.digits == DigitStyle.native ? _tag : 'en',
-    );
+    final f = NumberFormat.percentPattern(settings.digits == DigitStyle.native ? _tag : 'en');
     return digits(f.format(fraction));
   }
 
   /// Signed percentage change; the mark keeps "+" left of the digits in RTL.
-  String signedPercent(double fraction) =>
-      fraction > 0 ? '\u200E+${percent(fraction)}' : percent(fraction);
+  String signedPercent(double fraction) => fraction > 0 ? '\u200E+${percent(fraction)}' : percent(fraction);
 
   /// "1 h 30 min" / "۱ ساعت و ۳۰ دقیقه".
   String duration(int minutes) {
@@ -71,9 +66,7 @@ class AppFormatters {
     if (settings.calendar == CalendarSystem.jalali) {
       final j = Jalali.fromDateTime(d);
       final month = jalaliMonth(j.month);
-      return _tag == 'fa'
-          ? digits('${j.day} $month ${j.year}')
-          : digits('$month ${j.day}, ${j.year}');
+      return _tag == 'fa' ? digits('${j.day} $month ${j.year}') : digits('$month ${j.day}, ${j.year}');
     }
     return digits(DateFormat.yMMMd(_tag).format(d));
   }
@@ -97,9 +90,8 @@ class AppFormatters {
     return digits(DateFormat.yMMMM(_tag).format(d));
   }
 
-  String year(DateTime d) => settings.calendar == CalendarSystem.jalali
-      ? digits('${Jalali.fromDateTime(d).year}')
-      : digits('${d.year}');
+  String year(DateTime d) =>
+      settings.calendar == CalendarSystem.jalali ? digits('${Jalali.fromDateTime(d).year}') : digits('${d.year}');
 
   String weekdayShort(DateTime d) => DateFormat.E(_tag).format(d);
 
@@ -121,9 +113,7 @@ class AppFormatters {
   }
 
   /// Month index 1..12 within the configured calendar for [d].
-  int calendarMonth(DateTime d) => settings.calendar == CalendarSystem.jalali
-      ? Jalali.fromDateTime(d).month
-      : d.month;
+  int calendarMonth(DateTime d) => settings.calendar == CalendarSystem.jalali ? Jalali.fromDateTime(d).month : d.month;
 
   /// First instant of the calendar month containing [d].
   DateTime startOfMonth(DateTime d) {
@@ -139,8 +129,14 @@ class AppFormatters {
       final j = Jalali.fromDateTime(monthStart);
       var m = j.month + delta;
       var y = j.year;
-      while (m > 12) { m -= 12; y++; }
-      while (m < 1) { m += 12; y--; }
+      while (m > 12) {
+        m -= 12;
+        y++;
+      }
+      while (m < 1) {
+        m += 12;
+        y--;
+      }
       return Jalali(y, m, 1).toDateTime();
     }
     return DateTime(monthStart.year, monthStart.month + delta);

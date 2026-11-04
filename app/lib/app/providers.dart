@@ -21,15 +21,9 @@ final databaseProvider = Provider<AppDatabase>(
   (ref) => throw UnimplementedError('databaseProvider must be overridden'),
 );
 
-final settingsRepositoryProvider = Provider(
-  (ref) => SettingsRepository(ref.watch(databaseProvider)),
-);
-final questRepositoryProvider = Provider(
-  (ref) => QuestRepository(ref.watch(databaseProvider)),
-);
-final progressionRepositoryProvider = Provider(
-  (ref) => ProgressionRepository(ref.watch(databaseProvider)),
-);
+final settingsRepositoryProvider = Provider((ref) => SettingsRepository(ref.watch(databaseProvider)));
+final questRepositoryProvider = Provider((ref) => QuestRepository(ref.watch(databaseProvider)));
+final progressionRepositoryProvider = Provider((ref) => ProgressionRepository(ref.watch(databaseProvider)));
 final characterRepositoryProvider = Provider(
   (ref) => CharacterRepository(
     ref.watch(databaseProvider),
@@ -51,9 +45,7 @@ final regionalProvider = Provider<RegionalSettings>(
       RegionalSettings.defaultsFor(LocaleRegistry.resolve(ref.watch(deviceLocaleProvider))),
 );
 
-final profileProvider = StreamProvider<UserProfile>(
-  (ref) => ref.watch(settingsRepositoryProvider).watchProfile(),
-);
+final profileProvider = StreamProvider<UserProfile>((ref) => ref.watch(settingsRepositoryProvider).watchProfile());
 
 final characterStateProvider = StreamProvider<CharacterState>((ref) {
   final firstWeekday = ref.watch(regionalProvider.select((r) => r.firstWeekday));
@@ -93,10 +85,7 @@ extension AppContext on BuildContext {
 
 /// Formatters bound to the current localizations and regional settings.
 extension FormattersRef on WidgetRef {
-  AppFormatters fmt(BuildContext context) =>
-      AppFormatters(watch(regionalProvider), AppLocalizations.of(context));
+  AppFormatters fmt(BuildContext context) => AppFormatters(watch(regionalProvider), AppLocalizations.of(context));
 }
 
-final dataRepositoryProvider = Provider(
-  (ref) => DataRepository(ref.watch(databaseProvider)),
-);
+final dataRepositoryProvider = Provider((ref) => DataRepository(ref.watch(databaseProvider)));

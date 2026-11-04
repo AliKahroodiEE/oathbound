@@ -29,13 +29,15 @@ Future<CompletionOutcome?> completeQuest(BuildContext context, WidgetRef ref, Qu
   }
   final profile = ref.read(profileProvider).value;
   final regional = ref.read(regionalProvider);
-  final outcome = await ref.read(progressionRepositoryProvider).complete(
-    quest,
-    declaredMinutes: declared,
-    trackedMinutes: tracked,
-    weeklyTarget: profile?.weeklyTarget ?? 4,
-    firstWeekday: regional.firstWeekday,
-  );
+  final outcome = await ref
+      .read(progressionRepositoryProvider)
+      .complete(
+        quest,
+        declaredMinutes: declared,
+        trackedMinutes: tracked,
+        weeklyTarget: profile?.weeklyTarget ?? 4,
+        firstWeekday: regional.firstWeekday,
+      );
   if (outcome == null || !context.mounted) return outcome;
   HapticFeedback.mediumImpact();
   await showModalBottomSheet<void>(
@@ -73,7 +75,8 @@ class _MinutesSheetState extends State<_MinutesSheet> {
   @override
   void initState() {
     super.initState();
-    final guess = widget.quest.estimatedMinutes ??
+    final guess =
+        widget.quest.estimatedMinutes ??
         HeuristicEvaluator.extractMinutes(HeuristicEvaluator.normaliseText(widget.quest.title));
     _minutes = TextEditingController(text: guess?.toString() ?? '');
   }
@@ -85,9 +88,7 @@ class _MinutesSheetState extends State<_MinutesSheet> {
   }
 
   void _submit() {
-    final v = int.tryParse(
-      HeuristicEvaluator.normaliseText(_minutes.text).replaceAll(RegExp(r'[^0-9]'), ''),
-    );
+    final v = int.tryParse(HeuristicEvaluator.normaliseText(_minutes.text).replaceAll(RegExp(r'[^0-9]'), ''));
     Navigator.of(context).pop(_MinutesInput(v != null && v > 0 ? v.clamp(1, 960) : null));
   }
 
@@ -172,18 +173,11 @@ class RewardSheet extends ConsumerWidget {
               Container(
                 margin: const EdgeInsetsDirectional.only(bottom: AppSpace.sm),
                 padding: const EdgeInsetsDirectional.symmetric(horizontal: AppSpace.md, vertical: AppSpace.sm),
-                decoration: const BoxDecoration(
-                  color: AppColors.wine,
-                  borderRadius: AppRadius.sharpAll,
-                ),
+                decoration: const BoxDecoration(color: AppColors.wine, borderRadius: AppRadius.sharpAll),
                 child: Text(b, style: text.labelLarge),
               ),
             if (banners.isNotEmpty) const SizedBox(height: AppSpace.md),
-            RewardExplanation(
-              result: outcome.result,
-              proposal: outcome.proposal,
-              provisional: outcome.provisional,
-            ),
+            RewardExplanation(result: outcome.result, proposal: outcome.proposal, provisional: outcome.provisional),
             const SizedBox(height: AppSpace.xl),
             Row(
               children: [
@@ -195,10 +189,7 @@ class RewardSheet extends ConsumerWidget {
                   child: Text(l10n.actionUndo),
                 ),
                 const Spacer(),
-                FilledButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: Text(l10n.actionDone),
-                ),
+                FilledButton(onPressed: () => Navigator.of(context).pop(), child: Text(l10n.actionDone)),
               ],
             ),
           ],

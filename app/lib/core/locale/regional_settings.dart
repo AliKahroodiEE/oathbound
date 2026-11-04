@@ -31,17 +31,13 @@ class RegionalSettings {
   LocaleMeta get meta => LocaleRegistry.of(locale);
   TextDirection get direction => meta.direction;
 
-  RegionalSettings copyWith({
-    Locale? locale,
-    CalendarSystem? calendar,
-    DigitStyle? digits,
-    int? firstWeekday,
-  }) => RegionalSettings(
-    locale: locale ?? this.locale,
-    calendar: calendar ?? this.calendar,
-    digits: digits ?? this.digits,
-    firstWeekday: firstWeekday ?? this.firstWeekday,
-  );
+  RegionalSettings copyWith({Locale? locale, CalendarSystem? calendar, DigitStyle? digits, int? firstWeekday}) =>
+      RegionalSettings(
+        locale: locale ?? this.locale,
+        calendar: calendar ?? this.calendar,
+        digits: digits ?? this.digits,
+        firstWeekday: firstWeekday ?? this.firstWeekday,
+      );
 
   Map<String, Object> toJson() => {
     'locale': locale.languageCode,

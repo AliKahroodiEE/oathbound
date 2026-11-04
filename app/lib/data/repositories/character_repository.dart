@@ -42,13 +42,10 @@ class CharacterState {
   ConditionLabel get conditionLabel => Consistency.labelFor(condition);
 
   /// Titles the user may equip.
-  List<String> get unlockedTitles => [
-    for (final a in achievements) ?Achievements.titleFor(a.id),
-  ];
+  List<String> get unlockedTitles => [for (final a in achievements) ?Achievements.titleFor(a.id)];
 
   /// Show the welcome-back card after ≥ 3 days away, once per return.
-  bool showReturn(String todayKey) =>
-      (daysAway ?? 0) >= 3 && profile.returnAcknowledgedDay != todayKey;
+  bool showReturn(String todayKey) => (daysAway ?? 0) >= 3 && profile.returnAcknowledgedDay != todayKey;
 }
 
 /// Analytics for one period (week, month, year).
@@ -143,13 +140,12 @@ class CharacterRepository {
     final xp90 = await _progression.attributeTotals(fromDay: ninetyDaysAgo);
     final total = totals.values.fold(0, (a, b) => a + b);
 
-    final achievements = await (_db.select(_db.unlockedAchievements)
-          ..orderBy([(a) => OrderingTerm.desc(a.unlockedAt)]))
-        .get();
-    final completions = await _db.customSelect(
-      "SELECT COUNT(*) AS n FROM completions WHERE state = 'active'",
-      readsFrom: {_db.completions},
-    ).getSingle();
+    final achievements = await (_db.select(
+      _db.unlockedAchievements,
+    )..orderBy([(a) => OrderingTerm.desc(a.unlockedAt)])).get();
+    final completions = await _db
+        .customSelect("SELECT COUNT(*) AS n FROM completions WHERE state = 'active'", readsFrom: {_db.completions})
+        .getSingle();
 
     return CharacterState(
       profile: profile,
@@ -181,12 +177,13 @@ class CharacterRepository {
 
   /// Reward records, newest first (the reward ledger).
   Future<List<RewardRecord>> rewards({int limit = 50, int offset = 0}) async {
-    final query = _db.select(_db.evaluations).join([
-      innerJoin(_db.completions, _db.completions.id.equalsExp(_db.evaluations.completionId)),
-      innerJoin(_db.quests, _db.quests.id.equalsExp(_db.completions.questId)),
-    ])
-      ..orderBy([OrderingTerm.desc(_db.evaluations.createdAt)])
-      ..limit(limit, offset: offset);
+    final query =
+        _db.select(_db.evaluations).join([
+            innerJoin(_db.completions, _db.completions.id.equalsExp(_db.evaluations.completionId)),
+            innerJoin(_db.quests, _db.quests.id.equalsExp(_db.completions.questId)),
+          ])
+          ..orderBy([OrderingTerm.desc(_db.evaluations.createdAt)])
+          ..limit(limit, offset: offset);
     final rows = await query.get();
     return [
       for (final r in rows)
@@ -206,12 +203,14 @@ class CharacterRepository {
     final to = dayKey(endExclusive);
     final byAttr = await _progression.attributeTotals(fromDay: from, toDayExclusive: to);
 
-    final dayRows = await _db.customSelect(
-      'SELECT local_day, attribute, SUM(amount) AS xp FROM ledger_entries '
-      'WHERE superseded = 0 AND local_day >= ? AND local_day < ? GROUP BY local_day, attribute',
-      variables: [Variable(from), Variable(to)],
-      readsFrom: {_db.ledgerEntries},
-    ).get();
+    final dayRows = await _db
+        .customSelect(
+          'SELECT local_day, attribute, SUM(amount) AS xp FROM ledger_entries '
+          'WHERE superseded = 0 AND local_day >= ? AND local_day < ? GROUP BY local_day, attribute',
+          variables: [Variable(from), Variable(to)],
+          readsFrom: {_db.ledgerEntries},
+        )
+        .get();
     final byDay = <String, Map<Attribute, int>>{};
     for (final r in dayRows) {
       final a = Attribute.tryParse(r.read<String>('attribute'));
@@ -219,13 +218,15 @@ class CharacterRepository {
       (byDay[r.read<String>('local_day')] ??= {})[a] = r.read<int>('xp');
     }
 
-    final evalRows = await _db.customSelect(
-      'SELECT e.local_day, e.category, e.effective_minutes, e.trivial FROM evaluations e '
-      "JOIN completions c ON c.id = e.completion_id WHERE c.state = 'active' "
-      'AND e.local_day >= ? AND e.local_day < ?',
-      variables: [Variable(from), Variable(to)],
-      readsFrom: {_db.evaluations, _db.completions},
-    ).get();
+    final evalRows = await _db
+        .customSelect(
+          'SELECT e.local_day, e.category, e.effective_minutes, e.trivial FROM evaluations e '
+          "JOIN completions c ON c.id = e.completion_id WHERE c.state = 'active' "
+          'AND e.local_day >= ? AND e.local_day < ?',
+          variables: [Variable(from), Variable(to)],
+          readsFrom: {_db.evaluations, _db.completions},
+        )
+        .get();
     var minutes = 0;
     final active = <String>{};
     final byCategory = <QuestCategory, int>{};
@@ -236,9 +237,9 @@ class CharacterRepository {
       final c = QuestCategory.parse(r.read<String>('category'));
       byCategory[c] = (byCategory[c] ?? 0) + m;
     }
-    final marks = await (_db.select(_db.dayMarks)
-          ..where((m) => m.localDay.isBiggerOrEqualValue(from) & m.localDay.isSmallerThanValue(to) & m.rest))
-        .get();
+    final marks = await (_db.select(
+      _db.dayMarks,
+    )..where((m) => m.localDay.isBiggerOrEqualValue(from) & m.localDay.isSmallerThanValue(to) & m.rest)).get();
 
     return PeriodStats(
       start: start,
@@ -253,20 +254,23 @@ class CharacterRepository {
     );
   }
 
-  Stream<PeriodStats> watchPeriod(DateTime start, DateTime endExclusive) =>
-      _watch(() => period(start, endExclusive));
+  Stream<PeriodStats> watchPeriod(DateTime start, DateTime endExclusive) => _watch(() => period(start, endExclusive));
 
   Future<List<DayRecord>> _dayRecords(Set<DateTime> rest) async {
-    final rows = await _db.customSelect(
-      'SELECT e.local_day, SUM(e.effective_minutes) AS m FROM evaluations e '
-      "JOIN completions c ON c.id = e.completion_id WHERE c.state = 'active' GROUP BY e.local_day",
-      readsFrom: {_db.evaluations, _db.completions},
-    ).get();
-    final vitality = await _db.customSelect(
-      "SELECT local_day, SUM(amount) AS xp FROM ledger_entries WHERE superseded = 0 AND attribute = 'vitality' "
-      'GROUP BY local_day',
-      readsFrom: {_db.ledgerEntries},
-    ).get();
+    final rows = await _db
+        .customSelect(
+          'SELECT e.local_day, SUM(e.effective_minutes) AS m FROM evaluations e '
+          "JOIN completions c ON c.id = e.completion_id WHERE c.state = 'active' GROUP BY e.local_day",
+          readsFrom: {_db.evaluations, _db.completions},
+        )
+        .get();
+    final vitality = await _db
+        .customSelect(
+          "SELECT local_day, SUM(amount) AS xp FROM ledger_entries WHERE superseded = 0 AND attribute = 'vitality' "
+          'GROUP BY local_day',
+          readsFrom: {_db.ledgerEntries},
+        )
+        .get();
     final vit = {for (final r in vitality) r.read<String>('local_day'): r.read<int>('xp')};
     final records = <DateTime, DayRecord>{};
     for (final r in rows) {

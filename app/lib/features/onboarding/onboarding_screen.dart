@@ -58,16 +58,16 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   }
 
   Future<void> _saveIdentity() async {
-    await ref.read(settingsRepositoryProvider).updateProfile(
-      (p) => p.copyWith(characterName: _name.text.trim(), portrait: _portrait),
-    );
+    await ref
+        .read(settingsRepositoryProvider)
+        .updateProfile((p) => p.copyWith(characterName: _name.text.trim(), portrait: _portrait));
     _next();
   }
 
   Future<void> _saveAreas() async {
-    await ref.read(settingsRepositoryProvider).updateProfile(
-      (p) => p.copyWith(areas: [for (final a in _areas) a.name]),
-    );
+    await ref
+        .read(settingsRepositoryProvider)
+        .updateProfile((p) => p.copyWith(areas: [for (final a in _areas) a.name]));
     _next();
   }
 
@@ -76,9 +76,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     if (title.isEmpty || _busy) return;
     setState(() => _busy = true);
     final now = DateTime.now();
-    final quest = await ref.read(questRepositoryProvider).create(
-      QuestDraft(title: title, dueAt: DateTime(now.year, now.month, now.day)),
-    );
+    final quest = await ref
+        .read(questRepositoryProvider)
+        .create(QuestDraft(title: title, dueAt: DateTime(now.year, now.month, now.day)));
     if (completeNow && mounted) await completeQuest(context, ref, quest);
     if (!mounted) return;
     setState(() => _busy = false);
@@ -221,10 +221,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           ],
         ),
         const SizedBox(height: AppSpace.xxl),
-        FilledButton(
-          onPressed: _name.text.trim().isEmpty ? null : _saveIdentity,
-          child: Text(l10n.actionContinue),
-        ),
+        FilledButton(onPressed: _name.text.trim().isEmpty ? null : _saveIdentity, child: Text(l10n.actionContinue)),
       ],
     );
   }
@@ -287,22 +284,13 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           runSpacing: AppSpace.sm,
           children: [
             for (final s in _suggestions())
-              ActionChip(
-                label: Text(s),
-                onPressed: () => setState(() => _quest.text = s),
-              ),
+              ActionChip(label: Text(s), onPressed: () => setState(() => _quest.text = s)),
           ],
         ),
         const SizedBox(height: AppSpace.xxl),
-        FilledButton(
-          onPressed: ready ? () => _swear(completeNow: true) : null,
-          child: Text(l10n.onbCompleteNow),
-        ),
+        FilledButton(onPressed: ready ? () => _swear(completeNow: true) : null, child: Text(l10n.onbCompleteNow)),
         const SizedBox(height: AppSpace.sm),
-        OutlinedButton(
-          onPressed: ready ? () => _swear(completeNow: false) : null,
-          child: Text(l10n.onbLater),
-        ),
+        OutlinedButton(onPressed: ready ? () => _swear(completeNow: false) : null, child: Text(l10n.onbLater)),
       ],
     );
   }
@@ -314,10 +302,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const SizedBox(height: AppSpace.xl),
-        Wrap(
-          spacing: AppSpace.md,
-          children: [for (final a in Attribute.values) AttributeSigil(a, size: 28)],
-        ),
+        Wrap(spacing: AppSpace.md, children: [for (final a in Attribute.values) AttributeSigil(a, size: 28)]),
         const SizedBox(height: AppSpace.xl),
         Text(l10n.onbHowItWorksTitle, style: text.headlineSmall),
         const SizedBox(height: AppSpace.md),

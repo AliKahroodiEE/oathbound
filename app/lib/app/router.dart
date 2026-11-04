@@ -55,30 +55,28 @@ final routerProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: _rootKey,
         builder: (_, state) => QuestEditorScreen(questId: state.pathParameters['id']),
       ),
-      GoRoute(
-        path: '/settings',
-        parentNavigatorKey: _rootKey,
-        builder: (_, _) => const SettingsScreen(),
-      ),
+      GoRoute(path: '/settings', parentNavigatorKey: _rootKey, builder: (_, _) => const SettingsScreen()),
       StatefulShellRoute.indexedStack(
         builder: (_, _, shell) => AdaptiveShell(shell: shell),
         branches: [
-          StatefulShellBranch(routes: [
-            GoRoute(path: '/character', builder: (_, _) => const CharacterScreen()),
-          ]),
-          StatefulShellBranch(routes: [
-            GoRoute(path: '/quests', builder: (_, _) => const QuestsScreen()),
-          ]),
-          StatefulShellBranch(routes: [
-            GoRoute(path: '/guilds', builder: (_, _) => const GuildsScreen()),
-          ]),
-          StatefulShellBranch(routes: [
-            GoRoute(
-              path: '/chronicle',
-              builder: (_, _) => const ChronicleScreen(),
-              routes: [GoRoute(path: 'ledger', builder: (_, _) => const LedgerScreen())],
-            ),
-          ]),
+          StatefulShellBranch(
+            routes: [GoRoute(path: '/character', builder: (_, _) => const CharacterScreen())],
+          ),
+          StatefulShellBranch(
+            routes: [GoRoute(path: '/quests', builder: (_, _) => const QuestsScreen())],
+          ),
+          StatefulShellBranch(
+            routes: [GoRoute(path: '/guilds', builder: (_, _) => const GuildsScreen())],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/chronicle',
+                builder: (_, _) => const ChronicleScreen(),
+                routes: [GoRoute(path: 'ledger', builder: (_, _) => const LedgerScreen())],
+              ),
+            ],
+          ),
         ],
       ),
     ],

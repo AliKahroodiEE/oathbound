@@ -40,8 +40,7 @@ class QuestTile extends ConsumerWidget {
       if (q.isRecurring) _recurrenceLabel(context, q.recurrence),
       if (q.estimatedMinutes != null) l10n.estimateMinutes(f.number(q.estimatedMinutes!)),
       if (q.category != null) l10n.categoryName(q.category!),
-      if (view.subtasksTotal > 0)
-        l10n.objectiveProgress(f.number(view.subtasksDone), f.number(view.subtasksTotal)),
+      if (view.subtasksTotal > 0) l10n.objectiveProgress(f.number(view.subtasksDone), f.number(view.subtasksTotal)),
     ];
 
     return InkWell(
@@ -91,10 +90,7 @@ class QuestTile extends ConsumerWidget {
                       padding: const EdgeInsetsDirectional.only(top: AppSpace.xs, end: AppSpace.lg),
                       child: ClipRRect(
                         borderRadius: AppRadius.sharpAll,
-                        child: LinearProgressIndicator(
-                          value: view.subtasksDone / view.subtasksTotal,
-                          minHeight: 3,
-                        ),
+                        child: LinearProgressIndicator(value: view.subtasksDone / view.subtasksTotal, minHeight: 3),
                       ),
                     ),
                 ],

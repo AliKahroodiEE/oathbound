@@ -4,17 +4,11 @@ import 'package:test/test.dart';
 void main() {
   group('curves', () {
     test('level costs follow 100 × n^1.5', () {
-      expect(
-        [for (var n = 1; n <= 5; n++) Curves.xpToAdvanceLevel(n)],
-        [100, 283, 520, 800, 1118],
-      );
+      expect([for (var n = 1; n <= 5; n++) Curves.xpToAdvanceLevel(n)], [100, 283, 520, 800, 1118]);
     });
 
     test('rank costs follow 40 × n^1.4', () {
-      expect(
-        [for (var n = 1; n <= 5; n++) Curves.xpToAdvanceRank(n)],
-        [40, 106, 186, 279, 381],
-      );
+      expect([for (var n = 1; n <= 5; n++) Curves.xpToAdvanceRank(n)], [40, 106, 186, 279, 381]);
     });
 
     test('level walks exact boundaries', () {
@@ -72,17 +66,13 @@ void main() {
 
     test('an explicit category always wins', () {
       final p = HeuristicEvaluator.evaluate(
-        const HeuristicInput(
-          title: 'Read 10 pages',
-          categoryHint: QuestCategory.study,
-        ),
+        const HeuristicInput(title: 'Read 10 pages', categoryHint: QuestCategory.study),
       );
       expect(p.category, QuestCategory.study);
     });
 
     test('extracts durations in both languages', () {
-      int? m(String s) =>
-          HeuristicEvaluator.extractMinutes(HeuristicEvaluator.normaliseText(s));
+      int? m(String s) => HeuristicEvaluator.extractMinutes(HeuristicEvaluator.normaliseText(s));
       expect(m('Study 90m'), 90);
       expect(m('run 1.5 hours'), 90);
       expect(m('1h 30m deep work'), 90);

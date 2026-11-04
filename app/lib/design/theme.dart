@@ -102,10 +102,7 @@ ThemeData buildAppTheme(Locale locale) {
       ),
     ),
     iconButtonTheme: IconButtonThemeData(
-      style: IconButton.styleFrom(
-        foregroundColor: AppColors.ash,
-        minimumSize: const Size(44, 44),
-      ),
+      style: IconButton.styleFrom(foregroundColor: AppColors.ash, minimumSize: const Size(44, 44)),
     ),
     floatingActionButtonTheme: const FloatingActionButtonThemeData(
       backgroundColor: AppColors.crimson,
@@ -168,14 +165,11 @@ ThemeData buildAppTheme(Locale locale) {
       elevation: 0,
       height: 68,
       labelTextStyle: WidgetStateProperty.resolveWith(
-        (s) => text.labelMedium!.copyWith(
-          color: s.contains(WidgetState.selected) ? AppColors.bone : AppColors.ashMuted,
-        ),
+        (s) =>
+            text.labelMedium!.copyWith(color: s.contains(WidgetState.selected) ? AppColors.bone : AppColors.ashMuted),
       ),
       iconTheme: WidgetStateProperty.resolveWith(
-        (s) => IconThemeData(
-          color: s.contains(WidgetState.selected) ? AppColors.bone : AppColors.ashMuted,
-        ),
+        (s) => IconThemeData(color: s.contains(WidgetState.selected) ? AppColors.bone : AppColors.ashMuted),
       ),
     ),
     navigationRailTheme: NavigationRailThemeData(

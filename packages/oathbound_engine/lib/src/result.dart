@@ -13,11 +13,7 @@ class Grant {
   /// XP before daily caps; feeds tomorrow-independent cap accounting.
   final int rawAmount;
 
-  Map<String, Object?> toJson() => {
-    'attribute': attribute.name,
-    'amount': amount,
-    'rawAmount': rawAmount,
-  };
+  Map<String, Object?> toJson() => {'attribute': attribute.name, 'amount': amount, 'rawAmount': rawAmount};
 
   factory Grant.fromJson(Map<String, Object?> json) => Grant(
     Attribute.tryParse(json['attribute'])!,
@@ -27,10 +23,7 @@ class Grant {
 
   @override
   bool operator ==(Object other) =>
-      other is Grant &&
-      other.attribute == attribute &&
-      other.amount == amount &&
-      other.rawAmount == rawAmount;
+      other is Grant && other.attribute == attribute && other.amount == amount && other.rawAmount == rawAmount;
 
   @override
   int get hashCode => Object.hash(attribute, amount, rawAmount);
@@ -64,10 +57,8 @@ class Adjustment {
 
   Map<String, Object?> toJson() => {'code': code, 'params': params};
 
-  factory Adjustment.fromJson(Map<String, Object?> json) => Adjustment(
-    json['code']! as String,
-    Map<String, Object>.from((json['params'] as Map?) ?? const {}),
-  );
+  factory Adjustment.fromJson(Map<String, Object?> json) =>
+      Adjustment(json['code']! as String, Map<String, Object>.from((json['params'] as Map?) ?? const {}));
 
   @override
   String toString() => 'Adjustment($code, $params)';

@@ -13,13 +13,7 @@ const double baseXpConstant = 20;
 const double durationExponent = 0.65;
 const double durationReferenceMinutes = 30;
 
-const Map<int, double> difficultyMultiplier = {
-  1: 0.50,
-  2: 0.75,
-  3: 1.00,
-  4: 1.30,
-  5: 1.60,
-};
+const Map<int, double> difficultyMultiplier = {1: 0.50, 2: 0.75, 3: 1.00, 4: 1.30, 5: 1.60};
 
 const Map<QuestTier, double> tierMultiplier = {
   QuestTier.daily: 1.00,
@@ -27,11 +21,7 @@ const Map<QuestTier, double> tierMultiplier = {
   QuestTier.objective: 1.50,
 };
 
-const Map<QuestTier, int> tierMinutesCap = {
-  QuestTier.daily: 240,
-  QuestTier.contract: 480,
-  QuestTier.objective: 480,
-};
+const Map<QuestTier, int> tierMinutesCap = {QuestTier.daily: 240, QuestTier.contract: 480, QuestTier.objective: 480};
 
 /// Declared minutes may not exceed `max(estimate × k, floor)`.
 const int plausibilityFactor = 2;

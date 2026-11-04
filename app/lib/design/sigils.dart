@@ -115,8 +115,7 @@ class _SigilPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_SigilPainter old) =>
-      old.attribute != attribute || old.color != color;
+  bool shouldRepaint(_SigilPainter old) => old.attribute != attribute || old.color != color;
 }
 
 /// Character portrait sigils chosen during onboarding.

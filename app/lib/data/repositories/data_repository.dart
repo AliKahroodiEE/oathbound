@@ -10,8 +10,9 @@ class DataRepository {
 
   /// Every user-owned row on this device as JSON-ready maps.
   Future<Map<String, Object?>> exportAll() async {
-    Future<List<Map<String, Object?>>> rows(TableInfo<Table, DataClass> t) async =>
-        [for (final r in await _db.select(t).get()) r.toJson()];
+    Future<List<Map<String, Object?>>> rows(TableInfo<Table, DataClass> t) async => [
+      for (final r in await _db.select(t).get()) r.toJson(),
+    ];
     return {
       'format': 'oathbound-export',
       'version': 1,

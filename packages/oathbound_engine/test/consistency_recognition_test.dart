@@ -5,8 +5,7 @@ DateTime d(int month, int day) => DateTime.utc(2026, month, day);
 
 /// Every day from [from] to [to] inclusive.
 Set<DateTime> range(DateTime from, DateTime to) => {
-  for (var x = from; !x.isAfter(to); x = DateTime.utc(x.year, x.month, x.day + 1))
-    x,
+  for (var x = from; !x.isAfter(to); x = DateTime.utc(x.year, x.month, x.day + 1)) x,
 };
 
 void main() {
@@ -22,11 +21,7 @@ void main() {
   group('weekly consistency', () {
     test('counts consecutive kept weeks', () {
       // Weeks starting Oct 12, 19, 26 each get 4 active days (Mon–Thu).
-      final active = {
-        ...range(d(10, 12), d(10, 15)),
-        ...range(d(10, 19), d(10, 22)),
-        ...range(d(10, 26), d(10, 29)),
-      };
+      final active = {...range(d(10, 12), d(10, 15)), ...range(d(10, 19), d(10, 22)), ...range(d(10, 26), d(10, 29))};
       final w = Consistency.weekly(activeDays: active, today: d(11, 2), target: 4);
       expect(w.currentStreak, 3);
       expect(w.bestStreak, 3);
@@ -87,10 +82,7 @@ void main() {
     });
 
     test('today being inactive does not break the chain', () {
-      final c = Consistency.chain(
-        activeDays: range(d(11, 2), d(11, 3)),
-        today: d(11, 4),
-      );
+      final c = Consistency.chain(activeDays: range(d(11, 2), d(11, 3)), today: d(11, 4));
       expect(c.current, 2);
     });
 
@@ -128,9 +120,7 @@ void main() {
     });
 
     test('condition never drops below 25', () {
-      final records = [
-        for (var i = 1; i <= 10; i++) DayRecord(day: d(11, i), creditedMinutes: 960),
-      ];
+      final records = [for (var i = 1; i <= 10; i++) DayRecord(day: d(11, i), creditedMinutes: 960)];
       expect(Consistency.condition(records, d(11, 11)), 25);
       expect(Consistency.labelFor(25), ConditionLabel.strained);
       expect(Consistency.labelFor(80), ConditionLabel.rested);
@@ -153,40 +143,25 @@ void main() {
 
   group('achievements', () {
     test('first completion unlocks first_oath and its title', () {
-      final unlocked = Achievements.newlyUnlocked(
-        const AchievementStats(totalCompletions: 1),
-        {},
-      );
+      final unlocked = Achievements.newlyUnlocked(const AchievementStats(totalCompletions: 1), {});
       expect(unlocked.map((a) => a.id), ['first_oath']);
       expect(Achievements.titleFor('first_oath'), 'sworn');
     });
 
     test('already unlocked achievements are not repeated', () {
-      final unlocked = Achievements.newlyUnlocked(
-        const AchievementStats(totalCompletions: 12),
-        {'first_oath'},
-      );
+      final unlocked = Achievements.newlyUnlocked(const AchievementStats(totalCompletions: 12), {'first_oath'});
       expect(unlocked.map((a) => a.id), ['deeds_10']);
     });
 
     test('balanced requires every rank ≥ 3', () {
       final ranks = {for (final a in Attribute.values) a: 3};
-      expect(
-        Achievements.satisfied(AchievementStats(ranks: ranks)),
-        contains('balanced'),
-      );
+      expect(Achievements.satisfied(AchievementStats(ranks: ranks)), contains('balanced'));
       ranks[Attribute.social] = 2;
-      expect(
-        Achievements.satisfied(AchievementStats(ranks: ranks)),
-        isNot(contains('balanced')),
-      );
+      expect(Achievements.satisfied(AchievementStats(ranks: ranks)), isNot(contains('balanced')));
     });
 
     test('the return celebrates coming back', () {
-      expect(
-        Achievements.satisfied(const AchievementStats(returnedAfterLongGap: true)),
-        contains('the_return'),
-      );
+      expect(Achievements.satisfied(const AchievementStats(returnedAfterLongGap: true)), contains('the_return'));
     });
   });
 
@@ -196,29 +171,14 @@ void main() {
     });
 
     test('dominant attribute decides the class', () {
-      expect(
-        Classes.compute({Attribute.intelligence: 800, Attribute.social: 100}, 5),
-        CharacterClass.scholar,
-      );
-      expect(
-        Classes.compute({Attribute.vitality: 600, Attribute.strength: 200}, 5),
-        CharacterClass.druid,
-      );
+      expect(Classes.compute({Attribute.intelligence: 800, Attribute.social: 100}, 5), CharacterClass.scholar);
+      expect(Classes.compute({Attribute.vitality: 600, Attribute.strength: 200}, 5), CharacterClass.druid);
     });
 
     test('hybrids and explorer', () {
-      expect(
-        Classes.compute({Attribute.intelligence: 500, Attribute.discipline: 400}, 6),
-        CharacterClass.strategist,
-      );
-      expect(
-        Classes.compute({Attribute.intelligence: 500, Attribute.creativity: 400}, 6),
-        CharacterClass.arcanist,
-      );
-      expect(
-        Classes.compute({for (final a in Attribute.values) a: 100}, 6),
-        CharacterClass.explorer,
-      );
+      expect(Classes.compute({Attribute.intelligence: 500, Attribute.discipline: 400}, 6), CharacterClass.strategist);
+      expect(Classes.compute({Attribute.intelligence: 500, Attribute.creativity: 400}, 6), CharacterClass.arcanist);
+      expect(Classes.compute({for (final a in Attribute.values) a: 100}, 6), CharacterClass.explorer);
     });
   });
 }

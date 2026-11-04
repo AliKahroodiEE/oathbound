@@ -112,37 +112,39 @@ class _CompletedList extends ConsumerWidget {
     final l10n = context.l10n;
     final f = ref.fmt(context);
     final text = Theme.of(context).textTheme;
-    return ref.watch(rewardsProvider).when(
-      loading: () => const LoadingPanels(count: 2),
-      error: (_, _) => ErrorState(message: l10n.errorGeneric),
-      data: (records) {
-        final done = records.where((r) => !r.undone).toList();
-        if (done.isEmpty) return Center(child: EmptyState(message: l10n.questsEmptyCompleted));
-        return Align(
-          alignment: AlignmentDirectional.topCenter,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 820),
-            child: ListView.separated(
-              padding: const EdgeInsetsDirectional.fromSTEB(AppSpace.lg, AppSpace.md, AppSpace.lg, 96),
-              itemCount: done.length,
-              separatorBuilder: (_, _) => const Divider(),
-              itemBuilder: (_, i) {
-                final r = done[i];
-                return ListTile(
-                  contentPadding: EdgeInsetsDirectional.zero,
-                  leading: const Icon(Icons.verified_outlined, color: AppColors.crimson),
-                  title: UserText(r.questTitle, maxLines: 2, overflow: TextOverflow.ellipsis),
-                  subtitle: Text('${f.date(r.createdAt)} · ${f.time(r.createdAt)}'),
-                  trailing: Text(
-                    l10n.rewardTotal(f.number(r.result.totalXp)),
-                    style: text.labelMedium?.copyWith(color: AppColors.ember),
-                  ),
-                );
-              },
-            ),
-          ),
+    return ref
+        .watch(rewardsProvider)
+        .when(
+          loading: () => const LoadingPanels(count: 2),
+          error: (_, _) => ErrorState(message: l10n.errorGeneric),
+          data: (records) {
+            final done = records.where((r) => !r.undone).toList();
+            if (done.isEmpty) return Center(child: EmptyState(message: l10n.questsEmptyCompleted));
+            return Align(
+              alignment: AlignmentDirectional.topCenter,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 820),
+                child: ListView.separated(
+                  padding: const EdgeInsetsDirectional.fromSTEB(AppSpace.lg, AppSpace.md, AppSpace.lg, 96),
+                  itemCount: done.length,
+                  separatorBuilder: (_, _) => const Divider(),
+                  itemBuilder: (_, i) {
+                    final r = done[i];
+                    return ListTile(
+                      contentPadding: EdgeInsetsDirectional.zero,
+                      leading: const Icon(Icons.verified_outlined, color: AppColors.crimson),
+                      title: UserText(r.questTitle, maxLines: 2, overflow: TextOverflow.ellipsis),
+                      subtitle: Text('${f.date(r.createdAt)} · ${f.time(r.createdAt)}'),
+                      trailing: Text(
+                        l10n.rewardTotal(f.number(r.result.totalXp)),
+                        style: text.labelMedium?.copyWith(color: AppColors.ember),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            );
+          },
         );
-      },
-    );
   }
 }

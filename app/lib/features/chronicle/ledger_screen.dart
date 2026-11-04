@@ -19,53 +19,55 @@ class LedgerScreen extends ConsumerWidget {
     final text = Theme.of(context).textTheme;
     return Scaffold(
       appBar: AppBar(title: Text(l10n.ledgerTitle)),
-      body: ref.watch(rewardsProvider).when(
-        loading: () => const LoadingPanels(),
-        error: (_, _) => ErrorState(message: l10n.errorGeneric),
-        data: (records) => records.isEmpty
-            ? Center(child: EmptyState(message: l10n.ledgerEmpty, icon: Icons.receipt_long_outlined))
-            : Align(
-                alignment: AlignmentDirectional.topCenter,
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 760),
-                  child: ListView.separated(
-                    padding: const EdgeInsetsDirectional.all(AppSpace.lg),
-                    itemCount: records.length,
-                    separatorBuilder: (_, _) => const Divider(),
-                    itemBuilder: (_, i) {
-                      final r = records[i];
-                      return ExpansionTile(
-                        tilePadding: EdgeInsetsDirectional.zero,
-                        shape: const Border(),
-                        collapsedShape: const Border(),
-                        childrenPadding: const EdgeInsetsDirectional.only(bottom: AppSpace.lg),
-                        title: UserText(
-                          r.questTitle,
-                          style: text.bodyLarge?.copyWith(
-                            decoration: r.undone ? TextDecoration.lineThrough : null,
-                          ),
-                        ),
-                        subtitle: Text(
-                          [
-                            l10n.tierName(r.questTier),
-                            f.date(r.createdAt),
-                            if (r.undone) l10n.completionUndone,
-                          ].join(' · '),
-                          style: text.bodySmall,
-                        ),
-                        trailing: Text(
-                          l10n.rewardTotal(f.number(r.undone ? 0 : r.result.totalXp)),
-                          style: text.labelLarge?.copyWith(color: AppColors.ember),
-                        ),
-                        children: [
-                          RewardExplanation(result: r.result, proposal: r.proposal, provisional: r.provisional),
-                        ],
-                      );
-                    },
+      body: ref
+          .watch(rewardsProvider)
+          .when(
+            loading: () => const LoadingPanels(),
+            error: (_, _) => ErrorState(message: l10n.errorGeneric),
+            data: (records) => records.isEmpty
+                ? Center(
+                    child: EmptyState(message: l10n.ledgerEmpty, icon: Icons.receipt_long_outlined),
+                  )
+                : Align(
+                    alignment: AlignmentDirectional.topCenter,
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 760),
+                      child: ListView.separated(
+                        padding: const EdgeInsetsDirectional.all(AppSpace.lg),
+                        itemCount: records.length,
+                        separatorBuilder: (_, _) => const Divider(),
+                        itemBuilder: (_, i) {
+                          final r = records[i];
+                          return ExpansionTile(
+                            tilePadding: EdgeInsetsDirectional.zero,
+                            shape: const Border(),
+                            collapsedShape: const Border(),
+                            childrenPadding: const EdgeInsetsDirectional.only(bottom: AppSpace.lg),
+                            title: UserText(
+                              r.questTitle,
+                              style: text.bodyLarge?.copyWith(decoration: r.undone ? TextDecoration.lineThrough : null),
+                            ),
+                            subtitle: Text(
+                              [
+                                l10n.tierName(r.questTier),
+                                f.date(r.createdAt),
+                                if (r.undone) l10n.completionUndone,
+                              ].join(' · '),
+                              style: text.bodySmall,
+                            ),
+                            trailing: Text(
+                              l10n.rewardTotal(f.number(r.undone ? 0 : r.result.totalXp)),
+                              style: text.labelLarge?.copyWith(color: AppColors.ember),
+                            ),
+                            children: [
+                              RewardExplanation(result: r.result, proposal: r.proposal, provisional: r.provisional),
+                            ],
+                          );
+                        },
+                      ),
+                    ),
                   ),
-                ),
-              ),
-      ),
+          ),
     );
   }
 }

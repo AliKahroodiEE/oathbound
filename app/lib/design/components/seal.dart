@@ -5,12 +5,7 @@ import 'motion.dart';
 
 /// Completion control: an empty ring that fills into a crimson seal.
 class SealCheckbox extends StatelessWidget {
-  const SealCheckbox({
-    super.key,
-    required this.checked,
-    required this.onPressed,
-    required this.semanticLabel,
-  });
+  const SealCheckbox({super.key, required this.checked, required this.onPressed, required this.semanticLabel});
 
   final bool checked;
   final VoidCallback? onPressed;
@@ -37,14 +32,9 @@ class SealCheckbox extends StatelessWidget {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: checked ? AppColors.crimson : Colors.transparent,
-                border: Border.all(
-                  color: checked ? AppColors.crimson : AppColors.ashMuted,
-                  width: 1.5,
-                ),
+                border: Border.all(color: checked ? AppColors.crimson : AppColors.ashMuted, width: 1.5),
               ),
-              child: checked
-                  ? const Icon(Icons.check, size: 16, color: AppColors.bone)
-                  : null,
+              child: checked ? const Icon(Icons.check, size: 16, color: AppColors.bone) : null,
             ),
           ),
         ),
