@@ -163,6 +163,15 @@ jobs:
         env:
           DEPLOYMENT_URL: ${{ steps.deploy.outputs.deployment-url }}
         run: |
+          # Each deployment gets https://<id>.<project subdomain>; the project
+          # subdomain is not always <project>.pages.dev (taken names get a suffix).
+          host="${DEPLOYMENT_URL#https://}"
+          host="${host%%/*}"
+          project_host="${host#*.}"
+          site_host="${WYRD_SITE_URL#https://}"
+          if [[ "$project_host" == *.pages.dev && "$site_host" == *.pages.dev && "$project_host" != "$site_host" ]]; then
+            echo "::warning title=Site address differs::Cloudflare serves this project at https://$project_host, but WYRD_SITE_URL is $WYRD_SITE_URL. Set WYRD_SITE_URL to https://$project_host, then redeploy the backend and the web app."
+          fi
           {
             echo "### Web app deployed to Cloudflare Pages"
             echo

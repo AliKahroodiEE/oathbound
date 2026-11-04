@@ -330,7 +330,7 @@ flowchart TD
 | چه می‌خواهی | چه چیزی را میزبانی می‌کنی |
 | --- | --- |
 | برنامه روی گوشی، همه‌چیز محلی | هیچ |
-| نسخه‌ی وب، در مرورگرهای دسکتاپ و موبایل | فقط فایل‌های ایستا: `flutter build web` روی GitHub Pages، Cloudflare Pages، Netlify یا Vercel. این مخزن با هر push به `main` [نسخه‌ی عملیاتی](.github/workflows/deploy-web.yml) را روی Cloudflare Pages و [نسخه‌ی نمایشی](.github/workflows/pages.yml) را روی GitHub Pages منتشر می‌کند. |
+| نسخه‌ی وب، در مرورگرهای دسکتاپ و موبایل | فقط فایل‌های ایستا: `flutter build web` روی GitHub Pages، Cloudflare Pages، Netlify یا Vercel. وقتی push به `main` برنامه را تغییر دهد، این مخزن [نسخه‌ی عملیاتی](.github/workflows/deploy-web.yml) را روی Cloudflare Pages و [نسخه‌ی نمایشی](.github/workflows/pages.yml) را روی GitHub Pages منتشر می‌کند. |
 | حساب کاربری، همگام‌سازی بین دستگاه‌ها، انجمن‌ها و اعلان | سرورِ Supabase در [`backend`](backend/)، روی Supabase Cloud یا میزبانی شخصی، که [`deploy-backend.yml`](.github/workflows/deploy-backend.yml) منتشرش می‌کند |
 
 **نسخه‌ی خودت را رایگان راه بینداز.** [`docs/deployment.fa.md`](docs/deployment.fa.md) همه‌ی مرحله‌ها را با پلن‌های

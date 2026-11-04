@@ -5,11 +5,12 @@
 The owner's checklist for running Wyrd for real users at **$0 a month**. **No step needs a credit
 card**: every service below is a free plan that never asks for one (only the optional
 [custom domain](#custom-domain-later) costs money). Do the steps in order once; afterwards every
-push to `main` redeploys the web app and every `v*` tag publishes a new Android release.
+push to `main` that changes the app or the backend redeploys it, and every `v*` tag publishes a
+new Android release. Changing a variable alone deploys nothing: run the workflow by hand.
 
 | Piece | Where it runs | How it ships |
 | --- | --- | --- |
-| Web app (also the iPhone app) | Cloudflare Pages, `https://wyrd-app.pages.dev` | [`deploy-web.yml`](../.github/workflows/deploy-web.yml) on push to `main` |
+| Web app (also the iPhone app) | Cloudflare Pages, `https://wyrd-app.pages.dev` | [`deploy-web.yml`](../.github/workflows/deploy-web.yml) when a push to `main` changes the app |
 | Backend (database, sign-in, Edge Functions) | Supabase Free | the backend deploy workflow (see [backend/README.md](../backend/README.md)) |
 | Android app | Signed APK on GitHub Releases | [`release-android.yml`](../.github/workflows/release-android.yml) on a `v*` tag |
 | Sign-in e-mails | Brevo (or Gmail) over SMTP | Supabase custom SMTP |
@@ -93,7 +94,9 @@ exactly what the app uses.
    **Create Custom Token**. Permissions: *Account* · *Cloudflare Pages* · *Edit*. Account
    resources: *Include* · your account. Save it: `CLOUDFLARE_API_TOKEN`.
 4. Pages project name: `wyrd-app` (`wyrd` is taken): `CF_PAGES_PROJECT`. You do not create it
-   by hand; the first deploy does.
+   by hand; the first deploy does. If its `pages.dev` name is taken too, Cloudflare adds a
+   suffix (`wyrd-app-abc.pages.dev`): the first web deploy warns, and `WYRD_SITE_URL` must then
+   be set to that address.
 
 ## 3. E-mail sender
 

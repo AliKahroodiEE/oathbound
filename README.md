@@ -317,7 +317,7 @@ Persian copy needs a review by a native speaker before release.
 | You want | You host |
 | --- | --- |
 | The app on phones, everything local | Nothing |
-| The web app, in desktop and mobile browsers | Static files only: `flutter build web` to GitHub Pages, Cloudflare Pages, Netlify or Vercel. On every push to `main` this repository deploys the [production app](.github/workflows/deploy-web.yml) to Cloudflare Pages and the [demo](.github/workflows/pages.yml) to GitHub Pages. |
+| The web app, in desktop and mobile browsers | Static files only: `flutter build web` to GitHub Pages, Cloudflare Pages, Netlify or Vercel. When a push to `main` changes the app, this repository deploys the [production app](.github/workflows/deploy-web.yml) to Cloudflare Pages and the [demo](.github/workflows/pages.yml) to GitHub Pages. |
 | Accounts, sync across devices, guilds and push | The Supabase backend in [`backend/`](backend/), on Supabase Cloud or self-hosted, shipped by [`deploy-backend.yml`](.github/workflows/deploy-backend.yml) |
 
 **Run your own copy for free.** [`docs/deployment.md`](docs/deployment.md) walks through every step on free
