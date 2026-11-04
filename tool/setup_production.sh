@@ -5,9 +5,10 @@
 #
 #   tool/setup_production.sh [--repo OWNER/REPO]
 #
-# Every group can be skipped and the script can be re-run at any time: press
-# Enter to keep a value that is already stored. Passwords, tokens and keys are
-# read without echo, passed to gh on stdin and never written to disk.
+# Every group can be skipped and the script can be re-run at any time: groups
+# whose values are all stored are skipped unless you ask to change them, and
+# Enter keeps a stored value. Passwords, tokens and keys are read without
+# echo, passed to gh on stdin and never written to disk.
 # Works with the bash 3.2 that ships with macOS.
 set -euo pipefail
 
@@ -23,7 +24,7 @@ while [ $# -gt 0 ]; do
       shift 2
       ;;
     -h | --help)
-      sed -n '2,11p' "$0" | sed 's/^# \{0,1\}//'
+      sed -n '2,12p' "$0" | sed 's/^# \{0,1\}//'
       exit 0
       ;;
     *)
@@ -79,12 +80,27 @@ confirm() {
   esac
 }
 
-# group "Title" "what it is for" -> succeeds when the user wants to set it now.
+# group "Title" "what it is for" [NAME...] -> succeeds when the user wants to
+# set it now. When every NAME (secret or variable) is already stored, the
+# group defaults to being skipped.
 group() {
-  local reply=""
-  printf '\n%s== %s ==%s\n' "$bold" "$1" "$reset"
-  note "$2"
-  read -r -p "Set this up now? [Y/n/q] " reply || true
+  local title="$1" about="$2" reply="" name="" complete=false
+  shift 2
+  if [ $# -gt 0 ]; then
+    complete=true
+    for name in "$@"; do
+      if ! has_secret "$name" && ! has_variable "$name"; then complete=false; fi
+    done
+  fi
+  printf '\n%s== %s ==%s\n' "$bold" "$title" "$reset"
+  note "$about"
+  if [ "$complete" = true ]; then
+    note "Already stored: $*"
+    read -r -p "Change it? [y/N/q] " reply || true
+    reply="${reply:-n}"
+  else
+    read -r -p "Set this up now? [Y/n/q] " reply || true
+  fi
   case "$reply" in
     [nN]*)
       say "  skipped"
@@ -98,9 +114,16 @@ group() {
   esac
 }
 
-stored_secrets="" # names of the secrets already stored, one per line
+stored_secrets=""   # names of the secrets already stored, one per line
+stored_variables="" # the same for variables
 has_secret() {
   case $'\n'"$stored_secrets"$'\n' in
+    *$'\n'"$1"$'\n'*) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+has_variable() {
+  case $'\n'"$stored_variables"$'\n' in
     *$'\n'"$1"$'\n'*) return 0 ;;
     *) return 1 ;;
   esac
@@ -226,11 +249,16 @@ say "${bold}Wyrd production setup${reset} for ${bold}$repo${reset}"
 note "Values go to Settings > Secrets and variables > Actions of this repository."
 confirm "Continue with $repo?" Y || exit 0
 stored_secrets="$(gh secret list --repo "$repo" 2>/dev/null | cut -f1 || true)"
+stored_variables="$(gh variable list --repo "$repo" 2>/dev/null | cut -f1 || true)"
 
 # --- 1. Supabase ----------------------------------------------------------------
 
-if group "Supabase" "Backend project, its API keys and the CLI token the backend deploy uses (docs/deployment.md, step 1)."; then
-  ref="$(ask "Project ref (from https://supabase.com/dashboard/project/<ref>)")"
+if group "Supabase" "Backend project, its API keys and the CLI token the backend deploy uses (docs/deployment.md, step 1)." \
+  SUPABASE_PROJECT_ID SUPABASE_URL SUPABASE_PUBLISHABLE_KEY SUPABASE_SECRET_KEY SUPABASE_ACCESS_TOKEN SUPABASE_DB_PASSWORD; then
+  known_ref=""
+  stored_url="$(current_variable SUPABASE_URL)"
+  if [[ "$stored_url" =~ ^https://([a-z0-9]{20})\.supabase\.co/?$ ]]; then known_ref="${BASH_REMATCH[1]}"; fi
+  ref="$(ask "Project ref (from https://supabase.com/dashboard/project/<ref>)" "$known_ref")"
   warn_unless "$ref" '^[a-z0-9]{20}$' "a project ref is usually 20 lowercase letters"
   set_secret SUPABASE_PROJECT_ID "$ref"
   default_url=""
@@ -261,9 +289,15 @@ fi
 
 pages_project="$(current_variable CF_PAGES_PROJECT)"
 pages_project="${pages_project:-wyrd-app}"
-if group "Cloudflare Pages" "Hosting for the web app; the deploy workflow creates the Pages project on its first run (step 2)."; then
+if group "Cloudflare Pages" "Hosting for the web app; the deploy workflow creates the Pages project on its first run (step 2)." \
+  CLOUDFLARE_API_TOKEN CLOUDFLARE_ACCOUNT_ID CF_PAGES_PROJECT; then
   set_secret CLOUDFLARE_API_TOKEN "$(secret_prompt CLOUDFLARE_API_TOKEN "API token with Account > Cloudflare Pages > Edit")"
-  account="$(ask "Account ID (32 characters, Workers & Pages overview)")"
+  account=""
+  if has_secret CLOUDFLARE_ACCOUNT_ID; then
+    account="$(ask "Account ID (32 characters, Workers & Pages overview; Enter keeps the stored one)")"
+  else
+    account="$(ask "Account ID (32 characters, Workers & Pages overview)")"
+  fi
   warn_unless "$account" '^[0-9a-f]{32}$' "an account ID is 32 hexadecimal characters"
   set_secret CLOUDFLARE_ACCOUNT_ID "$account"
   pages_project="$(ask "Pages project name (wyrd is taken)" "$pages_project")"
@@ -273,7 +307,8 @@ fi
 
 # --- Site address ---------------------------------------------------------------
 
-if group "Site address" "The one public URL everything else uses (sign-in redirects, the backend's Site URL, release notes). Change it here when you move to your own domain."; then
+if group "Site address" "The one public URL everything else uses (sign-in redirects, the backend's Site URL, release notes). Change it here when you move to your own domain." \
+  WYRD_SITE_URL; then
   site="$(variable_prompt WYRD_SITE_URL "Site URL" "https://$pages_project.pages.dev")"
   site="${site%/}"
   warn_unless "$site" '^https://' "the site must be served over https"
@@ -282,7 +317,8 @@ fi
 
 # --- 3. E-mail ------------------------------------------------------------------
 
-if group "E-mail sender (SMTP)" "Sign-in codes and password resets. Supabase's built-in mailer only reaches your team (step 3)."; then
+if group "E-mail sender (SMTP)" "Sign-in codes and password resets. Supabase's built-in mailer only reaches your team (step 3)." \
+  SMTP_HOST SMTP_PORT SMTP_USER SMTP_PASS SMTP_ADMIN_EMAIL SMTP_SENDER_NAME; then
   say "  1) Brevo (free, 300 e-mails a day, verified sender address)"
   say "  2) Gmail with an app password"
   say "  3) Resend (needs your own domain)"
@@ -314,7 +350,8 @@ fi
 
 # --- 4. Firebase ----------------------------------------------------------------
 
-if group "Firebase Cloud Messaging" "Push notifications: the web and Android app config, the web push key and the server's service account (step 4)."; then
+if group "Firebase Cloud Messaging" "Push notifications: the web and Android app config, the web push key and the server's service account (step 4)." \
+  FIREBASE_PROJECT_ID FIREBASE_API_KEY FIREBASE_MESSAGING_SENDER_ID FIREBASE_APP_ID_WEB FIREBASE_APP_ID_ANDROID FIREBASE_VAPID_KEY FCM_SERVICE_ACCOUNT; then
   set_variable FIREBASE_PROJECT_ID "$(variable_prompt FIREBASE_PROJECT_ID "Project ID")"
   set_variable FIREBASE_API_KEY "$(variable_prompt FIREBASE_API_KEY "Web API key (apiKey, AIza...)")"
   set_variable FIREBASE_MESSAGING_SENDER_ID "$(variable_prompt FIREBASE_MESSAGING_SENDER_ID "Sender ID (messagingSenderId)")"
@@ -336,11 +373,27 @@ if group "Firebase Cloud Messaging" "Push notifications: the web and Android app
   fi
 fi
 
-# --- 5. GitHub sign-in ----------------------------------------------------------
+# --- 5. Google and GitHub sign-in --------------------------------------------
 
-if group "GitHub sign-in" "OAuth app from GitHub developer settings (step 5). GitHub reserves names starting with GITHUB_, so these are stored as GH_OAUTH_*."; then
-  set_variable GH_OAUTH_CLIENT_ID "$(variable_prompt GH_OAUTH_CLIENT_ID "Client ID")"
-  set_secret GH_OAUTH_CLIENT_SECRET "$(secret_prompt GH_OAUTH_CLIENT_SECRET "Client secret")"
+if group "Google sign-in" "Web OAuth client in Google Cloud > Google Auth Platform > Clients (step 5). Its secret is shown once: if you did not keep it, open the client, click Add secret and paste the new one." \
+  WYRD_GOOGLE_CLIENT_ID WYRD_GOOGLE_CLIENT_SECRET WYRD_AUTH_GOOGLE; then
+  google_id="$(variable_prompt WYRD_GOOGLE_CLIENT_ID "Client ID (...apps.googleusercontent.com)")"
+  warn_unless "$google_id" '\.apps\.googleusercontent\.com$' "Google client IDs end in .apps.googleusercontent.com"
+  set_variable WYRD_GOOGLE_CLIENT_ID "$google_id"
+  google_secret="$(secret_prompt WYRD_GOOGLE_CLIENT_SECRET "Client secret (GOCSPX-...)")"
+  warn_unless "$google_secret" '^GOCSPX-' "Google client secrets start with GOCSPX-"
+  set_secret WYRD_GOOGLE_CLIENT_SECRET "$google_secret"
+  if confirm "Show the Google button in the app?" Y; then
+    set_variable WYRD_AUTH_GOOGLE true
+  else
+    set_variable WYRD_AUTH_GOOGLE false
+  fi
+fi
+
+if group "GitHub sign-in" "OAuth app from GitHub developer settings (step 5). GitHub reserves names starting with GITHUB_, so these are stored as WYRD_GITHUB_*." \
+  WYRD_GITHUB_CLIENT_ID WYRD_GITHUB_CLIENT_SECRET WYRD_AUTH_GITHUB; then
+  set_variable WYRD_GITHUB_CLIENT_ID "$(variable_prompt WYRD_GITHUB_CLIENT_ID "Client ID")"
+  set_secret WYRD_GITHUB_CLIENT_SECRET "$(secret_prompt WYRD_GITHUB_CLIENT_SECRET "Client secret")"
   if confirm "Show the GitHub button in the app?" Y; then
     set_variable WYRD_AUTH_GITHUB true
   else
@@ -350,13 +403,15 @@ fi
 
 # --- 6. Android -----------------------------------------------------------------
 
-if group "Android release key" "Signs the APK on GitHub Releases. Every update must be signed with the same key: back it up (step 6)."; then
+if group "Android release key" "Signs the APK on GitHub Releases. Every update must be signed with the same key: back it up (step 6)." \
+  ANDROID_KEYSTORE_BASE64 ANDROID_KEYSTORE_PASSWORD ANDROID_KEY_ALIAS ANDROID_KEY_PASSWORD; then
   setup_android_key
 fi
 
 # --- 7. Backups -----------------------------------------------------------------
 
-if group "Encrypted backups" "Database dumps are encrypted to an age public key; only you keep the private key (step 7)."; then
+if group "Encrypted backups" "Database dumps are encrypted to an age public key; only you keep the private key (step 7)." \
+  BACKUP_AGE_RECIPIENT; then
   recipient="$(current_variable BACKUP_AGE_RECIPIENT)"
   if [ -n "$recipient" ]; then
     recipient="$(ask "age public key" "$recipient")"
