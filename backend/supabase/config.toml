@@ -1,30 +1,36 @@
-# Supabase CLI configuration for LOCAL development (`supabase start` from backend/).
-# Hosted projects are configured in the dashboard / via `supabase link`; nothing
-# here is a secret. Values referenced as env(...) come from the shell or
-# backend/supabase/.env (never committed).
+# Supabase CLI (v3) configuration; run the CLI from backend/. Locally it
+# describes the stack `supabase start` runs. For the hosted project the
+# backend deploy workflow (.github/workflows/deploy-backend.yml) pushes what
+# this file declares with `supabase config push` (keys left out stay as they
+# are) and deploys the functions with the [functions.*] settings. Nothing here
+# is a secret: env(...) values come from the shell, backend/supabase/.env
+# (never committed) or the workflow's GitHub variables and secrets.
 
 project_id = "wyrd"
 
 [api]
 enabled = true
 port = 54321
-# Only `public` is exposed through PostgREST. Internal helpers live in the
+# Only `public` is exposed, and no GraphQL. Internal helpers live in the
 # `private` schema and are reachable only from SECURITY DEFINER functions.
-schemas = ["public", "graphql_public"]
+schemas = ["public"]
 extra_search_path = ["public", "extensions"]
 max_rows = 1000
+# Like the hosted project: nothing in `public` is visible to anon,
+# authenticated or service_role without a GRANT (…_data_api_grants.sql), so
+# a missing grant fails locally the way it would in production.
+auto_expose_new_tables = false
 
 [db]
 port = 54322
 shadow_port = 54320
 major_version = 17
 
+# Local pooler only. Pool sizes are left undeclared on purpose: `config push`
+# would otherwise overwrite the hosted pooler's plan defaults.
 [db.pooler]
 enabled = false
 port = 54329
-pool_mode = "transaction"
-default_pool_size = 20
-max_client_conn = 100
 
 [db.migrations]
 enabled = true
@@ -41,8 +47,9 @@ enabled = true
 port = 54323
 api_url = "http://127.0.0.1"
 
-# Captures auth e-mails (magic links, confirmations) locally: http://127.0.0.1:54324
-[inbucket]
+# Captures auth e-mails (sign-in codes, confirmations) locally:
+# http://127.0.0.1:54324. CLI v3 name of the former [inbucket].
+[local_smtp]
 enabled = true
 port = 54324
 
@@ -115,20 +122,26 @@ policy = "per_worker"
 inspector_port = 8083
 deno_version = 2
 
-# Users call this with their access token; the gateway verifies the JWT and
-# the function re-checks ownership of the completion.
+# Every function authenticates its callers in code (_shared/auth.ts): user
+# access tokens with auth.getClaims, internal callers by a project secret key
+# in the apikey header. verify_jwt adds the platform's JWT check in front;
+# secret keys are not JWTs, so functions that internal callers reach run
+# without it.
+
+# User-facing: the app calls it with the user's access token. The function
+# checks the token again and that the caller owns the completion.
 [functions.evaluate-completion]
 enabled = true
 verify_jwt = true
 
-# Users (their own chronicle) or the service role (pg_cron dispatch).
+# Users (their own chronicle) and pg_cron through pg_net (secret key as
+# apikey, …_cron_secret_key.sql).
 [functions.generate-chronicle]
 enabled = true
-verify_jwt = true
+verify_jwt = false
 
-# Internal only. Authenticated in code (service-role key or
-# INTERNAL_FUNCTION_SECRET), so Database Webhooks and internal callers that
-# do not send a user JWT are accepted by the gateway.
+# Internal only: the notification triggers (…_notify_triggers.sql) and
+# generate-chronicle send a secret key as apikey, or INTERNAL_FUNCTION_SECRET.
 [functions.notify]
 enabled = true
 verify_jwt = false
