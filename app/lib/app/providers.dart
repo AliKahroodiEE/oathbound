@@ -10,6 +10,7 @@ import '../core/locale/regional_settings.dart';
 import '../data/db/database.dart';
 import '../data/models.dart';
 import '../data/repositories/character_repository.dart';
+import '../data/repositories/data_repository.dart';
 import '../data/repositories/progression_repository.dart';
 import '../data/repositories/quest_repository.dart';
 import '../data/repositories/settings_repository.dart';
@@ -95,3 +96,7 @@ extension FormattersRef on WidgetRef {
   AppFormatters fmt(BuildContext context) =>
       AppFormatters(watch(regionalProvider), AppLocalizations.of(context));
 }
+
+final dataRepositoryProvider = Provider(
+  (ref) => DataRepository(ref.watch(databaseProvider)),
+);
