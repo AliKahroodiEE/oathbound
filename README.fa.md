@@ -1,0 +1,401 @@
+<div align="center">
+
+<a href="https://alikahroodiee.github.io/wyrd/">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/banner-dark-fa.webp">
+    <source media="(prefers-color-scheme: light)" srcset="docs/assets/banner-light-fa.webp">
+    <img src="docs/assets/banner-dark-fa.webp" alt="سرنوشت‌ساز (Wyrd)، یک نقش‌آفرینی فانتزی تاریک برای زندگی واقعی. شخصیتت، همان کسی است که می‌شوی." width="100%">
+  </picture>
+</a>
+
+[English](README.md) · **فارسی**
+
+</div>
+
+<div dir="rtl">
+
+<div align="center">
+
+<h3>تلاشِ واقعی‌ات را به شخصیتی تبدیل کن که رشد می‌کند.</h3>
+
+مأموریت‌ها و عادت‌ها به تجربه، شش ویژگی و وقایع‌نامه‌ای زنده تبدیل می‌شوند.<br>
+هوش مصنوعی پیشنهاد می‌دهد، قوانینِ شفاف تصمیم می‌گیرند و هر پاداش دلیلش را می‌گوید.
+
+<br>
+
+[![Try the live demo](https://img.shields.io/badge/%E2%96%B6%20%20Try%20the%20live%20demo-C0202D?style=for-the-badge)](https://alikahroodiee.github.io/wyrd/)
+
+[![CI](https://github.com/AliKahroodiEE/wyrd/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/AliKahroodiEE/wyrd/actions/workflows/ci.yml)
+[![Web demo](https://github.com/AliKahroodiEE/wyrd/actions/workflows/pages.yml/badge.svg?branch=main)](https://github.com/AliKahroodiEE/wyrd/actions/workflows/pages.yml)
+![Flutter](https://img.shields.io/badge/Flutter-3.47-02569B?logo=flutter&logoColor=white)
+![Dart](https://img.shields.io/badge/Dart-3.13-0175C2?logo=dart&logoColor=white)
+![Platforms](https://img.shields.io/badge/platforms-Android%20%C2%B7%20iOS%20%C2%B7%20Web-FF5A64)
+![Languages](https://img.shields.io/badge/languages-English%20%C2%B7%20Persian%20(RTL)-8B6CFF)
+[![License](https://img.shields.io/badge/license-PolyForm%20Strict%201.0.0-E2B45C)](LICENSE.md)
+
+[**ویژگی‌ها**](#features) · [**تصاویر**](#screenshots) · [**شروع سریع**](#quick-start) · [**چطور کار می‌کند**](#how-it-works) · [**مستندات**](docs/) · [**مجوز**](#license)
+
+</div>
+
+<br>
+
+> [!TIP]
+> **نیازی به نصب نیست.** [نسخه‌ی نمایشی زنده](https://alikahroodiee.github.io/wyrd/) کاملاً در مرورگرت اجرا می‌شود و شش هفته سابقه‌ی نمونه دارد.
+> هیچ داده‌ای از دستگاهت بیرون نمی‌رود. به زبان دستگاهت و با حالت روشن یا تیره‌ی آن باز می‌شود.
+
+## <a id="why"></a>چرا سرنوشت‌ساز
+
+بیشتر برنامه‌های عادت‌سازی برای تیک‌زدن یک خانه امتیاز می‌دهند. سرنوشت‌ساز می‌پرسد واقعاً چه کردی و از
+همان، شخصیتی ماندگار می‌سازد: مطالعه هوش را بالا می‌برد، تمرین قدرت را می‌سازد و پای قولی ماندن که
+از قبل برایش برنامه ریخته بودی، انضباط را آب‌دیده می‌کند. هوش مصنوعی تلاشت را می‌خواند؛ یک موتورِ
+قطعی برایش سقف می‌گذارد، بازده نزولی را اعمال می‌کند، نتیجه را در دفتری قابل‌حسابرسی ثبت می‌کند و
+دقیقاً می‌گوید چرا رشد کردی.
+
+نه سازوکارِ شرمساری، نه حلقه‌ی قمار، نه ترس از شکستنِ زنجیره. ویژگی‌ها وقتی استراحت می‌کنی هرگز افت
+نمی‌کنند، برای امتحان و بیماری «حالت توقف» هست و چالش‌های انجمن هیچ‌وقت یک گروه را به خاطر روزِ
+بدِ یک نفر جریمه نمی‌کنند. این طراحی بر پایه‌ی پژوهش‌های منتشرشده درباره‌ی انگیزه و شکل‌گیری عادت
+است ([`docs/research`](docs/research/behavioral-science.md)).
+
+## <a id="features"></a>ویژگی‌ها
+
+<table>
+  <tr>
+    <td width="33%" valign="top">
+      <h4>⚔️ مأموریت‌هایی به اندازه‌ی زندگی واقعی</h4>
+      مأموریت‌های روزانه، قراردادها و اهداف بلندمدت؛ با تکرار، زیرکار، زمان‌سنج، یادآور و نیتِ
+      «کِی و کجا».
+    </td>
+    <td width="33%" valign="top">
+      <h4>🧬 شش ویژگی، تجربه‌ی صادقانه</h4>
+      قدرت، هوش، انضباط، خلاقیت، سرزندگی و ارتباط. سطح، عنوان‌ها و کلاس از کاری که انجام می‌دهی
+      شکل می‌گیرند، نه از چیزی که ادعا می‌کنی.
+    </td>
+    <td width="33%" valign="top">
+      <h4>⚖️ هوش مصنوعی پیشنهاد می‌دهد، قوانین تصمیم می‌گیرند</h4>
+      موتور قوانین دو بار نوشته شده، در Dart و TypeScript، و بردارهای آزمونِ مشترک آن دو را به هم
+      گره می‌زنند؛ پس گوشی و سرور سرِ هر امتیاز هم‌نظرند.
+    </td>
+  </tr>
+  <tr>
+    <td valign="top">
+      <h4>🔑 هوش مصنوعی خودت</h4>
+      Anthropic، OpenAI، Google Gemini یا هر سرویس سازگار (OpenRouter، Groq، Ollama و…). کلیدت فقط در
+      حافظه‌ی امنِ دستگاهت می‌ماند. هوش مصنوعی نداری؟ قواعدِ داخلی همه‌چیز را ارزیابی می‌کنند.
+    </td>
+    <td valign="top">
+      <h4>🛡️ انجمن‌ها</h4>
+      انجمن‌های خصوصی با تالار، واکنش، نظر و چالش‌های گروهی؛ ساخته‌شده برای دلگرمی، نه مقایسه.
+    </td>
+    <td valign="top">
+      <h4>📜 وقایع‌نامه‌ای که خودش نوشته می‌شود</h4>
+      تحلیل هفتگی، ماهانه و سالانه، نمای ریتم و توازن، دفتر کاملِ پاداش‌ها و خلاصه‌هایی از هوش مصنوعی
+      که بر داده‌های واقعی‌ات تکیه دارند.
+    </td>
+  </tr>
+  <tr>
+    <td valign="top">
+      <h4>🌗 روشن و تیره</h4>
+      تیره مثل سنگ و اخگر، روشن مثل پوست‌نوشته و جوهر. از دستگاهت پیروی می‌کند، یا با یک ضربه از
+      برگه‌ی شخصیت عوضش کن.
+    </td>
+    <td valign="top">
+      <h4>🌍 فارسی و English</h4>
+      به زبان دستگاهت باز می‌شود. چیدمانِ کاملِ راست‌به‌چپ، تقویم جلالی، ارقام فارسی و متن‌های
+      دوزبانه‌ای که همیشه درست خوانده می‌شوند.
+    </td>
+    <td valign="top">
+      <h4>📶 اول روی دستگاه</h4>
+      در حالت مهمان همه‌چیز روی خودِ دستگاه کار می‌کند، حتی آفلاین. حساب کاربری، همگام‌سازی و انجمن‌ها
+      اختیاری‌اند.
+    </td>
+  </tr>
+</table>
+
+## <a id="screenshots"></a>تصاویر
+
+<p align="center"><sub>این تصاویر از پوسته‌ی GitHubِ تو پیروی می‌کنند: بین روشن و تیره جابه‌جا شو تا روی دیگرش را ببینی.</sub></p>
+
+<table>
+  <tr>
+    <td align="center" width="25%">
+      <picture>
+        <source media="(prefers-color-scheme: light)" srcset="docs/screenshots/phone-character-light-fa.webp">
+        <img src="docs/screenshots/phone-character-dark-fa.webp" alt="برگه‌ی شخصیت با حلقه‌ی تجربه، سطح، عنوان، کلاس، وضعیت، پیوستگی و مأموریت‌های امروز" width="100%">
+      </picture>
+      <br><sub><b>برگه‌ی شخصیت</b><br>سطح، وضعیت و مأموریت‌های امروز</sub>
+    </td>
+    <td align="center" width="25%">
+      <picture>
+        <source media="(prefers-color-scheme: light)" srcset="docs/screenshots/phone-reward-light-fa.webp">
+        <img src="docs/screenshots/phone-reward-dark-fa.webp" alt="برگه‌ی پاداش: ۴۷+ تجربه، اعلان ارتقای رتبه و توضیحِ هر افزایش ویژگی" width="100%">
+      </picture>
+      <br><sub><b>پاداش‌هایی که خودشان را توضیح می‌دهند</b><br>هر امتیاز دلیلی دارد</sub>
+    </td>
+    <td align="center" width="25%">
+      <picture>
+        <source media="(prefers-color-scheme: light)" srcset="docs/screenshots/phone-quests-light-fa.webp">
+        <img src="docs/screenshots/phone-quests-dark-fa.webp" alt="فهرست مأموریت‌ها با عادت‌های تکرارشونده، نشان دسته‌ها و مُهرهای انجام‌شده" width="100%">
+      </picture>
+      <br><sub><b>مأموریت‌ها و عادت‌ها</b><br>روزانه، قرارداد، هدف بلندمدت</sub>
+    </td>
+    <td align="center" width="25%">
+      <picture>
+        <source media="(prefers-color-scheme: light)" srcset="docs/screenshots/phone-chronicle-light-fa.webp">
+        <img src="docs/screenshots/phone-chronicle-dark-fa.webp" alt="وقایع‌نامه‌ی هفتگی با تقویم جلالی" width="100%">
+      </picture>
+      <br><sub><b>وقایع‌نامه</b><br>با تقویم جلالی</sub>
+    </td>
+  </tr>
+</table>
+
+<picture>
+  <source media="(prefers-color-scheme: light)" srcset="docs/screenshots/desktop-character-light-fa.webp">
+  <img src="docs/screenshots/desktop-character-dark-fa.webp" alt="سرنوشت‌ساز در مرورگر دسکتاپ: نوار کناری با کلید پوسته، برگه‌ی شخصیت با نمودار ویژگی‌ها، مأموریت‌های امروز، دستاوردها و رشد اخیر" width="100%">
+</picture>
+
+<details>
+<summary><b>تصاویر بیشتر</b>: هر دو پوسته کنار هم، وقایع‌نامه در دسکتاپ، تنظیمات</summary>
+<br>
+
+<img src="docs/assets/themes.webp" alt="یک شخصیت در پوسته‌ی تیره (انگلیسی) و پوسته‌ی روشن (فارسی)" width="100%">
+
+<picture>
+  <source media="(prefers-color-scheme: light)" srcset="docs/screenshots/desktop-chronicle-light-fa.webp">
+  <img src="docs/screenshots/desktop-chronicle-dark-fa.webp" alt="وقایع‌نامه‌ی هفتگی در دسکتاپ: خلاصه، رشد بر پایه‌ی ویژگی، توزیع تلاش و ریتم" width="100%">
+</picture>
+
+<table>
+  <tr>
+    <td align="center" width="33%">
+      <picture>
+        <source media="(prefers-color-scheme: light)" srcset="docs/screenshots/phone-settings-light-fa.webp">
+        <img src="docs/screenshots/phone-settings-dark-fa.webp" alt="تنظیمات با زبان و پوسته‌ی خودکار" width="100%">
+      </picture>
+      <br><sub>زبان و پوسته روی «خودکار»</sub>
+    </td>
+    <td align="center" width="33%">
+      <img src="docs/screenshots/phone-character-light-en.webp" alt="برگه‌ی شخصیت به انگلیسی، پوسته‌ی روشن" width="100%">
+      <br><sub>انگلیسی، روشن</sub>
+    </td>
+    <td align="center" width="33%">
+      <img src="docs/screenshots/phone-character-dark-en.webp" alt="برگه‌ی شخصیت به انگلیسی، پوسته‌ی تیره" width="100%">
+      <br><sub>انگلیسی، تیره</sub>
+    </td>
+  </tr>
+</table>
+
+</details>
+
+<sub>همه‌ی تصاویر از خودِ برنامه با قلم‌های واقعی‌اش و شش هفته داده‌ی نمونه ساخته شده‌اند. بخش
+<a href="#regenerating-screenshots">بازسازی تصاویر</a> را ببین.</sub>
+
+## <a id="quick-start"></a>شروع سریع
+
+به Flutter نسخه‌ی ۳٫۴۷ یا بالاتر (stable) و Dart نسخه‌ی ۳٫۱۳ یا بالاتر نیاز داری.
+
+<div dir="ltr">
+
+```bash
+git clone https://github.com/AliKahroodiEE/wyrd.git
+cd wyrd/app
+flutter pub get
+# Six weeks of sample history; drop the flag for a fresh start
+flutter run -d chrome --dart-define=WYRD_DEMO=true
+```
+
+</div>
+
+برای اجرا روی گوشی اندروید یا شبیه‌ساز iOS از `flutter run -d <device>` استفاده کن. بدون پیکربندی سرور،
+سرنوشت‌ساز کاملاً روی خودِ دستگاه اجرا می‌شود: همه‌ی امکانات به جز حساب کاربری، همگام‌سازی و انجمن‌ها
+آفلاین کار می‌کنند.
+
+<details>
+<summary><b>نسخه‌ی نمایشی فارسی، اتصال به سرور و گزینه‌های دیگر</b></summary>
+<br>
+
+<div dir="ltr">
+
+```bash
+# Seed the demo in Persian regardless of the device language
+flutter run -d chrome --dart-define=WYRD_DEMO=true --dart-define=WYRD_DEMO_LOCALE=fa
+
+# Connect a Supabase backend (accounts, sync, guilds, push)
+flutter run --dart-define=SUPABASE_URL=https://<project>.supabase.co \
+            --dart-define=SUPABASE_PUBLISHABLE_KEY=<publishable-key>
+```
+
+</div>
+
+راه‌اندازی سرور در [`backend/README.md`](backend/README.md) توضیح داده شده است.
+
+</details>
+
+## <a id="how-it-works"></a>چطور کار می‌کند
+
+```mermaid
+flowchart TD
+    Q["مأموریتی را انجام می‌دهی"] --> E{"ارزیابی تلاش"}
+    E -->|"کلید هوش مصنوعی خودت یا سرور"| P["پیشنهاد هوش مصنوعی:<br/>دسته، دشواری، تلاش"]
+    E -->|"بدون هوش مصنوعی"| H["قواعد داخلی"]
+    P --> R["موتور قوانین:<br/>سقف‌ها، بازده نزولی، پاداش‌ها"]
+    H --> R
+    R --> C["تجربه، ویژگی‌ها، سطح، عنوان‌ها"]
+    C --> L[("دفتر محلی،<br/>همراه با توضیح")]
+    L -. "همگام‌سازی اختیاری" .-> S[("Supabase:<br/>بازبینی دوباره روی سرور")]
+```
+
+- **هوش مصنوعی هرگز مستقیم به شخصیتت دست نمی‌زند.** فقط یک پیشنهادِ ساختاریافته برمی‌گرداند. موتور
+  آن را محدود می‌کند و روی سرور، پیشنهادِ هوش مصنوعیِ خودت باید در فاصله‌ی یک پله دشواری و حداکثر دو
+  برابرِ مدت‌زمانِ تخمینِ خودِ سرور بماند.
+- **موتور خالص و نسخه‌دار است.** همان قوانین در Dart روی دستگاه و در TypeScript روی سرور اجرا می‌شوند و
+  بردارهای آزمونِ مشترک آن‌ها را هم‌گام نگه می‌دارند
+  ([ADR-004](docs/architecture/adr/004-dual-engine-conformance.md)).
+- **اول روی دستگاه.** هر تغییر اول در پایگاه‌داده‌ی SQLiteِ محلی ثبت می‌شود (در وب با WebAssembly) و بعد
+  از راه یک صفِ خروجی با ساعت‌های منطقیِ ترکیبی همگام می‌شود
+  ([ADR-003](docs/architecture/adr/003-local-first-sync.md)).
+
+<details>
+<summary><b>فناوری‌ها</b></summary>
+<br>
+
+| لایه | ساخته‌شده با |
+| --- | --- |
+| برنامه | Flutter · Riverpod 3 · go_router · Drift (SQLite، در وب با WebAssembly) · fl_chart |
+| موتور قوانین | بسته‌ی خالصِ Dart، با همزادی در TypeScript که بردارهای آزمونِ مشترک به هم گره‌شان می‌زنند |
+| سرور | Supabase: پستگرس با امنیت در سطح سطر، RPCها، Edge Functions (Deno)، pg_cron |
+| هوش مصنوعی | Anthropic Messages، OpenAI Chat Completions، Google Gemini؛ همه مستقیم از خودِ دستگاه |
+| بومی‌سازی | کاتالوگ‌های ARB با gen-l10n · فارسی و انگلیسی · تقویم جلالی با `shamsi_date` |
+| CI/CD | GitHub Actions: تحلیل، قالب‌بندی، همه‌ی آزمون‌ها و ساخت وب؛ نسخه‌ی نمایشی روی GitHub Pages |
+
+</details>
+
+## <a id="status"></a>وضعیت پروژه
+
+| بخش | وضعیت |
+| --- | --- |
+| پژوهش، مشخصات محصول، قوانین پیشرفت، سیستم طراحی، تجربه‌ی کاربری، معماری و ADRها | ✅ [`docs/`](docs/) |
+| موتور قوانین در Dart (۱۰۳ آزمون) و TypeScript (۴۶ آزمون)، گره‌خورده با بردارهای انطباق | ✅ [`packages/`](packages/) |
+| برنامه‌ی اول‌روی‌دستگاه: برگه‌ی شخصیت، مأموریت‌ها، پاداش‌ها، دفتر، وقایع‌نامه، تنظیمات، آشنایی | ✅ [`app/`](app/) |
+| پوسته‌های روشن و تیره با کلید یک‌ضربه‌ای؛ زبان و پوسته از دستگاه پیروی می‌کنند | ✅ |
+| فارسی و انگلیسی، راست‌به‌چپ کامل، تقویم جلالی و میلادی، ارقام فارسی یا لاتین | ✅ |
+| چیدمان‌های تطبیقی: گوشی (نوار شناور)، تبلت (ریل)، دسکتاپ و وب (نوار کناری، ستون‌ها) | ✅ |
+| سرور: طرح‌واره، امنیت در سطح سطر، RPCهای همگام‌سازی و پیشرفت، توابع هوش مصنوعی، اعلان | ✅ [`backend/`](backend/) |
+| حساب کاربری، همگام‌سازی، ارزیابی روی سرور، انجمن‌ها (تالار، واکنش، نظر، چالش) | ✅ |
+| هوش مصنوعی خودت: Anthropic، OpenAI، Gemini و سرویس‌های سازگار | ✅ |
+
+<details>
+<summary><b>چه چیزهایی آزموده شده و چه چیزهایی نه</b></summary>
+<br>
+
+**آزموده شده:** همه‌ی آزمون‌های موتور، برنامه و سرور؛ تحلیل ایستا؛ همه‌ی مهاجرت‌ها و ۷۳ بررسی امنیتی و
+رفتاری روی یک پستگرسِ آفلاین (PGlite)؛ بررسی نوعِ همه‌ی Edge Functionها؛ اجرای نسخه‌ی وب در مرورگر به
+فارسی و انگلیسی، در روشن و تیره، در عرض گوشی، تبلت و دسکتاپ.
+
+**هنوز آزموده نشده:** یک پروژه‌ی زنده‌ی Supabase، فراخوانی واقعیِ سرویس‌های هوش مصنوعی و اعلان در
+محیط عملیاتی، و ساخت بومیِ اندروید و iOS (که به Android SDK و Xcode نیاز دارند). متن فارسی پیش از
+انتشار باید به دست یک ویراستارِ فارسی‌زبان بازبینی شود.
+
+</details>
+
+### نقشه‌ی راه
+
+- [x] **پایه**: موتور قوانین، برنامه‌ی اول‌روی‌دستگاه، مأموریت‌ها، برگه‌ی شخصیت، فارسی و انگلیسی
+- [x] **متصل**: حساب کاربری، همگام‌سازی، ارزیابی روی سرور، اعلان‌ها
+- [x] **اجتماعی**: انجمن‌های خصوصی با تالار، واکنش، نظر و چالش
+- [x] **وقایع‌نامه**: تحلیل هفتگی، ماهانه و سالانه، وقایع‌نامه‌هایی به قلم هوش مصنوعی
+- [ ] **موتور انگیزه**: گزارش صبحگاهی، بازتاب شبانه، مرور هفتگی
+- [ ] **عمومی**: انجمن‌های عمومی و نظارت، نسخه‌ی ویژه و آرایه‌ها
+- [ ] **فروشگاه‌ها**: Google Play و App Store
+
+## <a id="hosting"></a>میزبانی
+
+| چه می‌خواهی | چه چیزی را میزبانی می‌کنی |
+| --- | --- |
+| برنامه روی گوشی، همه‌چیز محلی | هیچ |
+| نسخه‌ی وب، در مرورگرهای دسکتاپ و موبایل | فقط فایل‌های ایستا: `flutter build web` روی GitHub Pages، Cloudflare Pages، Netlify یا Vercel. این مخزن [نسخه‌ی نمایشی‌اش را](.github/workflows/pages.yml) با هر push به `main` منتشر می‌کند. |
+| حساب کاربری، همگام‌سازی بین دستگاه‌ها، انجمن‌ها و اعلان | سرورِ Supabase در [`backend/`](backend/)، روی Supabase Cloud یا میزبانی شخصی |
+
+**هوش مصنوعی اختیاری است و می‌تواند هیچ هزینه‌ای برای گرداننده نداشته باشد.** هر کاربر می‌تواند حساب
+Anthropic، OpenAI، Google Gemini یا سرویس سازگارِ خودش را در *تنظیمات ← هوش مصنوعی ← هوش مصنوعی خودت*
+وصل کند. کلید در حافظه‌ی امنِ دستگاه می‌ماند و فقط به همان سرویس فرستاده می‌شود. کلیدِ سمتِ سرور
+(`ANTHROPIC_API_KEY`) هم پشتیبانی می‌شود، اما الزامی نیست.
+
+## <a id="development"></a>توسعه
+
+<div dir="ltr">
+
+```text
+.
+├── app/            Flutter client (Android, iOS, Web)
+├── packages/       Shared pure-Dart packages (the rules engine)
+├── backend/        Supabase schema, row-level security, Edge Functions
+├── tool/           Repository scripts (README image conversion)
+└── docs/           Research, product spec, design system, architecture, ADRs
+```
+
+```bash
+cd packages/wyrd_engine && dart test   # rules, caps, curves, consistency, vectors
+cd app && flutter test                 # data layer, l10n gates, RTL lint, widget tests
+cd app && flutter analyze --fatal-infos
+```
+
+</div>
+
+CI همه‌ی این‌ها را به‌علاوه‌ی ساخت وب با هر push اجرا می‌کند ([`ci.yml`](.github/workflows/ci.yml)).
+
+### <a id="regenerating-screenshots"></a>بازسازی تصاویر
+
+همه‌ی تصاویرِ این صفحه از آزمون‌های ویجتی ساخته می‌شوند که خودِ برنامه را با داده‌ی نمونه، در هر دو
+پوسته و هر دو زبان اجرا می‌کنند و بعد قاب می‌گیرند. یک اسکریپت کوچک خروجی‌ها را به WebP تبدیل می‌کند
+(به Python 3 و Pillow نیاز دارد):
+
+<div dir="ltr">
+
+```bash
+cd app
+flutter test --dart-define=SCREENSHOTS=true --update-goldens test/screenshots/readme_screenshots_test.dart
+flutter test --dart-define=SCREENSHOTS=true --update-goldens test/screenshots/readme_art_test.dart
+cd .. && python3 tool/readme_images.py
+```
+
+</div>
+
+### <a id="localization"></a>بومی‌سازی
+
+فارسی و انگلیسی هر دو زبانِ درجه‌یک‌اند. همه‌ی متن‌ها در کاتالوگ‌های ARB با کلیدهای ثابت نگه داشته
+می‌شوند، چیدمان‌ها به‌جای چپ و راست از «آغاز» و «پایان» استفاده می‌کنند و برنامه تا وقتی کاربر زبانی
+انتخاب نکرده، از زبان دستگاه پیروی می‌کند. افزودن یک زبان تازه کاری محتوایی است، نه مهندسی؛
+[`docs/localization.md`](docs/localization.md) را ببین. این صفحه [به انگلیسی](README.md) هم هست.
+
+## <a id="license"></a>مجوز
+
+**منبع‌دسترس است، نه متن‌باز به معنای OSI.** این کد منتشر شده تا بتوانی آن را بخوانی، از آن یاد بگیری و
+ارزیابی‌اش کنی، تحت [مجوز PolyForm Strict 1.0.0](LICENSE.md). به زبان ساده:
+
+- ✅ می‌توانی کد را بخوانی و برای مطالعه یا آزمایشِ شخصی و غیرتجاری اجرا کنی.
+- ❌ **نمی‌توانی** آن را، چه کامل و چه بخشی از آن، دوباره منتشر کنی.
+- ❌ **نمی‌توانی** آن را تغییر دهی یا اثر تازه‌ای بر پایه‌اش بسازی.
+- ❌ **نمی‌توانی** از آن برای هیچ هدفِ تجاری استفاده کنی.
+
+برای هر کاربرد دیگر (مجوز تجاری، همکاری، یا اجازه‌ی استفاده‌ی دوباره از بخشی از کد) از طریق GitHub با
+نویسنده تماس بگیر. متنِ الزام‌آور، [`LICENSE.md`](LICENSE.md) به زبان انگلیسی است؛ این خلاصه و این
+ترجمه مشاوره‌ی حقوقی نیستند.
+
+## <a id="contributing"></a>مشارکت
+
+چون مجوز اجازه‌ی ساختِ آثارِ مشتق را نمی‌دهد، درخواست‌های ادغام (pull request) بدون یک توافق‌نامه‌ی
+کتبیِ جداگانه پذیرفته نمی‌شوند. گزارش اشکال و ایده‌ها در قالب
+[issue](https://github.com/AliKahroodiEE/wyrd/issues) با آغوش باز پذیرفته می‌شوند؛
+[`CONTRIBUTING.md`](CONTRIBUTING.md) را ببین.
+
+<br>
+
+<div align="center">
+
+**اگر سرنوشت‌ساز جرقه‌ای در ذهنت زد، یک ⭐ کمک می‌کند دیگران هم پیدایش کنند.**
+
+<sub>حق نشر © ۲۰۲۶ AliKahroodiEE. همه‌ی حقوقی که صراحتاً واگذار نشده، محفوظ است.</sub>
+
+</div>
+
+</div>
