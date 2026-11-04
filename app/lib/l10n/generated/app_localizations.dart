@@ -230,6 +230,12 @@ abstract class AppLocalizations {
   /// **'Something went wrong on our side. Your data is safe.'**
   String get errorGeneric;
 
+  /// No description provided for @actionRateLimited.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many changes in a row. Wait a minute, then try again.'**
+  String get actionRateLimited;
+
   /// No description provided for @loadingLabel.
   ///
   /// In en, this message translates to:

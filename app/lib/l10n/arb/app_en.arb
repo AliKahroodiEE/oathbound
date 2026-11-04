@@ -27,6 +27,7 @@
 
   "offlineBanner": "Working offline — changes will sync when you reconnect.",
   "errorGeneric": "Something went wrong on our side. Your data is safe.",
+  "actionRateLimited": "Too many changes in a row. Wait a minute, then try again.",
   "loadingLabel": "Loading",
 
   "attributeStrength": "Strength",

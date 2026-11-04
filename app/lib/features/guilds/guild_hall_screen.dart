@@ -5,7 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:wyrd_engine/wyrd_engine.dart';
-import 'package:supabase_flutter/supabase_flutter.dart' show RealtimeChannel;
+import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException, RealtimeChannel;
 
 import '../../app/providers.dart';
 import '../../core/format/bidi.dart';
@@ -16,6 +16,7 @@ import '../../design/components/states.dart';
 import '../../design/sigils.dart';
 import '../../design/tokens.dart';
 import '../../l10n/content.dart';
+import '../../l10n/generated/app_localizations.dart';
 
 /// A guild's hall: activity feed, collective challenges and members.
 /// Realtime changes trigger a refetch (never applied directly).
@@ -201,7 +202,13 @@ class _GuildHallScreenState extends ConsumerState<GuildHallScreen> {
             event: _feed[i],
             actor: _name(_feed[i].actorId),
             onReact: (kind, on) async {
-              await _api?.toggleReaction(_feed[i].id, kind, on: on);
+              try {
+                await _api?.toggleReaction(_feed[i].id, kind, on: on);
+              } on Object catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(guildErrorMessage(l10n, e))));
+                }
+              }
               await _load();
             },
             onComments: () => _openComments(_feed[i]),
@@ -553,9 +560,9 @@ class _CommentsSheetState extends ConsumerState<_CommentsSheet> {
       await ref.read(guildApiProvider)?.addComment(widget.eventId, body);
       _input.clear();
       await _load();
-    } on Object {
+    } on Object catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.errorGeneric)));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(guildErrorMessage(context.l10n, e))));
       }
     } finally {
       if (mounted) setState(() => _sending = false);
@@ -617,3 +624,9 @@ class _CommentsSheetState extends ConsumerState<_CommentsSheet> {
     );
   }
 }
+
+/// A refused guild action in words: the server's rate limits (hint
+/// rate_limited on reactions and comments) ask for a minute's patience;
+/// anything else gets the general message.
+String guildErrorMessage(AppLocalizations l10n, Object error) =>
+    error is PostgrestException && error.hint == 'rate_limited' ? l10n.actionRateLimited : l10n.errorGeneric;

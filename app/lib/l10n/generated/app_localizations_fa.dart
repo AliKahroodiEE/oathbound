@@ -79,6 +79,9 @@ class AppLocalizationsFa extends AppLocalizations {
   String get errorGeneric => 'مشکلی از سمت ما پیش آمد. داده‌هایت در امان است.';
 
   @override
+  String get actionRateLimited => 'تغییرها پشت سر هم زیاد بود. یک دقیقه صبر کن و دوباره امتحان کن.';
+
+  @override
   String get loadingLabel => 'در حال بارگذاری';
 
   @override

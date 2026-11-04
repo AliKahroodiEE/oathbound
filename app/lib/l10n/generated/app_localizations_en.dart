@@ -79,6 +79,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get errorGeneric => 'Something went wrong on our side. Your data is safe.';
 
   @override
+  String get actionRateLimited => 'Too many changes in a row. Wait a minute, then try again.';
+
+  @override
   String get loadingLabel => 'Loading';
 
   @override
