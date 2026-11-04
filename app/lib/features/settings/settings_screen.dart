@@ -15,6 +15,7 @@ import '../../data/remote/backend.dart';
 import '../../data/repositories/settings_repository.dart';
 import '../../design/components/panel.dart';
 import '../../design/tokens.dart';
+import '../install/ios_install_hint.dart';
 import 'ai_provider_screen.dart';
 
 /// Settings (requirements §4.10).
@@ -167,6 +168,7 @@ class SettingsScreen extends ConsumerWidget {
                       value: profile.reducedEffects,
                       onChanged: (v) => setProfile((p) => p.copyWith(reducedEffects: v)),
                     ),
+                    const IosInstallHint(),
                   ],
                 ),
               ),

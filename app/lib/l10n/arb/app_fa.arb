@@ -428,6 +428,8 @@
   "quietHoursValue": "{from} تا {to}",
   "notificationsWebNote": "در مرورگر، یادآوری‌ها فقط وقتی برنامه باز است نمایش داده می‌شوند.",
   "sectionAppearance": "ظاهر",
+  "installHintTitle": "برنامه را به صفحه‌ی اصلی اضافه کن",
+  "installHintBody": "دکمه‌ی Share را بزن (شاید زیر ••• باشد) و بعد «Add to Home Screen» را انتخاب کن. وقتی از صفحه‌ی اصلی بازش کنی، برنامه تمام‌صفحه اجرا می‌شود و می‌تواند برایت اعلان بفرستد.",
   "reducedMotion": "کاهش حرکت",
   "reducedEffects": "کاهش جلوه‌های دیداری",
   "themeLabel": "پوسته",
