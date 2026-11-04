@@ -94,16 +94,17 @@ jobs:
       # The CLI loads config.toml for every command and refuses an unresolved
       # number or boolean, so these are always set (the booleans and the site
       # URL in the first step). GitHub reserves the GITHUB_ prefix for secret
-      # and variable names: the OAuth app is stored as GH_OAUTH_CLIENT_ID /
-      # GH_OAUTH_CLIENT_SECRET.
+      # and variable names, hence WYRD_GITHUB_CLIENT_ID / _SECRET.
       SMTP_HOST: ${{ secrets.SMTP_HOST }}
       SMTP_PORT: ${{ secrets.SMTP_PORT || '587' }}
       SMTP_USER: ${{ secrets.SMTP_USER }}
       SMTP_PASS: ${{ secrets.SMTP_PASS }}
       SMTP_ADMIN_EMAIL: ${{ secrets.SMTP_ADMIN_EMAIL }}
       SMTP_SENDER_NAME: ${{ secrets.SMTP_SENDER_NAME || 'Wyrd' }}
-      GITHUB_CLIENT_ID: ${{ vars.GH_OAUTH_CLIENT_ID }}
-      GITHUB_CLIENT_SECRET: ${{ secrets.GH_OAUTH_CLIENT_SECRET }}
+      WYRD_GOOGLE_CLIENT_ID: ${{ vars.WYRD_GOOGLE_CLIENT_ID }}
+      WYRD_GOOGLE_CLIENT_SECRET: ${{ secrets.WYRD_GOOGLE_CLIENT_SECRET }}
+      WYRD_GITHUB_CLIENT_ID: ${{ vars.WYRD_GITHUB_CLIENT_ID }}
+      WYRD_GITHUB_CLIENT_SECRET: ${{ secrets.WYRD_GITHUB_CLIENT_SECRET }}
     steps:
       - uses: actions/checkout@v7
 
@@ -115,7 +116,8 @@ jobs:
         env:
           SITE_URL_VARIABLE: ${{ vars.WYRD_SITE_URL }}
           PAGES_PROJECT: ${{ vars.CF_PAGES_PROJECT || 'wyrd-app' }}
-          GITHUB_SIGN_IN: ${{ vars.WYRD_AUTH_GITHUB }}
+          GOOGLE_SIGN_IN: ${{ vars.WYRD_AUTH_GOOGLE }}
+          GH_SIGN_IN: ${{ vars.WYRD_AUTH_GITHUB }}
         run: |
           # The one public address (OAuth redirects, e-mail links), as in deploy-web.yml.
           site_url="${SITE_URL_VARIABLE:-https://$PAGES_PROJECT.pages.dev}"
@@ -142,12 +144,25 @@ jobs:
           fi
           echo "SMTP_ENABLED=$smtp" >> "$GITHUB_ENV"
 
+          # A provider is on only when its switch is true and both halves of
+          # its OAuth client are stored (deploy-web.yml and the APK build use
+          # the same rule for the buttons).
+          google=false
+          if [ "$GOOGLE_SIGN_IN" = true ]; then
+            if [ -n "$WYRD_GOOGLE_CLIENT_ID" ] && [ -n "$WYRD_GOOGLE_CLIENT_SECRET" ]; then
+              google=true
+            else
+              echo "::warning title=Google sign-in off::WYRD_AUTH_GOOGLE is true but the WYRD_GOOGLE_CLIENT_ID variable or the WYRD_GOOGLE_CLIENT_SECRET secret is missing."
+            fi
+          fi
+          echo "WYRD_AUTH_GOOGLE=$google" >> "$GITHUB_ENV"
+
           github=false
-          if [ "$GITHUB_SIGN_IN" = true ]; then
-            if [ -n "$GITHUB_CLIENT_ID" ] && [ -n "$GITHUB_CLIENT_SECRET" ]; then
+          if [ "$GH_SIGN_IN" = true ]; then
+            if [ -n "$WYRD_GITHUB_CLIENT_ID" ] && [ -n "$WYRD_GITHUB_CLIENT_SECRET" ]; then
               github=true
             else
-              echo "::warning title=GitHub sign-in off::WYRD_AUTH_GITHUB is true but GH_OAUTH_CLIENT_ID or GH_OAUTH_CLIENT_SECRET is missing."
+              echo "::warning title=GitHub sign-in off::WYRD_AUTH_GITHUB is true but the WYRD_GITHUB_CLIENT_ID variable or the WYRD_GITHUB_CLIENT_SECRET secret is missing."
             fi
           fi
           echo "WYRD_AUTH_GITHUB=$github" >> "$GITHUB_ENV"
@@ -239,7 +254,7 @@ jobs:
             echo "### Backend deploy: $JOB_STATUS"
             echo
             echo "- Site URL (auth redirects, e-mail links): $WYRD_SITE_URL"
-            echo "- Custom SMTP: ${SMTP_ENABLED:-unknown} · GitHub sign-in: ${WYRD_AUTH_GITHUB:-unknown}"
+            echo "- Custom SMTP: ${SMTP_ENABLED:-unknown} · Google sign-in: ${WYRD_AUTH_GOOGLE:-unknown} · GitHub sign-in: ${WYRD_AUTH_GITHUB:-unknown}"
             echo "- Function secrets set: ${SECRET_NAMES:-not reached}"
             echo "- Vault (cron and notification triggers): ${VAULT_STATUS:-not reached}"
           } >> "$GITHUB_STEP_SUMMARY"

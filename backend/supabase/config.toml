@@ -58,7 +58,7 @@ enabled = true
 file_size_limit = "5MiB"
 
 # Sign-in: an emailed 6-digit code, email + password (confirmed and reset by
-# code) and GitHub. Every env(...) below comes from backend/supabase/.env
+# code), Google and GitHub. Every env(...) below comes from backend/supabase/.env
 # locally (copy backend/.env.example) and from the GitHub repository
 # variables and secrets when the deploy pushes this file; see .env.example.
 [auth]
@@ -161,13 +161,25 @@ redirect_uri = ""
 url = ""
 skip_nonce_check = false
 
-# GitHub: an OAuth app (github.com/settings/developers) whose callback URL is
-# https://<project-ref>.supabase.co/auth/v1/callback. WYRD_AUTH_GITHUB=true
+# Google: a Web application OAuth client (Google Cloud > Google Auth Platform
+# > Clients) whose authorized redirect URI is
+# https://<project-ref>.supabase.co/auth/v1/callback. WYRD_AUTH_GOOGLE=true
 # switches the provider on here and shows the button in the app builds.
+[auth.external.google]
+enabled = "env(WYRD_AUTH_GOOGLE)"
+client_id = "env(WYRD_GOOGLE_CLIENT_ID)"
+secret = "env(WYRD_GOOGLE_CLIENT_SECRET)"
+redirect_uri = ""
+url = ""
+skip_nonce_check = false
+
+# GitHub: an OAuth app (github.com/settings/developers) whose callback URL is
+# the same https://<project-ref>.supabase.co/auth/v1/callback. GitHub
+# reserves names starting with GITHUB_ for Actions, hence the WYRD_ prefix.
 [auth.external.github]
 enabled = "env(WYRD_AUTH_GITHUB)"
-client_id = "env(GITHUB_CLIENT_ID)"
-secret = "env(GITHUB_CLIENT_SECRET)"
+client_id = "env(WYRD_GITHUB_CLIENT_ID)"
+secret = "env(WYRD_GITHUB_CLIENT_SECRET)"
 redirect_uri = ""
 url = ""
 
