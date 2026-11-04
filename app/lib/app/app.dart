@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../design/theme.dart';
+import '../features/reminders/reminder_coordinator.dart';
 import '../l10n/generated/app_localizations.dart';
 import 'providers.dart';
 import 'router.dart';
@@ -11,6 +12,7 @@ class OathboundApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    ref.watch(reminderCoordinatorProvider);
     final regional = ref.watch(regionalProvider);
     final reducedMotion = ref.watch(profileProvider.select((p) => p.value?.reducedMotion ?? false));
     final theme = buildAppTheme(regional.locale);

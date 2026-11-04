@@ -13,8 +13,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appName => 'Oathbound';
 
   @override
-  String get appTagline =>
-      'Your character is not someone you play. Your character is who you become.';
+  String get appTagline => 'Your character is not someone you play. Your character is who you become.';
 
   @override
   String get navCharacter => 'Character';
@@ -74,12 +73,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get copied => 'Copied';
 
   @override
-  String get offlineBanner =>
-      'Working offline — changes will sync when you reconnect.';
+  String get offlineBanner => 'Working offline — changes will sync when you reconnect.';
 
   @override
-  String get errorGeneric =>
-      'Something went wrong on our side. Your data is safe.';
+  String get errorGeneric => 'Something went wrong on our side. Your data is safe.';
 
   @override
   String get loadingLabel => 'Loading';
@@ -103,28 +100,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get attributeSocial => 'Social';
 
   @override
-  String get attributeStrengthDesc =>
-      'Physical capability built through training and movement.';
+  String get attributeStrengthDesc => 'Physical capability built through training and movement.';
 
   @override
-  String get attributeIntelligenceDesc =>
-      'Knowledge and understanding built through study and learning.';
+  String get attributeIntelligenceDesc => 'Knowledge and understanding built through study and learning.';
 
   @override
-  String get attributeDisciplineDesc =>
-      'Consistency and follow-through: planning, then keeping your word.';
+  String get attributeDisciplineDesc => 'Consistency and follow-through: planning, then keeping your word.';
 
   @override
-  String get attributeCreativityDesc =>
-      'Making things and solving problems in new ways.';
+  String get attributeCreativityDesc => 'Making things and solving problems in new ways.';
 
   @override
-  String get attributeVitalityDesc =>
-      'Rest, recovery and the habits that keep you well.';
+  String get attributeVitalityDesc => 'Rest, recovery and the habits that keep you well.';
 
   @override
-  String get attributeSocialDesc =>
-      'Connection, communication and showing up for others.';
+  String get attributeSocialDesc => 'Connection, communication and showing up for others.';
 
   @override
   String characterLevel(String level) {
@@ -173,12 +164,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'You are well recovered. Condition only falls from overexertion — never from missed quests.';
 
   @override
-  String get conditionSteadyHelp =>
-      'Recent days have been demanding. A calm day or a rest day restores condition.';
+  String get conditionSteadyHelp => 'Recent days have been demanding. A calm day or a rest day restores condition.';
 
   @override
-  String get conditionStrainedHelp =>
-      'You have been pushing very hard. Consider a rest day; your progress is safe.';
+  String get conditionStrainedHelp => 'You have been pushing very hard. Consider a rest day; your progress is safe.';
 
   @override
   String get sectionAttributes => 'Attributes';
@@ -202,12 +191,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get todayEmptyAction => 'Swear a quest';
 
   @override
-  String get growthEmpty =>
-      'Complete a quest and your growth will be recorded here.';
+  String get growthEmpty => 'Complete a quest and your growth will be recorded here.';
 
   @override
-  String get achievementsEmpty =>
-      'Achievements mark milestones. Your first one is a single quest away.';
+  String get achievementsEmpty => 'Achievements mark milestones. Your first one is a single quest away.';
 
   @override
   String get classUnrevealed => 'Your class reveals itself at level 5.';
@@ -283,24 +270,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get className_arcanist => 'Arcanist';
 
   @override
-  String get classDesc_scholar =>
-      'Your recent path has been one of study and understanding.';
+  String get classDesc_scholar => 'Your recent path has been one of study and understanding.';
 
   @override
-  String get classDesc_warden =>
-      'You plan, you keep your word, and you hold the line.';
+  String get classDesc_warden => 'You plan, you keep your word, and you hold the line.';
 
   @override
-  String get classDesc_artisan =>
-      'Your hands and mind have been busy making things.';
+  String get classDesc_artisan => 'Your hands and mind have been busy making things.';
 
   @override
-  String get classDesc_vanguard =>
-      'You have been training the body and leading with strength.';
+  String get classDesc_vanguard => 'You have been training the body and leading with strength.';
 
   @override
-  String get classDesc_envoy =>
-      'You have invested in people and the bonds between them.';
+  String get classDesc_envoy => 'You have invested in people and the bonds between them.';
 
   @override
   String get classDesc_druid => 'You have tended rest, recovery and wellbeing.';
@@ -348,8 +330,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tierContractHelp => 'A larger piece of work with steps.';
 
   @override
-  String get tierObjectiveHelp =>
-      'A major goal that quests and contracts build toward.';
+  String get tierObjectiveHelp => 'A major goal that quests and contracts build toward.';
 
   @override
   String get newQuest => 'New quest';
@@ -427,8 +408,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fieldIntentionHint => 'e.g. After dinner, at my desk';
 
   @override
-  String get fieldIntentionHelp =>
-      'Naming a time and place makes follow-through more likely.';
+  String get fieldIntentionHelp => 'Naming a time and place makes follow-through more likely.';
+
+  @override
+  String get fieldReminder => 'Reminder';
+
+  @override
+  String get reminderNone => 'No reminder';
+
+  @override
+  String get reminderBody => 'This quest is ready whenever you are.';
+
+  @override
+  String get reminderClear => 'Remove reminder';
 
   @override
   String get fieldRecurrence => 'Repeats';
@@ -491,26 +483,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deleteQuestTitle => 'Delete this quest?';
 
   @override
-  String get deleteQuestBody =>
-      'The quest is removed. Rewards already recorded stay in your chronicle.';
+  String get deleteQuestBody => 'The quest is removed. Rewards already recorded stay in your chronicle.';
 
   @override
   String get questDeleted => 'Quest deleted';
 
   @override
-  String get questsEmptyToday =>
-      'Nothing sworn for today. One small quest is enough.';
+  String get questsEmptyToday => 'Nothing sworn for today. One small quest is enough.';
 
   @override
   String get questsEmptyUpcoming => 'No upcoming quests.';
 
   @override
-  String get questsEmptyContracts =>
-      'No contracts yet. Contracts hold larger work with steps.';
+  String get questsEmptyContracts => 'No contracts yet. Contracts hold larger work with steps.';
 
   @override
-  String get questsEmptyObjectives =>
-      'No objectives yet. Objectives give your quests a direction.';
+  String get questsEmptyObjectives => 'No objectives yet. Objectives give your quests a direction.';
 
   @override
   String get questsEmptyCompleted => 'Completed quests will gather here.';
@@ -559,8 +547,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get completeSheetMinutes => 'How many minutes did it take?';
 
   @override
-  String get completeSheetMinutesHelp =>
-      'Optional. Honest numbers keep your character honest.';
+  String get completeSheetMinutesHelp => 'Optional. Honest numbers keep your character honest.';
 
   @override
   String get completeSheetConfirm => 'Seal';
@@ -586,8 +573,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get rewardTitle => 'Deed recorded';
 
   @override
-  String get rewardProvisional =>
-      'Provisional — will be confirmed when you are online.';
+  String get rewardProvisional => 'Provisional — will be confirmed when you are online.';
 
   @override
   String rewardTotal(String xp) {
@@ -598,12 +584,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get rewardWhy => 'Why this reward?';
 
   @override
-  String get rewardSourceAi =>
-      'Interpreted by the oracle, decided by the rules.';
+  String get rewardSourceAi => 'Interpreted by the oracle, decided by the rules.';
 
   @override
-  String get rewardSourceHeuristic =>
-      'Interpreted by the rules on this device.';
+  String get rewardSourceHeuristic => 'Interpreted by the rules on this device.';
 
   @override
   String get rewardNone => 'No XP this time — the reasons are below.';
@@ -639,8 +623,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get adj_daily_budget =>
-      'Today\'s effort budget is full. Rest is part of growth.';
+  String get adj_daily_budget => 'Today\'s effort budget is full. Rest is part of growth.';
 
   @override
   String adj_tier_bonus(String tier) {
@@ -651,8 +634,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get adj_trivial_floor => 'A very small task counts for a little.';
 
   @override
-  String get adj_trivial_limit =>
-      'Today\'s small tasks have already been counted.';
+  String get adj_trivial_limit => 'Today\'s small tasks have already been counted.';
 
   @override
   String adj_repetition(String count) {
@@ -660,15 +642,13 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get adj_low_confidence =>
-      'The description was unclear; adding detail gives a fuller reading.';
+  String get adj_low_confidence => 'The description was unclear; adding detail gives a fuller reading.';
 
   @override
   String get adj_follow_through => 'Planned and kept: a Discipline bonus.';
 
   @override
-  String get adj_follow_through_intention =>
-      'Planned, kept, and you named when and where: a larger Discipline bonus.';
+  String get adj_follow_through_intention => 'Planned, kept, and you named when and where: a larger Discipline bonus.';
 
   @override
   String adj_soft_cap(String attribute) {
@@ -681,8 +661,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get adj_weights_defaulted =>
-      'Attributes were chosen from the category.';
+  String get adj_weights_defaulted => 'Attributes were chosen from the category.';
 
   @override
   String achievementUnlocked(String name) {
@@ -728,8 +707,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get achievement_first_objective_name => 'The Long Road';
 
   @override
-  String get achievement_first_objective_desc =>
-      'Complete a long-term objective.';
+  String get achievement_first_objective_desc => 'Complete a long-term objective.';
 
   @override
   String get achievement_level_5_name => 'Tempered';
@@ -759,22 +737,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get achievement_rank_10_intelligence_name => 'Keeper of Lore';
 
   @override
-  String get achievement_rank_10_intelligence_desc =>
-      'Reach rank 10 in Intelligence.';
+  String get achievement_rank_10_intelligence_desc => 'Reach rank 10 in Intelligence.';
 
   @override
   String get achievement_rank_10_discipline_name => 'Unbending Will';
 
   @override
-  String get achievement_rank_10_discipline_desc =>
-      'Reach rank 10 in Discipline.';
+  String get achievement_rank_10_discipline_desc => 'Reach rank 10 in Discipline.';
 
   @override
   String get achievement_rank_10_creativity_name => 'Dreamwright';
 
   @override
-  String get achievement_rank_10_creativity_desc =>
-      'Reach rank 10 in Creativity.';
+  String get achievement_rank_10_creativity_desc => 'Reach rank 10 in Creativity.';
 
   @override
   String get achievement_rank_10_vitality_name => 'Evergreen';
@@ -792,29 +767,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get achievement_kept_weeks_4_name => 'A Month of Oaths';
 
   @override
-  String get achievement_kept_weeks_4_desc =>
-      'Keep your weekly target four weeks in a row.';
+  String get achievement_kept_weeks_4_desc => 'Keep your weekly target four weeks in a row.';
 
   @override
   String get achievement_kept_weeks_12_name => 'Steadfast';
 
   @override
-  String get achievement_kept_weeks_12_desc =>
-      'Keep your weekly target twelve weeks in a row.';
+  String get achievement_kept_weeks_12_desc => 'Keep your weekly target twelve weeks in a row.';
 
   @override
   String get achievement_kept_weeks_52_name => 'Oathkeeper';
 
   @override
-  String get achievement_kept_weeks_52_desc =>
-      'Keep your weekly target for a full year.';
+  String get achievement_kept_weeks_52_desc => 'Keep your weekly target for a full year.';
 
   @override
   String get achievement_the_return_name => 'The Return';
 
   @override
-  String get achievement_the_return_desc =>
-      'Come back after a week away and complete a quest.';
+  String get achievement_the_return_desc => 'Come back after a week away and complete a quest.';
 
   @override
   String get achievement_balanced_name => 'The Whole';
@@ -826,8 +797,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get achievement_hours_100_name => 'A Hundred Hours';
 
   @override
-  String get achievement_hours_100_desc =>
-      'Invest 100 hours of credited effort.';
+  String get achievement_hours_100_desc => 'Invest 100 hours of credited effort.';
 
   @override
   String get title_sworn => 'the Sworn';
@@ -917,25 +887,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get writtenChronicle => 'The chronicle';
 
   @override
-  String chronicleLocalSummary(
-    String period,
-    String count,
-    String time,
-    String attribute,
-  ) {
+  String chronicleLocalSummary(String period, String count, String time, String attribute) {
     return 'This $period you completed $count deeds and invested $time. $attribute grew the most.';
   }
 
   @override
-  String get chronicleNeedsAccount =>
-      'Written chronicles are composed by the oracle and need an account.';
+  String get chronicleNeedsAccount => 'Written chronicles are composed by the oracle and need an account.';
 
   @override
   String get ledgerTitle => 'Reward ledger';
 
   @override
-  String get ledgerEmpty =>
-      'Every reward you earn is recorded here with its reasons.';
+  String get ledgerEmpty => 'Every reward you earn is recorded here with its reasons.';
 
   @override
   String comparedToPrevious(String change) {
@@ -971,8 +934,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get guildsTitle => 'Guilds';
 
   @override
-  String get guildsIntro =>
-      'Guilds are small circles of people who encourage each other\'s real-world progress.';
+  String get guildsIntro => 'Guilds are small circles of people who encourage each other\'s real-world progress.';
 
   @override
   String get guildsRequireAccount =>
@@ -1025,8 +987,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get guildMembers => 'Members';
 
   @override
-  String get feedEmpty =>
-      'The hall is quiet. Completed quests shared with this guild appear here.';
+  String get feedEmpty => 'The hall is quiet. Completed quests shared with this guild appear here.';
 
   @override
   String memberCount(int count, String countText) {
@@ -1101,8 +1062,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get challengesEmpty =>
-      'No challenges yet. Officers can start a collective challenge.';
+  String get challengesEmpty => 'No challenges yet. Officers can start a collective challenge.';
 
   @override
   String get newChallenge => 'New challenge';
@@ -1123,8 +1083,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get challengeDays => 'Duration in days';
 
   @override
-  String get challengeNoPenalty =>
-      'No one is penalised if the target is not reached.';
+  String get challengeNoPenalty => 'No one is penalised if the target is not reached.';
 
   @override
   String get leaveGuild => 'Leave guild';
@@ -1139,8 +1098,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get reportContent => 'Report';
 
   @override
-  String get reportSent =>
-      'Report sent to the guild\'s officers and moderators.';
+  String get reportSent => 'Report sent to the guild\'s officers and moderators.';
 
   @override
   String get guildCreated => 'Guild founded';
@@ -1185,17 +1143,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get weeklyTarget => 'Weekly target';
 
   @override
-  String get weeklyTargetHelp =>
-      'How many active days make a kept week. Set what is realistic, not heroic.';
+  String get weeklyTargetHelp => 'How many active days make a kept week. Set what is realistic, not heroic.';
 
   @override
   String weeklyTargetValue(int count, String countText) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$countText days',
-      one: '$countText day',
-    );
+    String _temp0 = intl.Intl.pluralLogic(count, locale: localeName, other: '$countText days', one: '$countText day');
     return '$_temp0';
   }
 
@@ -1209,8 +1161,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pauseMode => 'Pause mode';
 
   @override
-  String get pauseModeHelp =>
-      'For travel, illness or exams. Consistency is frozen and nothing is lost.';
+  String get pauseModeHelp => 'For travel, illness or exams. Consistency is frozen and nothing is lost.';
 
   @override
   String get sectionMotivation => 'Motivation';
@@ -1252,8 +1203,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get driverRoutine => 'Structured routines';
 
   @override
-  String get motivationPrivacy =>
-      'Used only to adjust tone and suggestions. Change or clear it at any time.';
+  String get motivationPrivacy => 'Used only to adjust tone and suggestions. Change or clear it at any time.';
 
   @override
   String get sectionAi => 'AI';
@@ -1262,8 +1212,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aiEvaluation => 'Let AI interpret completed quests';
 
   @override
-  String get aiEvaluationHelp =>
-      'When off, rewards come from the built-in rules only.';
+  String get aiEvaluationHelp => 'When off, rewards come from the built-in rules only.';
 
   @override
   String get aiLanguage => 'Language for AI explanations';
@@ -1299,8 +1248,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get notificationsWebNote =>
-      'In the browser, reminders appear only while the app is open.';
+  String get notificationsWebNote => 'In the browser, reminders appear only while the app is open.';
 
   @override
   String get sectionAppearance => 'Appearance';
@@ -1348,8 +1296,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dataDeleted => 'All data deleted.';
 
   @override
-  String get aboutLicense =>
-      'Source-available under the PolyForm Strict License 1.0.0.';
+  String get aboutLicense => 'Source-available under the PolyForm Strict License 1.0.0.';
 
   @override
   String get authTitle => 'Your account';
@@ -1370,8 +1317,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authInvalid => 'That email and password don\'t match.';
 
   @override
-  String get authBackendMissing =>
-      'Online features are not configured in this build.';
+  String get authBackendMissing => 'Online features are not configured in this build.';
 
   @override
   String get onbWelcomeBody =>
@@ -1399,8 +1345,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get onbFirstQuestTitle => 'Swear your first quest';
 
   @override
-  String get onbFirstQuestHelp =>
-      'Something real and small you can do today — or already did.';
+  String get onbFirstQuestHelp => 'Something real and small you can do today — or already did.';
 
   @override
   String get onbHowItWorksTitle => 'How growth works';

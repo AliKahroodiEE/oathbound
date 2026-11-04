@@ -13,8 +13,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get appName => 'Oathbound';
 
   @override
-  String get appTagline =>
-      'شخصیت تو کسی نیست که نقشش را بازی می‌کنی؛ کسی است که به آن تبدیل می‌شوی.';
+  String get appTagline => 'شخصیت تو کسی نیست که نقشش را بازی می‌کنی؛ کسی است که به آن تبدیل می‌شوی.';
 
   @override
   String get navCharacter => 'شخصیت';
@@ -74,8 +73,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get copied => 'رونوشت گرفته شد';
 
   @override
-  String get offlineBanner =>
-      'در حالت آفلاین کار می‌کنی؛ تغییرات پس از اتصال همگام می‌شوند.';
+  String get offlineBanner => 'در حالت آفلاین کار می‌کنی؛ تغییرات پس از اتصال همگام می‌شوند.';
 
   @override
   String get errorGeneric => 'مشکلی از سمت ما پیش آمد. داده‌هایت در امان است.';
@@ -102,23 +100,19 @@ class AppLocalizationsFa extends AppLocalizations {
   String get attributeSocial => 'ارتباط';
 
   @override
-  String get attributeStrengthDesc =>
-      'توان جسمی که با تمرین و تحرک ساخته می‌شود.';
+  String get attributeStrengthDesc => 'توان جسمی که با تمرین و تحرک ساخته می‌شود.';
 
   @override
-  String get attributeIntelligenceDesc =>
-      'دانش و فهمی که با مطالعه و یادگیری ساخته می‌شود.';
+  String get attributeIntelligenceDesc => 'دانش و فهمی که با مطالعه و یادگیری ساخته می‌شود.';
 
   @override
-  String get attributeDisciplineDesc =>
-      'پیوستگی و پایبندی: برنامه بریز و به قولت عمل کن.';
+  String get attributeDisciplineDesc => 'پیوستگی و پایبندی: برنامه بریز و به قولت عمل کن.';
 
   @override
   String get attributeCreativityDesc => 'ساختن و حل مسئله به شیوه‌های تازه.';
 
   @override
-  String get attributeVitalityDesc =>
-      'استراحت، بازیابی و عادت‌هایی که سالم نگهت می‌دارند.';
+  String get attributeVitalityDesc => 'استراحت، بازیابی و عادت‌هایی که سالم نگهت می‌دارند.';
 
   @override
   String get attributeSocialDesc => 'پیوند، گفت‌وگو و حضور برای دیگران.';
@@ -170,12 +164,10 @@ class AppLocalizationsFa extends AppLocalizations {
       'به خوبی بازیابی شده‌ای. وضعیت فقط با زیاده‌روی کم می‌شود، نه با مأموریت‌های انجام‌نشده.';
 
   @override
-  String get conditionSteadyHelp =>
-      'روزهای اخیر پرفشار بوده‌اند. یک روز آرام یا روز استراحت وضعیت را بازمی‌گرداند.';
+  String get conditionSteadyHelp => 'روزهای اخیر پرفشار بوده‌اند. یک روز آرام یا روز استراحت وضعیت را بازمی‌گرداند.';
 
   @override
-  String get conditionStrainedHelp =>
-      'خیلی به خودت فشار آورده‌ای. به یک روز استراحت فکر کن؛ پیشرفتت محفوظ است.';
+  String get conditionStrainedHelp => 'خیلی به خودت فشار آورده‌ای. به یک روز استراحت فکر کن؛ پیشرفتت محفوظ است.';
 
   @override
   String get sectionAttributes => 'ویژگی‌ها';
@@ -202,8 +194,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get growthEmpty => 'یک مأموریت را انجام بده تا رشدت این‌جا ثبت شود.';
 
   @override
-  String get achievementsEmpty =>
-      'دستاوردها نقطه‌های عطف را نشان می‌دهند. نخستینش تنها یک مأموریت فاصله دارد.';
+  String get achievementsEmpty => 'دستاوردها نقطه‌های عطف را نشان می‌دهند. نخستینش تنها یک مأموریت فاصله دارد.';
 
   @override
   String get classUnrevealed => 'طبقه‌ات در سطح ۵ آشکار می‌شود.';
@@ -280,8 +271,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get classDesc_scholar => 'مسیر اخیرت، راه مطالعه و فهم بوده است.';
 
   @override
-  String get classDesc_warden =>
-      'برنامه می‌ریزی، به قولت پایبندی و استوار می‌مانی.';
+  String get classDesc_warden => 'برنامه می‌ریزی، به قولت پایبندی و استوار می‌مانی.';
 
   @override
   String get classDesc_artisan => 'دست و ذهنت سرگرم ساختن بوده‌اند.';
@@ -290,8 +280,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get classDesc_vanguard => 'تن را پرورده‌ای و با قدرت پیش می‌روی.';
 
   @override
-  String get classDesc_envoy =>
-      'روی آدم‌ها و پیوندهای میانشان سرمایه گذاشته‌ای.';
+  String get classDesc_envoy => 'روی آدم‌ها و پیوندهای میانشان سرمایه گذاشته‌ای.';
 
   @override
   String get classDesc_druid => 'به استراحت، بازیابی و سلامت رسیدگی کرده‌ای.';
@@ -339,8 +328,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get tierContractHelp => 'کاری بزرگ‌تر که چند گام دارد.';
 
   @override
-  String get tierObjectiveHelp =>
-      'هدفی بزرگ که مأموریت‌ها و قراردادها به سویش می‌روند.';
+  String get tierObjectiveHelp => 'هدفی بزرگ که مأموریت‌ها و قراردادها به سویش می‌روند.';
 
   @override
   String get newQuest => 'مأموریت تازه';
@@ -418,8 +406,19 @@ class AppLocalizationsFa extends AppLocalizations {
   String get fieldIntentionHint => 'مثلاً بعد از شام، پشت میزم';
 
   @override
-  String get fieldIntentionHelp =>
-      'تعیین زمان و مکان، احتمال انجام دادن را بیشتر می‌کند.';
+  String get fieldIntentionHelp => 'تعیین زمان و مکان، احتمال انجام دادن را بیشتر می‌کند.';
+
+  @override
+  String get fieldReminder => 'یادآوری';
+
+  @override
+  String get reminderNone => 'بدون یادآوری';
+
+  @override
+  String get reminderBody => 'هر وقت آماده بودی، این مأموریت منتظر توست.';
+
+  @override
+  String get reminderClear => 'حذف یادآوری';
 
   @override
   String get fieldRecurrence => 'تکرار';
@@ -482,15 +481,13 @@ class AppLocalizationsFa extends AppLocalizations {
   String get deleteQuestTitle => 'این مأموریت حذف شود؟';
 
   @override
-  String get deleteQuestBody =>
-      'مأموریت حذف می‌شود. پاداش‌های ثبت‌شده در وقایع‌نامه‌ات می‌مانند.';
+  String get deleteQuestBody => 'مأموریت حذف می‌شود. پاداش‌های ثبت‌شده در وقایع‌نامه‌ات می‌مانند.';
 
   @override
   String get questDeleted => 'مأموریت حذف شد';
 
   @override
-  String get questsEmptyToday =>
-      'برای امروز عهدی نبسته‌ای. یک مأموریت کوچک کافی است.';
+  String get questsEmptyToday => 'برای امروز عهدی نبسته‌ای. یک مأموریت کوچک کافی است.';
 
   @override
   String get questsEmptyUpcoming => 'مأموریتی در پیش نیست.';
@@ -500,12 +497,10 @@ class AppLocalizationsFa extends AppLocalizations {
       'هنوز قراردادی نداری. قراردادها کارهای بزرگ‌تر و چندمرحله‌ای را در خود جا می‌دهند.';
 
   @override
-  String get questsEmptyObjectives =>
-      'هنوز هدفی نداری. اهداف به مأموریت‌هایت جهت می‌دهند.';
+  String get questsEmptyObjectives => 'هنوز هدفی نداری. اهداف به مأموریت‌هایت جهت می‌دهند.';
 
   @override
-  String get questsEmptyCompleted =>
-      'مأموریت‌های انجام‌شده این‌جا گرد می‌آیند.';
+  String get questsEmptyCompleted => 'مأموریت‌های انجام‌شده این‌جا گرد می‌آیند.';
 
   @override
   String get dueToday => 'امروز';
@@ -551,8 +546,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get completeSheetMinutes => 'چند دقیقه طول کشید؟';
 
   @override
-  String get completeSheetMinutesHelp =>
-      'اختیاری. عددهای صادقانه، شخصیتت را صادق نگه می‌دارند.';
+  String get completeSheetMinutesHelp => 'اختیاری. عددهای صادقانه، شخصیتت را صادق نگه می‌دارند.';
 
   @override
   String get completeSheetConfirm => 'مُهر کن';
@@ -595,8 +589,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get rewardSourceHeuristic => 'تفسیر با قواعد، روی همین دستگاه.';
 
   @override
-  String get rewardNone =>
-      'این بار تجربه‌ای در کار نیست — دلیلش در پایین آمده است.';
+  String get rewardNone => 'این بار تجربه‌ای در کار نیست — دلیلش در پایین آمده است.';
 
   @override
   String levelUp(String level) {
@@ -629,8 +622,7 @@ class AppLocalizationsFa extends AppLocalizations {
   }
 
   @override
-  String get adj_daily_budget =>
-      'سهم تلاش امروز پر شده است. استراحت هم بخشی از رشد است.';
+  String get adj_daily_budget => 'سهم تلاش امروز پر شده است. استراحت هم بخشی از رشد است.';
 
   @override
   String adj_tier_bonus(String tier) {
@@ -649,12 +641,10 @@ class AppLocalizationsFa extends AppLocalizations {
   }
 
   @override
-  String get adj_low_confidence =>
-      'توضیح روشن نبود؛ با جزئیات بیشتر، تفسیر کامل‌تری به دست می‌آید.';
+  String get adj_low_confidence => 'توضیح روشن نبود؛ با جزئیات بیشتر، تفسیر کامل‌تری به دست می‌آید.';
 
   @override
-  String get adj_follow_through =>
-      'برنامه‌ریزی کردی و انجامش دادی: پاداش انضباط.';
+  String get adj_follow_through => 'برنامه‌ریزی کردی و انجامش دادی: پاداش انضباط.';
 
   @override
   String get adj_follow_through_intention =>
@@ -711,15 +701,13 @@ class AppLocalizationsFa extends AppLocalizations {
   String get achievement_first_contract_name => 'قرارداد مُهرشده';
 
   @override
-  String get achievement_first_contract_desc =>
-      'نخستین قراردادت را به پایان برسان.';
+  String get achievement_first_contract_desc => 'نخستین قراردادت را به پایان برسان.';
 
   @override
   String get achievement_first_objective_name => 'راه دراز';
 
   @override
-  String get achievement_first_objective_desc =>
-      'یک هدف بلندمدت را به پایان برسان.';
+  String get achievement_first_objective_desc => 'یک هدف بلندمدت را به پایان برسان.';
 
   @override
   String get achievement_level_5_name => 'آبدیده';
@@ -749,29 +737,25 @@ class AppLocalizationsFa extends AppLocalizations {
   String get achievement_rank_10_intelligence_name => 'نگهبان دانش';
 
   @override
-  String get achievement_rank_10_intelligence_desc =>
-      'در هوش به رتبه‌ی ۱۰ برس.';
+  String get achievement_rank_10_intelligence_desc => 'در هوش به رتبه‌ی ۱۰ برس.';
 
   @override
   String get achievement_rank_10_discipline_name => 'اراده‌ی خم‌نشدنی';
 
   @override
-  String get achievement_rank_10_discipline_desc =>
-      'در انضباط به رتبه‌ی ۱۰ برس.';
+  String get achievement_rank_10_discipline_desc => 'در انضباط به رتبه‌ی ۱۰ برس.';
 
   @override
   String get achievement_rank_10_creativity_name => 'رؤیاساز';
 
   @override
-  String get achievement_rank_10_creativity_desc =>
-      'در خلاقیت به رتبه‌ی ۱۰ برس.';
+  String get achievement_rank_10_creativity_desc => 'در خلاقیت به رتبه‌ی ۱۰ برس.';
 
   @override
   String get achievement_rank_10_vitality_name => 'همیشه‌سبز';
 
   @override
-  String get achievement_rank_10_vitality_desc =>
-      'در سرزندگی به رتبه‌ی ۱۰ برس.';
+  String get achievement_rank_10_vitality_desc => 'در سرزندگی به رتبه‌ی ۱۰ برس.';
 
   @override
   String get achievement_rank_10_social_name => 'یار هم‌دل';
@@ -783,29 +767,25 @@ class AppLocalizationsFa extends AppLocalizations {
   String get achievement_kept_weeks_4_name => 'یک ماه پایبندی';
 
   @override
-  String get achievement_kept_weeks_4_desc =>
-      'چهار هفته پشت سر هم به هدف هفتگی‌ات برس.';
+  String get achievement_kept_weeks_4_desc => 'چهار هفته پشت سر هم به هدف هفتگی‌ات برس.';
 
   @override
   String get achievement_kept_weeks_12_name => 'ثابت‌قدم';
 
   @override
-  String get achievement_kept_weeks_12_desc =>
-      'دوازده هفته پشت سر هم به هدف هفتگی‌ات برس.';
+  String get achievement_kept_weeks_12_desc => 'دوازده هفته پشت سر هم به هدف هفتگی‌ات برس.';
 
   @override
   String get achievement_kept_weeks_52_name => 'پیمان‌دار';
 
   @override
-  String get achievement_kept_weeks_52_desc =>
-      'یک سال تمام به هدف هفتگی‌ات پایبند بمان.';
+  String get achievement_kept_weeks_52_desc => 'یک سال تمام به هدف هفتگی‌ات پایبند بمان.';
 
   @override
   String get achievement_the_return_name => 'بازگشت';
 
   @override
-  String get achievement_the_return_desc =>
-      'پس از یک هفته دوری برگرد و مأموریتی انجام بده.';
+  String get achievement_the_return_desc => 'پس از یک هفته دوری برگرد و مأموریتی انجام بده.';
 
   @override
   String get achievement_balanced_name => 'یکپارچه';
@@ -907,18 +887,12 @@ class AppLocalizationsFa extends AppLocalizations {
   String get writtenChronicle => 'وقایع‌نامه';
 
   @override
-  String chronicleLocalSummary(
-    String period,
-    String count,
-    String time,
-    String attribute,
-  ) {
+  String chronicleLocalSummary(String period, String count, String time, String attribute) {
     return 'در این $period $count کردار انجام دادی و $time وقت گذاشتی. بیشترین رشد از آنِ $attribute بود.';
   }
 
   @override
-  String get chronicleNeedsAccount =>
-      'وقایع‌نامه‌ی نوشتاری را پیشگو می‌نگارد و به حساب کاربری نیاز دارد.';
+  String get chronicleNeedsAccount => 'وقایع‌نامه‌ی نوشتاری را پیشگو می‌نگارد و به حساب کاربری نیاز دارد.';
 
   @override
   String get ledgerTitle => 'دفتر پاداش‌ها';
@@ -960,8 +934,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get guildsTitle => 'انجمن‌ها';
 
   @override
-  String get guildsIntro =>
-      'انجمن‌ها حلقه‌های کوچکی از آدم‌ها هستند که یکدیگر را در پیشرفت واقعی دلگرم می‌کنند.';
+  String get guildsIntro => 'انجمن‌ها حلقه‌های کوچکی از آدم‌ها هستند که یکدیگر را در پیشرفت واقعی دلگرم می‌کنند.';
 
   @override
   String get guildsRequireAccount =>
@@ -1014,16 +987,11 @@ class AppLocalizationsFa extends AppLocalizations {
   String get guildMembers => 'اعضا';
 
   @override
-  String get feedEmpty =>
-      'تالار آرام است. مأموریت‌هایی که با این انجمن به اشتراک گذاشته شوند این‌جا می‌آیند.';
+  String get feedEmpty => 'تالار آرام است. مأموریت‌هایی که با این انجمن به اشتراک گذاشته شوند این‌جا می‌آیند.';
 
   @override
   String memberCount(int count, String countText) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$countText عضو',
-    );
+    String _temp0 = intl.Intl.pluralLogic(count, locale: localeName, other: '$countText عضو');
     return '$_temp0';
   }
 
@@ -1050,12 +1018,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String commentsCount(int count, String countText) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$countText نظر',
-      zero: 'نظر',
-    );
+    String _temp0 = intl.Intl.pluralLogic(count, locale: localeName, other: '$countText نظر', zero: 'نظر');
     return '$_temp0';
   }
 
@@ -1088,8 +1051,7 @@ class AppLocalizationsFa extends AppLocalizations {
   }
 
   @override
-  String get challengesEmpty =>
-      'هنوز چالشی نیست. معاونان می‌توانند چالشی جمعی آغاز کنند.';
+  String get challengesEmpty => 'هنوز چالشی نیست. معاونان می‌توانند چالشی جمعی آغاز کنند.';
 
   @override
   String get newChallenge => 'چالش تازه';
@@ -1170,16 +1132,11 @@ class AppLocalizationsFa extends AppLocalizations {
   String get weeklyTarget => 'هدف هفتگی';
 
   @override
-  String get weeklyTargetHelp =>
-      'چند روز فعال، یک هفته‌ی کامل به حساب بیاید. عددی واقع‌بینانه بگذار، نه قهرمانانه.';
+  String get weeklyTargetHelp => 'چند روز فعال، یک هفته‌ی کامل به حساب بیاید. عددی واقع‌بینانه بگذار، نه قهرمانانه.';
 
   @override
   String weeklyTargetValue(int count, String countText) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$countText روز',
-    );
+    String _temp0 = intl.Intl.pluralLogic(count, locale: localeName, other: '$countText روز');
     return '$_temp0';
   }
 
@@ -1187,15 +1144,13 @@ class AppLocalizationsFa extends AppLocalizations {
   String get restDayToday => 'امروز را روز استراحت اعلام کن';
 
   @override
-  String get restDayDeclared =>
-      'امروز روز استراحت است. بازیابی هم به حساب می‌آید.';
+  String get restDayDeclared => 'امروز روز استراحت است. بازیابی هم به حساب می‌آید.';
 
   @override
   String get pauseMode => 'حالت توقف';
 
   @override
-  String get pauseModeHelp =>
-      'برای سفر، بیماری یا فصل امتحان. پیوستگی منجمد می‌شود و چیزی از دست نمی‌رود.';
+  String get pauseModeHelp => 'برای سفر، بیماری یا فصل امتحان. پیوستگی منجمد می‌شود و چیزی از دست نمی‌رود.';
 
   @override
   String get sectionMotivation => 'انگیزه';
@@ -1237,8 +1192,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get driverRoutine => 'برنامه‌های منظم';
 
   @override
-  String get motivationPrivacy =>
-      'فقط برای تنظیم لحن و پیشنهادها به کار می‌رود. هر زمان بخواهی تغییرش بده یا پاکش کن.';
+  String get motivationPrivacy => 'فقط برای تنظیم لحن و پیشنهادها به کار می‌رود. هر زمان بخواهی تغییرش بده یا پاکش کن.';
 
   @override
   String get sectionAi => 'هوش مصنوعی';
@@ -1247,8 +1201,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get aiEvaluation => 'هوش مصنوعی مأموریت‌های انجام‌شده را تفسیر کند';
 
   @override
-  String get aiEvaluationHelp =>
-      'اگر خاموش باشد، پاداش‌ها فقط از قواعد داخلی می‌آیند.';
+  String get aiEvaluationHelp => 'اگر خاموش باشد، پاداش‌ها فقط از قواعد داخلی می‌آیند.';
 
   @override
   String get aiLanguage => 'زبان توضیحات هوش مصنوعی';
@@ -1284,8 +1237,7 @@ class AppLocalizationsFa extends AppLocalizations {
   }
 
   @override
-  String get notificationsWebNote =>
-      'در مرورگر، یادآوری‌ها فقط وقتی برنامه باز است نمایش داده می‌شوند.';
+  String get notificationsWebNote => 'در مرورگر، یادآوری‌ها فقط وقتی برنامه باز است نمایش داده می‌شوند.';
 
   @override
   String get sectionAppearance => 'ظاهر';
@@ -1300,8 +1252,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get sectionAccount => 'حساب کاربری';
 
   @override
-  String get guestMode =>
-      'به عنوان مهمان بازی می‌کنی. داده‌هایت روی همین دستگاه است.';
+  String get guestMode => 'به عنوان مهمان بازی می‌کنی. داده‌هایت روی همین دستگاه است.';
 
   @override
   String signedInAs(String email) {
@@ -1334,8 +1285,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get dataDeleted => 'همه‌ی داده‌ها حذف شد.';
 
   @override
-  String get aboutLicense =>
-      'کد منبع با مجوز PolyForm Strict 1.0.0 در دسترس است.';
+  String get aboutLicense => 'کد منبع با مجوز PolyForm Strict 1.0.0 در دسترس است.';
 
   @override
   String get authTitle => 'حساب تو';
@@ -1356,8 +1306,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get authInvalid => 'ایمیل و گذرواژه با هم جور نیستند.';
 
   @override
-  String get authBackendMissing =>
-      'قابلیت‌های آنلاین در این نسخه پیکربندی نشده‌اند.';
+  String get authBackendMissing => 'قابلیت‌های آنلاین در این نسخه پیکربندی نشده‌اند.';
 
   @override
   String get onbWelcomeBody =>
@@ -1385,8 +1334,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get onbFirstQuestTitle => 'نخستین عهدت را ببند';
 
   @override
-  String get onbFirstQuestHelp =>
-      'کاری واقعی و کوچک که امروز می‌توانی انجام دهی — یا انجامش داده‌ای.';
+  String get onbFirstQuestHelp => 'کاری واقعی و کوچک که امروز می‌توانی انجام دهی — یا انجامش داده‌ای.';
 
   @override
   String get onbHowItWorksTitle => 'رشد چگونه رخ می‌دهد';
@@ -1426,8 +1374,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get returnTitle => 'خوش برگشتی';
 
   @override
-  String get returnBody =>
-      'چند روزی دور بودی. اشکالی ندارد. سفرت پاک نشده است. یک هدف کوچک برگزین و ادامه بده.';
+  String get returnBody => 'چند روزی دور بودی. اشکالی ندارد. سفرت پاک نشده است. یک هدف کوچک برگزین و ادامه بده.';
 
   @override
   String get returnAction => 'یک مأموریت کوچک برگزین';
