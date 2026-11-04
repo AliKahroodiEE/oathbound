@@ -22,7 +22,7 @@ jobs:
         with:
           sdk: stable
       - run: dart pub get
-      - run: dart format --output=none --set-exit-if-changed lib test || true
+      - run: dart format --output=none --set-exit-if-changed lib test tool
       - run: dart analyze --fatal-infos
       - run: dart test
 
@@ -59,6 +59,8 @@ jobs:
         run: |
           flutter gen-l10n
           git diff --exit-code -- lib/l10n/generated
+      - name: Formatting
+        run: dart format --output=none --set-exit-if-changed lib/app lib/core lib/data/models.dart lib/data/repositories lib/data/db/database.dart lib/design lib/features lib/l10n/content.dart lib/main.dart test
       - run: flutter analyze --fatal-infos
       - run: flutter test
       - run: flutter build web --release
