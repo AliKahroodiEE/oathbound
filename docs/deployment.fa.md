@@ -18,7 +18,7 @@ push به شاخه‌ی `main` نسخه‌ی وب را دوباره منتشر �
 | اعلان‌ها (push) | Firebase Cloud Messaging | تابع `notify` در Edge Functions |
 
 کاربران با یک کد ۶ رقمی که برایشان ایمیل می‌شود، با ایمیل و رمز عبور (تأیید ثبت‌نام و بازیابی رمز هم با کد ۶ رقمی
-است) یا با گیت‌هاب وارد می‌شوند.
+است)، یا با گوگل یا گیت‌هاب وارد می‌شوند.
 
 نشانی عمومی سایت فقط در **یک** جا تعریف می‌شود: متغیر مخزن گیت‌هاب به نام `WYRD_SITE_URL`. هر
 چیزی که به این نشانی نیاز دارد (ساخت نسخه‌ی وب، فایل APK و تنظیمات بازگشت Supabase) آن را از همین
@@ -44,7 +44,9 @@ push به شاخه‌ی `main` نسخه‌ی وب را دوباره منتشر �
 2. **Cloudflare**: حسابی برای میزبانی نسخه‌ی وب (مرحله‌ی ۲).
 3. **Brevo یا یک app password در Gmail**: فرستنده‌ی ایمیل‌های ورود (مرحله‌ی ۳).
 4. **Firebase**: پروژه‌ای برای اعلان‌ها (مرحله‌ی ۴).
-5. **یک OAuth app در گیت‌هاب**: برای دکمه‌ی «ورود با گیت‌هاب» (مرحله‌ی ۵).
+5. **یک OAuth client در گوگل و یک OAuth app در گیت‌هاب**: برای دکمه‌های «ادامه با گوگل» و «ادامه با
+   گیت‌هاب» (مرحله‌ی ۵). ممکن است Google Cloud یک دوره‌ی آزمایشی رایگان پیشنهاد کند که کارت می‌خواهد:
+   ردش کن، ساختن client ورود به حساب پرداخت نیازی ندارد.
 6. **یک keystore اندروید**: کلیدی که APK را امضا می‌کند (مرحله‌ی ۶). اسکریپت راه‌اندازی آن را با `keytool`
    می‌سازد که همراه هر JDK هست (Android Studio هم یکی دارد).
 7. **age** برای پشتیبان‌گیری: پشتیبان‌های پایگاه داده را رمز می‌کند (مرحله‌ی ۷). نصبش: `brew install age`،
@@ -140,7 +142,33 @@ push به شاخه‌ی `main` نسخه‌ی وب را دوباره منتشر �
 
 مقدارهای تنظیم وب Firebase ذاتاً عمومی‌اند؛ فقط کلید service account محرمانه است.
 
-## ۵. ورود با گیت‌هاب
+## ۵. ورود با گوگل و گیت‌هاب
+
+هر دو، کاربر را به یک نشانی بازگشت در Supabase می‌فرستند:
+`https://<ref>.supabase.co/auth/v1/callback`. بعد در وب، ورود به `WYRD_SITE_URL` برمی‌گردد و گوشی‌ها از راه
+`app.wyrd://auth-callback` به برنامه برمی‌گردند؛ تنظیمات بک‌اند هر دو را مجاز می‌کند.
+
+**گوگل.** در [Google Cloud console](https://console.cloud.google.com)، با پروژه‌ای که Firebase ساخته (یا یک
+پروژه‌ی تازه؛ حساب پرداخت لازم نیست):
+
+1. **Google Auth Platform → Branding** (<https://console.cloud.google.com/auth/branding>): نام برنامه
+   `Wyrd`، ایمیل پشتیبانی‌ات و صفحه‌های برنامه: صفحه‌ی اصلی `WYRD_SITE_URL`، حریم خصوصی
+   `WYRD_SITE_URL/privacy` و شرایط استفاده `WYRD_SITE_URL/terms` (هر دو صفحه همراه نسخه‌ی وب منتشر
+   می‌شوند؛ اگر تنظیمات تو فرق دارد `app/web/privacy.html` و `app/web/terms.html` را ویرایش کن). لوگو
+   بارگذاری نکن: با لوگو، گوگل تأیید برنامه را الزامی می‌کند.
+2. **Audience**: گزینه‌ی *External* و بعد **Publish app** (فقط دسترسی‌های پایه‌ی ایمیل و پروفایل استفاده
+   می‌شوند، پس بازبینی لازم نیست).
+3. **Clients → Create client** → *Web application* با نام `Wyrd web (Supabase)`. در Authorized JavaScript
+   origins نشانی `WYRD_SITE_URL` و در Authorized redirect URIs نشانی
+   `https://<ref>.supabase.co/auth/v1/callback` را بگذار.
+4. **client ID** (`WYRD_GOOGLE_CLIENT_ID`) و **client secret** (`WYRD_GOOGLE_CLIENT_SECRET`) را کپی کن.
+   secret فقط یک بار نشان داده می‌شود؛ اگر گمش کردی، client را باز کن، **Add secret** را بزن و قبلی را
+   پاک کن.
+
+تا وقتی هویت برنامه تأیید نشده (که دامنه‌ی شخصی لازم دارد)، صفحه‌ی رضایت گوگل به‌جای Wyrd نام
+`<ref>.supabase.co` را نشان می‌دهد. ورود همان‌طور کار می‌کند.
+
+**گیت‌هاب.**
 
 1. یک OAuth app تازه بساز: <https://github.com/settings/applications/new> (یک *OAuth App*، نه
    GitHub App).
@@ -149,9 +177,11 @@ push به شاخه‌ی `main` نسخه‌ی وب را دوباره منتشر �
 2. روی **Generate a new client secret** بزن. client ID و secret را کپی کن.
 
 گیت‌هاب اجازه نمی‌دهد نام secret یا variable با `GITHUB_` شروع شود، پس این‌ها با نام
-`GH_OAUTH_CLIENT_ID` (variable) و `GH_OAUTH_CLIENT_SECRET` (secret) ذخیره می‌شوند. مقدار
-`WYRD_AUTH_GITHUB=true` دکمه‌ی گیت‌هاب را در برنامه نشان می‌دهد. در وب، ورود به `WYRD_SITE_URL` برمی‌گردد؛
-گوشی‌ها از راه `app.wyrd://auth-callback` به برنامه برمی‌گردند و تنظیمات بک‌اند هر دو بازگشت را مجاز می‌کند.
+`WYRD_GITHUB_CLIENT_ID` (variable) و `WYRD_GITHUB_CLIENT_SECRET` (secret) ذخیره می‌شوند.
+
+مقدارهای `WYRD_AUTH_GOOGLE=true` و `WYRD_AUTH_GITHUB=true` این دو را روشن می‌کنند. هر دکمه فقط وقتی
+نشان داده می‌شود که کلیدش روشن باشد و client ID و secret آن هر دو ذخیره شده باشند، پس دکمه‌ی نیمه‌کاره
+هیچ‌وقت دیده نمی‌شود.
 
 ## ۶. کلید امضای اندروید
 
@@ -211,7 +241,8 @@ tool/setup_production.sh         # or: tool/setup_production.sh --repo OWNER/REP
 </div>
 
 اسکریپت گروه‌های بالا را به همین ترتیب یکی‌یکی می‌پرسد، اجازه می‌دهد هر کدام را رد کنی و هر وقت خواستی
-می‌شود دوباره اجرایش کرد (Enter مقدار ذخیره‌شده را نگه می‌دارد). رمزها، توکن‌ها و کلیدها هنگام تایپ نمایش
+می‌شود دوباره اجرایش کرد: گروه‌هایی که کامل‌اند رد می‌شوند مگر بخواهی عوضشان کنی، و Enter مقدار ذخیره‌شده را
+نگه می‌دارد. رمزها، توکن‌ها و کلیدها هنگام تایپ نمایش
 داده نمی‌شوند و از راه stdin به `gh` می‌رسند. نتیجه را در
 `https://github.com/OWNER/REPO/settings/secrets/actions` (زبانه‌های secrets و variables) ببین.
 
@@ -226,7 +257,9 @@ tool/setup_production.sh         # or: tool/setup_production.sh --repo OWNER/REP
 | `SMTP_HOST`، `SMTP_PORT`، `SMTP_USER`، `SMTP_PASS`، `SMTP_ADMIN_EMAIL`، `SMTP_SENDER_NAME` | secret | استقرار بک‌اند (SMTP سفارشی Supabase) |
 | `FIREBASE_API_KEY`، `FIREBASE_APP_ID_WEB`، `FIREBASE_APP_ID_ANDROID`، `FIREBASE_MESSAGING_SENDER_ID`، `FIREBASE_PROJECT_ID`، `FIREBASE_VAPID_KEY` | variable | ساخت برنامه |
 | `FCM_SERVICE_ACCOUNT` | secret | استقرار بک‌اند (تابع `notify`) |
-| `GH_OAUTH_CLIENT_ID` / `GH_OAUTH_CLIENT_SECRET` | variable / secret | استقرار بک‌اند |
+| `WYRD_GOOGLE_CLIENT_ID` / `WYRD_GOOGLE_CLIENT_SECRET` | variable / secret | استقرار بک‌اند، ساخت برنامه (نمایش دکمه) |
+| `WYRD_AUTH_GOOGLE` | variable | ساخت برنامه و استقرار بک‌اند (`true` ورود با گوگل را روشن می‌کند) |
+| `WYRD_GITHUB_CLIENT_ID` / `WYRD_GITHUB_CLIENT_SECRET` | variable / secret | استقرار بک‌اند، ساخت برنامه (نمایش دکمه) |
 | `WYRD_AUTH_GITHUB` | variable | ساخت برنامه و استقرار بک‌اند (`true` ورود با گیت‌هاب را روشن می‌کند) |
 | `ANDROID_KEYSTORE_BASE64`، `ANDROID_KEYSTORE_PASSWORD`، `ANDROID_KEY_ALIAS`، `ANDROID_KEY_PASSWORD` | secret | انتشار اندروید |
 | `BACKUP_AGE_RECIPIENT` | variable | پشتیبان‌گیری |
@@ -241,7 +274,7 @@ tool/setup_production.sh         # or: tool/setup_production.sh --repo OWNER/REP
    `WYRD_SITE_URL` باشد و فهرست نشانی‌های بازگشت هم آن و هم `app.wyrd://auth-callback` را داشته باشد.
 2. **وب.** در **Actions** گردش‌کار **Deploy web (Cloudflare Pages)** را با **Run workflow** اجرا کن،
    یا `gh workflow run deploy-web.yml`. اجرای اول پروژه‌ی Pages را می‌سازد. `https://wyrd-app.pages.dev`
-   را باز کن، با کد ایمیلی حساب بساز و یک حساب با رمز عبور و ورود با گیت‌هاب را هم امتحان کن.
+   را باز کن، با کد ایمیلی حساب بساز و یک حساب با رمز عبور و ورود با گوگل و گیت‌هاب را هم امتحان کن.
 3. **اندروید.** اولین نسخه را تگ بزن:
 
 <div dir="ltr">
@@ -293,8 +326,9 @@ git push origin v1.0.0
    domain**. اگر دامنه روی Cloudflare باشد، رکورد DNS خودکار ساخته می‌شود.
 3. همه‌چیز را با یک تغییر به آن نشانی ببر: `gh variable set WYRD_SITE_URL --body https://your.domain` (یا
    گروه *Site address* در اسکریپت راه‌اندازی).
-4. در OAuth app گیت‌هاب، homepage URL را عوض کن. نشانی callback
-   (`https://<ref>.supabase.co/auth/v1/callback`) عوض نمی‌شود.
+4. گوگل: در Google Auth Platform پیوندهای صفحه‌ی اصلی، حریم خصوصی و شرایط (Branding) و JavaScript origin
+   مربوط به client را به نشانی تازه تغییر بده. در OAuth app گیت‌هاب، homepage URL را عوض کن. نشانی callback
+   (`https://<ref>.supabase.co/auth/v1/callback`) برای هیچ‌کدام عوض نمی‌شود.
 5. ایمیل: دامنه را در <https://resend.com/domains> اضافه کن، رکوردهای DNSی را که نشان می‌دهد در DNS
    کلادفلر بساز و صبر کن تا *Verified* شود. در <https://resend.com/api-keys> یک API key بساز و بعد
    گروه ایمیل اسکریپت راه‌اندازی را با گزینه‌ی *Resend* دوباره اجرا کن: سرور `smtp.resend.com`، درگاه
@@ -302,7 +336,7 @@ git push origin v1.0.0
 6. دوباره منتشر کن: اول بک‌اند (Site URL، فهرست نشانی‌های بازگشت، SMTP)، بعد نسخه‌ی وب (**Run workflow**).
    نسخه‌ی بعدی اندروید نشانی تازه را می‌گیرد؛ ورود در گوشی به آن وابسته نیست.
 
-نشانی `pages.dev` همچنان کار می‌کند، اما ورود با گیت‌هاب فقط به نشانی تازه برمی‌گردد، پس همان را به بقیه بده.
+نشانی `pages.dev` همچنان کار می‌کند، اما ورود با گوگل و گیت‌هاب فقط به نشانی تازه برمی‌گردد، پس همان را به بقیه بده.
 برنامه‌های صفحه‌ی اصلی آیفون به نشانی‌ای وابسته‌اند که از آن اضافه شده‌اند، پس از کاربران آیفون بخواه یک بار
 نشانی تازه را اضافه کنند (داده‌های همگام‌شده‌شان بعد از ورود برمی‌گردد).
 
@@ -311,9 +345,12 @@ git push origin v1.0.0
 - **گردش‌کار وب می‌گوید «skipped»:** `CLOUDFLARE_API_TOKEN` تنظیم نشده؛ اسکریپت راه‌اندازی را اجرا کن.
 - **ایمیلی نمی‌رسد:** ببین فرستنده نزد سرویس‌دهنده تأیید شده باشد، لاگ‌های Auth در Supabase و پوشه‌ی
   هرزنامه را نگاه کن.
-- **ورود با گیت‌هاب خطا می‌دهد:** callback URL در OAuth app باید
-  `https://<ref>.supabase.co/auth/v1/callback` باشد و استقرار بک‌اند باید بعد از ذخیره‌ی `GH_OAUTH_CLIENT_ID`،
-  `GH_OAUTH_CLIENT_SECRET` و `WYRD_AUTH_GITHUB=true` اجرا شده باشد.
+- **ورود با گوگل یا گیت‌هاب خطا می‌دهد:** نشانی بازگشت باید `https://<ref>.supabase.co/auth/v1/callback`
+  باشد (در گوگل، خطای *redirect_uri_mismatch* یعنی این نشانی در redirect URIهای client نیست) و استقرار
+  بک‌اند باید بعد از ذخیره‌ی client ID، secret و `WYRD_AUTH_GOOGLE=true` / `WYRD_AUTH_GITHUB=true` اجرا شده
+  باشد. پیام *Access blocked: app not published* در گوگل یعنی صفحه‌ی Audience هنوز *Testing* است.
+- **دکمه‌ی گوگل یا گیت‌هاب دیده نمی‌شود:** کلید روشن‌کردن، client ID یا secret آن کم است؛ استقرار وب
+  هشداری با نام همان مورد نشان می‌دهد. ذخیره‌اش کن و نسخه‌ی وب را دوباره منتشر کن.
 - **بعد از یک هفته‌ی بی‌فعالیت برنامه به بک‌اند وصل نمی‌شود:** پروژه‌ی رایگان متوقف شده؛ از داشبورد
   Supabase دوباره راهش بینداز.
 - **گردش‌کار انتشار در «Check signing secrets» شکست می‌خورد:** مرحله‌ی اندروید اسکریپت راه‌اندازی را

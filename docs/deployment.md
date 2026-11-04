@@ -16,7 +16,7 @@ push to `main` redeploys the web app and every `v*` tag publishes a new Android 
 | Push notifications | Firebase Cloud Messaging | the `notify` Edge Function |
 
 People sign in with a 6-digit code sent by e-mail, with e-mail and password (the sign-up
-confirmation and password resets also use 6-digit codes) or with GitHub.
+confirmation and password resets also use 6-digit codes), or with Google or GitHub.
 
 The public address lives in **one** place: the GitHub repository variable `WYRD_SITE_URL`.
 Everything that needs it (the web build, the APK, Supabase's redirect settings) reads that
@@ -43,7 +43,9 @@ Seven things, all free, none of which asks for a credit card:
 2. **Cloudflare**: an account for the web hosting (step 2).
 3. **Brevo or a Gmail app password**: the sender of sign-in e-mails (step 3).
 4. **Firebase**: a project for push notifications (step 4).
-5. **A GitHub OAuth app**: the "Continue with GitHub" button (step 5).
+5. **A Google OAuth client and a GitHub OAuth app**: the "Continue with Google" and "Continue
+   with GitHub" buttons (step 5). Google Cloud may offer a free trial that wants a card: skip it,
+   sign-in clients do not need billing.
 6. **An Android keystore**: the key that signs the APK (step 6). The setup script creates it with
    `keytool`, which comes with every JDK (Android Studio includes one).
 7. **age** for backups: encrypts the database backups (step 7). Install it with
@@ -141,7 +143,34 @@ their spam folder the first time. Once you have a domain, switch to Resend
 
 Firebase web config values are public by design; only the service-account key is secret.
 
-## 5. GitHub sign-in
+## 5. Google and GitHub sign-in
+
+Both providers send people back to Supabase at the same callback,
+`https://<ref>.supabase.co/auth/v1/callback`. On the web, sign-in then returns to
+`WYRD_SITE_URL`; phones come back to the app through `app.wyrd://auth-callback`. The backend
+configuration allows both.
+
+**Google.** In the [Google Cloud console](https://console.cloud.google.com), with the project
+Firebase created (or a new one; no billing account is needed):
+
+1. **Google Auth Platform → Branding** (<https://console.cloud.google.com/auth/branding>): app
+   name `Wyrd`, your support e-mail, and the app's pages: home `WYRD_SITE_URL`, privacy policy
+   `WYRD_SITE_URL/privacy`, terms `WYRD_SITE_URL/terms` (both pages ship with the web app; edit
+   `app/web/privacy.html` and `app/web/terms.html` if your setup differs). Do not upload a
+   logo: a logo makes Google require verification.
+2. **Audience**: *External*, then **Publish app** (only the basic e-mail and profile scopes are
+   used, so no review is needed).
+3. **Clients → Create client** → *Web application*, name `Wyrd web (Supabase)`. Authorized
+   JavaScript origin `WYRD_SITE_URL`; authorized redirect URI
+   `https://<ref>.supabase.co/auth/v1/callback`.
+4. Copy the **client ID** (`WYRD_GOOGLE_CLIENT_ID`) and the **client secret**
+   (`WYRD_GOOGLE_CLIENT_SECRET`). The secret is shown only once; if you lose it, open the client,
+   **Add secret**, and delete the old one.
+
+Until the app's brand is verified (which needs a domain of your own), Google's consent screen
+names `<ref>.supabase.co` rather than Wyrd. Sign-in works the same.
+
+**GitHub.**
 
 1. New OAuth app: <https://github.com/settings/applications/new> (an *OAuth App*, not a
    GitHub App).
@@ -150,10 +179,11 @@ Firebase web config values are public by design; only the service-account key is
 2. **Generate a new client secret**. Copy the client ID and the secret.
 
 GitHub does not allow secret or variable names that start with `GITHUB_`, so they are stored
-as `GH_OAUTH_CLIENT_ID` (variable) and `GH_OAUTH_CLIENT_SECRET` (secret).
-`WYRD_AUTH_GITHUB=true` shows the GitHub button in the app. On the web, sign-in returns to
-`WYRD_SITE_URL`; phones come back to the app through `app.wyrd://auth-callback`. The backend
-configuration allows both redirects.
+as `WYRD_GITHUB_CLIENT_ID` (variable) and `WYRD_GITHUB_CLIENT_SECRET` (secret).
+
+`WYRD_AUTH_GOOGLE=true` and `WYRD_AUTH_GITHUB=true` switch the providers on. A button appears
+only when its switch is on and both its client ID and secret are stored, so a half-configured
+provider never shows a broken button.
 
 ## 6. Android signing key
 
@@ -199,7 +229,8 @@ tool/setup_production.sh         # or: tool/setup_production.sh --repo OWNER/REP
 ```
 
 The script walks through the groups above in the same order, lets you skip any of them and can
-be re-run at any time (Enter keeps a stored value). Passwords, tokens and keys are typed without
+be re-run at any time: groups that are already complete are skipped unless you ask to change
+them, and Enter keeps a stored value. Passwords, tokens and keys are typed without
 echo and handed to `gh` on stdin. You can check the result at
 `https://github.com/OWNER/REPO/settings/secrets/actions` (secrets and variables tabs).
 
@@ -214,7 +245,9 @@ echo and handed to `gh` on stdin. You can check the result at
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_ADMIN_EMAIL`, `SMTP_SENDER_NAME` | secrets | backend deploy (Supabase custom SMTP) |
 | `FIREBASE_API_KEY`, `FIREBASE_APP_ID_WEB`, `FIREBASE_APP_ID_ANDROID`, `FIREBASE_MESSAGING_SENDER_ID`, `FIREBASE_PROJECT_ID`, `FIREBASE_VAPID_KEY` | variables | builds |
 | `FCM_SERVICE_ACCOUNT` | secret | backend deploy (`notify` function) |
-| `GH_OAUTH_CLIENT_ID` / `GH_OAUTH_CLIENT_SECRET` | variable / secret | backend deploy |
+| `WYRD_GOOGLE_CLIENT_ID` / `WYRD_GOOGLE_CLIENT_SECRET` | variable / secret | backend deploy, builds (whether to show the button) |
+| `WYRD_AUTH_GOOGLE` | variable | builds and backend deploy (`true` turns Google sign-in on) |
+| `WYRD_GITHUB_CLIENT_ID` / `WYRD_GITHUB_CLIENT_SECRET` | variable / secret | backend deploy, builds (whether to show the button) |
 | `WYRD_AUTH_GITHUB` | variable | builds and backend deploy (`true` turns GitHub sign-in on) |
 | `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD` | secrets | Android release |
 | `BACKUP_AGE_RECIPIENT` | variable | backups |
@@ -230,7 +263,7 @@ Order matters: the apps need a backend to talk to.
 2. **Web.** **Actions** → **Deploy web (Cloudflare Pages)** → **Run workflow**, or
    `gh workflow run deploy-web.yml`. The first run creates the Pages project. Open
    `https://wyrd-app.pages.dev`, create an account with an e-mail code, try a password account
-   and GitHub sign-in.
+   and Google and GitHub sign-in.
 3. **Android.** Tag the first release:
 
    ```bash
@@ -278,8 +311,9 @@ stays free.
    domain**. With the domain on Cloudflare, the DNS record is created for you.
 3. Point everything at it with one change: `gh variable set WYRD_SITE_URL --body https://your.domain`
    (or the *Site address* group of the setup script).
-4. GitHub OAuth app: change the homepage URL. The callback URL
-   (`https://<ref>.supabase.co/auth/v1/callback`) does not change.
+4. Google: in Google Auth Platform, change the home, privacy and terms links (Branding) and the
+   client's JavaScript origin to the new address. GitHub OAuth app: change the homepage URL.
+   The callback URL (`https://<ref>.supabase.co/auth/v1/callback`) does not change for either.
 5. E-mail: add the domain at <https://resend.com/domains>, create the DNS records it lists in
    Cloudflare DNS and wait for *Verified*. Create an API key at <https://resend.com/api-keys>,
    then re-run the setup script's e-mail group with *Resend*: host `smtp.resend.com`, port
@@ -287,8 +321,8 @@ stays free.
 6. Redeploy: the backend (Site URL, redirect list, SMTP), then the web app (**Run workflow**).
    The next Android release picks up the new address; phone sign-in does not depend on it.
 
-The `pages.dev` address keeps working, but GitHub sign-in only returns to the new address, so
-share that one. Home Screen apps on iPhone belong to the address they were added from, so ask
+The `pages.dev` address keeps working, but Google and GitHub sign-in only return to the new
+address, so share that one. Home Screen apps on iPhone belong to the address they were added from, so ask
 iPhone users to add the new address once (their synced data comes back after signing in).
 
 ## If something goes wrong
@@ -296,9 +330,13 @@ iPhone users to add the new address once (their synced data comes back after sig
 - **Web workflow says "skipped":** `CLOUDFLARE_API_TOKEN` is not set; run the setup script.
 - **No e-mails:** check the sender is verified at the provider, look at the Auth logs in
   Supabase, and the spam folder.
-- **GitHub sign-in fails:** the OAuth app's callback URL must be
-  `https://<ref>.supabase.co/auth/v1/callback`, and the backend deploy must have run after
-  `GH_OAUTH_CLIENT_ID`, `GH_OAUTH_CLIENT_SECRET` and `WYRD_AUTH_GITHUB=true` were stored.
+- **Google or GitHub sign-in fails:** the callback URL must be
+  `https://<ref>.supabase.co/auth/v1/callback` (Google: *redirect_uri_mismatch* means it is not
+  in the client's redirect URIs), and the backend deploy must have run after the client ID,
+  the secret and `WYRD_AUTH_GOOGLE=true` / `WYRD_AUTH_GITHUB=true` were stored. Google's *Access
+  blocked: app not published* means the Audience page still says *Testing*.
+- **No Google or GitHub button:** its switch, client ID or secret is missing; the web deploy
+  shows a warning naming it. Store it and redeploy the web app.
 - **The app cannot reach the backend after a quiet week:** the Free project paused; restore it
   from the Supabase dashboard.
 - **Release workflow fails at "Check signing secrets":** run the setup script's Android step.

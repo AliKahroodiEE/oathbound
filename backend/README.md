@@ -239,6 +239,9 @@ and committed separately.
 | `20261104000900_data_api_grants.sql` | the complete Data API surface: exactly what the app and the functions use |
 | `20261104000910_cron_secret_key.sql` | internal Edge Function calls with a secret key from Vault, `set_function_credentials` |
 | `20261104000920_notify_triggers.sql` | pg_net triggers on reactions, comments and milestones → `notify` |
+| `20261104001000_push_token_unregister.sql` | users may delete their own device's push token (sign-out) |
+| `20261104001010_notification_prefs_rpc.sql` | `set_notification_prefs`: the app's notification switches and quiet hours |
+| `20261104001020_reaction_signals.sql` | reactions leave the Realtime publication; each change touches its feed event |
 
 New migrations: create with `supabase migration new <name>`. Never edit an
 applied one. Every new table needs `enable row level security`, and every
@@ -252,7 +255,7 @@ until the grants match the code.
 | Role | Gets |
 | --- | --- |
 | `anon` | nothing: guests never reach the server (ADR-003) |
-| `authenticated` (the app) | SELECT on `guilds`, `feed_events`, `reactions`, `comments`, `challenges` (guild hall and its Realtime feed); SELECT(id) and UPDATE of the settings columns on `profiles`; EXECUTE on the user RPCs below |
+| `authenticated` (the app) | SELECT on `guilds`, `feed_events`, `reactions`, `comments`, `challenges` (guild hall and its Realtime feed); SELECT(id) and UPDATE of the settings columns on `profiles`; SELECT(token) and DELETE on its own `push_tokens` rows; EXECUTE on the user RPCs below |
 | `service_role` (secret keys, the functions) | SELECT on the tables the functions read; INSERT on `notification_deliveries`; INSERT/UPDATE on `chronicles`; DELETE on `push_tokens`; EXECUTE on the service RPCs |
 
 * Personal data reaches the app only through `sync_pull`; every client write
@@ -405,7 +408,9 @@ Both skip with a notice until their secrets exist.
 | `SUPABASE_SECRET_KEY` | secret | for cron and push | stored in Vault for pg_cron and the notification triggers |
 | `WYRD_SITE_URL` | variable | recommended | the web app's origin: Auth site URL and redirects (default `https://wyrd-app.pages.dev`) |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_ADMIN_EMAIL`, `SMTP_SENDER_NAME` | secrets | for real users | custom SMTP (Brevo free or a Gmail app password now, Resend later); without it Supabase only mails your own team, 2 an hour |
-| `GH_OAUTH_CLIENT_ID` / `GH_OAUTH_CLIENT_SECRET` | variable / secret | for GitHub sign-in | GitHub OAuth app; passed to `config.toml` as `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` (GitHub reserves the `GITHUB_` prefix) |
+| `WYRD_GOOGLE_CLIENT_ID` / `WYRD_GOOGLE_CLIENT_SECRET` | variable / secret | for Google sign-in | Google Cloud Web OAuth client (redirect URI `https://<ref>.supabase.co/auth/v1/callback`) |
+| `WYRD_AUTH_GOOGLE` | variable | for Google sign-in | `true` turns the provider on (needs both values above) |
+| `WYRD_GITHUB_CLIENT_ID` / `WYRD_GITHUB_CLIENT_SECRET` | variable / secret | for GitHub sign-in | GitHub OAuth app (GitHub reserves the `GITHUB_` prefix, hence `WYRD_`) |
 | `WYRD_AUTH_GITHUB` | variable | for GitHub sign-in | `true` turns the provider on (needs both values above) |
 | `ANTHROPIC_API_KEY` | secret | no | server-side AI evaluation and chronicles |
 | `FCM_SERVICE_ACCOUNT` | secret | for push | Firebase service-account JSON for `notify` |

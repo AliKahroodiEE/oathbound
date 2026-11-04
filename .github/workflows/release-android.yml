@@ -97,9 +97,19 @@ jobs:
           } >> "$GITHUB_ENV"
           # Sign-in buttons appear only for providers the backend deploy switches
           # on: the switch is true and both halves of the OAuth client exist.
-          sign_in() { if [ "$1" = true ] && [ -n "$2" ] && [ -n "$3" ]; then echo true; else echo false; fi; }
-          echo "WYRD_AUTH_GOOGLE=$(sign_in "$GOOGLE_SIGN_IN" "$GOOGLE_CLIENT_ID" "$GOOGLE_CLIENT_SECRET")" >> "$GITHUB_ENV"
-          echo "WYRD_AUTH_GITHUB=$(sign_in "$GH_SIGN_IN" "$GH_CLIENT_ID" "$GH_CLIENT_SECRET")" >> "$GITHUB_ENV"
+          sign_in() { # NAME SWITCH CLIENT_ID SECRET
+            local value=false
+            if [ "$2" = true ]; then
+              if [ -n "$3" ] && [ -n "$4" ]; then
+                value=true
+              else
+                echo "::warning title=$1 sign-in hidden::WYRD_AUTH_$1 is true but the WYRD_$1_CLIENT_ID variable or the WYRD_$1_CLIENT_SECRET secret is missing, so the button stays hidden."
+              fi
+            fi
+            echo "WYRD_AUTH_$1=$value" >> "$GITHUB_ENV"
+          }
+          sign_in GOOGLE "$GOOGLE_SIGN_IN" "$GOOGLE_CLIENT_ID" "$GOOGLE_CLIENT_SECRET"
+          sign_in GITHUB "$GH_SIGN_IN" "$GH_CLIENT_ID" "$GH_CLIENT_SECRET"
 
       - uses: actions/setup-java@v6
         with:
