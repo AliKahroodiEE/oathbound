@@ -1,0 +1,105 @@
+{
+  "locale": "en",
+  "common": {
+    "someone": "A companion",
+    "formerMember": "Former member",
+    "guild": "Your guild"
+  },
+  "attributes": {
+    "strength": "Strength",
+    "intelligence": "Intelligence",
+    "discipline": "Discipline",
+    "creativity": "Creativity",
+    "vitality": "Vitality",
+    "social": "Social"
+  },
+  "categories": {
+    "study": "study",
+    "work": "work",
+    "fitness": "training",
+    "health": "health",
+    "creative": "creative work",
+    "social": "time with others",
+    "chores": "household tasks",
+    "admin": "administration",
+    "mindfulness": "mindfulness",
+    "reading": "reading",
+    "other": "other deeds"
+  },
+  "notifications": {
+    "reaction_honour": {
+      "title": "{guild}",
+      "body": "{actor} honoured your deed."
+    },
+    "reaction_steel": {
+      "title": "{guild}",
+      "body": "{actor} raised steel for your deed."
+    },
+    "reaction_flame": {
+      "title": "{guild}",
+      "body": "{actor} kindled a flame for your deed."
+    },
+    "reaction_laurel": {
+      "title": "{guild}",
+      "body": "{actor} offered a laurel for your deed."
+    },
+    "reaction_batched": {
+      "title": "{guild}",
+      "body_one": "{actor} and one other answered your deed.",
+      "body_other": "{actor} and {count} others answered your deed."
+    },
+    "comment": {
+      "title": "{guild}",
+      "body": "{actor} wrote on your deed: “{excerpt}”"
+    },
+    "challenge_milestone": {
+      "title": "{guild}",
+      "body": "“{challenge}” has reached {percent}%."
+    },
+    "challenge_complete": {
+      "title": "{guild}",
+      "body": "“{challenge}” is complete. The guild stood together."
+    },
+    "objective_progress": {
+      "title": "An objective moved forward",
+      "body": "“{objective}” is one step further along."
+    },
+    "weekly_chronicle": {
+      "title": "Your chronicle is written",
+      "body": "The record of your past week is ready to read."
+    },
+    "daily_briefing": {
+      "title": "Today’s quests",
+      "body_one": "One quest is set for today.",
+      "body_other": "{count} quests are set for today."
+    },
+    "quest_reminder": {
+      "title": "{quest}",
+      "body": "The hour you chose has come."
+    },
+    "welcome_back": {
+      "title": "Your journey has not been erased",
+      "body": "Whenever you are ready, one small quest is enough to continue."
+    }
+  },
+  "chronicle": {
+    "periodNoun": {
+      "week": "week",
+      "month": "month",
+      "year": "year"
+    },
+    "quiet": "This {period} your chronicle holds no recorded deeds. The road waits without judgement, and every deed you have already done remains yours.",
+    "opening_one": "This {period} you completed one deed across {activeDays} active days, investing {hours} hours of real effort.",
+    "opening_other": "This {period} you completed {deeds} deeds across {activeDays} active days, investing {hours} hours of real effort.",
+    "growth": "Your greatest growth was in {attribute}, which gained {attributeXp} XP; in all, you earned {xp} XP.",
+    "topActivity": "Most of your time went to {activity}: {activityHours} hours over {activityCount} sessions.",
+    "comparison": "In the previous {period} you recorded {previousHours} hours; this {period}, {hours}.",
+    "bestDay": "Your strongest day was {bestDay}, with {bestDayXp} XP.",
+    "levelUp": "You rose from level {levelStart} to level {levelEnd}.",
+    "level": "You stand at level {levelEnd}.",
+    "achievements_one": "One new achievement was recorded in your name.",
+    "achievements_other": "{count} new achievements were recorded in your name.",
+    "restDays_one": "You also kept one day of rest.",
+    "restDays_other": "You also kept {count} days of rest."
+  }
+}

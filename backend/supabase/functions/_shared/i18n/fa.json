@@ -1,0 +1,105 @@
+{
+  "locale": "fa",
+  "common": {
+    "someone": "یکی از همراهان",
+    "formerMember": "عضو پیشین",
+    "guild": "انجمن شما"
+  },
+  "attributes": {
+    "strength": "قدرت",
+    "intelligence": "هوش",
+    "discipline": "انضباط",
+    "creativity": "خلاقیت",
+    "vitality": "سرزندگی",
+    "social": "اجتماعی"
+  },
+  "categories": {
+    "study": "مطالعه",
+    "work": "کار",
+    "fitness": "ورزش",
+    "health": "سلامت",
+    "creative": "کار هنری",
+    "social": "وقت‌گذرانی با دیگران",
+    "chores": "کارهای خانه",
+    "admin": "امور اداری",
+    "mindfulness": "ذهن‌آگاهی",
+    "reading": "کتاب‌خوانی",
+    "other": "کارهای دیگر"
+  },
+  "notifications": {
+    "reaction_honour": {
+      "title": "{guild}",
+      "body": "{actor} به کار شما ادای احترام کرد."
+    },
+    "reaction_steel": {
+      "title": "{guild}",
+      "body": "{actor} برای کار شما شمشیر برافراشت."
+    },
+    "reaction_flame": {
+      "title": "{guild}",
+      "body": "{actor} برای کار شما شعله‌ای افروخت."
+    },
+    "reaction_laurel": {
+      "title": "{guild}",
+      "body": "{actor} به کار شما تاج افتخار پیشکش کرد."
+    },
+    "reaction_batched": {
+      "title": "{guild}",
+      "body_one": "{actor} و یک نفر دیگر به کار شما پاسخ دادند.",
+      "body_other": "{actor} و {count} نفر دیگر به کار شما پاسخ دادند."
+    },
+    "comment": {
+      "title": "{guild}",
+      "body": "{actor} درباره‌ی کار شما نوشت: «{excerpt}»"
+    },
+    "challenge_milestone": {
+      "title": "{guild}",
+      "body": "«{challenge}» به {percent}٪ رسید."
+    },
+    "challenge_complete": {
+      "title": "{guild}",
+      "body": "«{challenge}» به پایان رسید. اعضای انجمن دوشادوش هم ایستادند."
+    },
+    "objective_progress": {
+      "title": "هدفی یک گام پیش رفت",
+      "body": "«{objective}» یک گام به سرانجام نزدیک‌تر شد."
+    },
+    "weekly_chronicle": {
+      "title": "وقایع‌نامه‌ی شما نوشته شد",
+      "body": "گزارش هفته‌ای که گذشت آماده‌ی خواندن است."
+    },
+    "daily_briefing": {
+      "title": "مأموریت‌های امروز",
+      "body_one": "برای امروز یک مأموریت در برنامه دارید.",
+      "body_other": "برای امروز {count} مأموریت در برنامه دارید."
+    },
+    "quest_reminder": {
+      "title": "{quest}",
+      "body": "زمانی که خودتان برگزیده بودید فرا رسیده است."
+    },
+    "welcome_back": {
+      "title": "مسیر شما پاک نشده است",
+      "body": "هر زمان آماده بودید، یک مأموریت کوچک برای ادامه کافی است."
+    }
+  },
+  "chronicle": {
+    "periodNoun": {
+      "week": "هفته",
+      "month": "ماه",
+      "year": "سال"
+    },
+    "quiet": "در این {period} کاری در وقایع‌نامه‌ی شما ثبت نشده است. راه بی‌داوری در انتظار می‌ماند و هر آنچه تاکنون انجام داده‌اید همچنان از آنِ شماست.",
+    "opening_one": "در این {period}، یک کار را در {activeDays} روز فعال به انجام رساندید و {hours} ساعت تلاش واقعی صرف کردید.",
+    "opening_other": "در این {period}، {deeds} کار را در {activeDays} روز فعال به انجام رساندید و {hours} ساعت تلاش واقعی صرف کردید.",
+    "growth": "بیشترین رشد شما در {attribute} بود که {attributeXp} امتیاز تجربه افزود؛ در مجموع {xp} امتیاز تجربه به دست آوردید.",
+    "topActivity": "بیشترِ وقت شما صرف {activity} شد: {activityHours} ساعت در {activityCount} نوبت.",
+    "comparison": "در {period} پیش {previousHours} ساعت ثبت کرده بودید و در این {period} {hours} ساعت.",
+    "bestDay": "پربارترین روز شما {bestDay} بود، با {bestDayXp} امتیاز تجربه.",
+    "levelUp": "از سطح {levelStart} به سطح {levelEnd} رسیدید.",
+    "level": "اکنون در سطح {levelEnd} ایستاده‌اید.",
+    "achievements_one": "یک دستاورد تازه به نام شما ثبت شد.",
+    "achievements_other": "{count} دستاورد تازه به نام شما ثبت شد.",
+    "restDays_one": "یک روز را نیز به استراحت اختصاص دادید.",
+    "restDays_other": "{count} روز را نیز به استراحت اختصاص دادید."
+  }
+}
