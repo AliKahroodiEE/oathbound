@@ -58,3 +58,6 @@ packages/*/pubspec.lock
 
 # Local agent tooling
 .claude/
+
+# Python bytecode (tool/ scripts)
+__pycache__/

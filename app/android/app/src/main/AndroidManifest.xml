@@ -1,4 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Sync, sign-in and pushes. Plugins also merge it in; stated so release builds never depend on that. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     <!-- Quest reminders: post notifications and restore schedules after reboot. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
@@ -27,7 +29,7 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
-            <!-- GitHub sign-in in the browser returns here as app.wyrd://auth-callback?code=...
+            <!-- Google and GitHub sign-in in the browser return here as app.wyrd://auth-callback?code=...
                  supabase_flutter reads it through app_links and trades the code for a session;
                  Flutter's own deep linking stays off so the router never sees the link. -->
             <intent-filter>
@@ -47,6 +49,13 @@
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_channel_id"
             android:value="guild_and_chronicle" />
+        <!-- Pushes use the white status-bar mark (tool/app_icons.py), tinted crimson. -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/ic_stat_wyrd" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_color"
+            android:resource="@color/notification_accent" />
         <!-- No FCM token at startup: the app requests one only for a signed-in user who allowed notifications. -->
         <meta-data
             android:name="firebase_messaging_auto_init_enabled"
