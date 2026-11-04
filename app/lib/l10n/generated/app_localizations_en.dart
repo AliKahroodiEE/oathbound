@@ -1605,8 +1605,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deleteAllData => 'Delete all data';
 
   @override
-  String get deleteAllDataBody =>
-      'This permanently removes your character, quests and history from this device and, if signed in, from our servers.';
+  String get deleteAllDataBody => 'This permanently removes your character, quests and history from this device.';
+
+  @override
+  String get signOutClearDevice => 'Sign out and clear this device';
+
+  @override
+  String get signOutClearDeviceBody =>
+      'You\'ll be signed out and this device forgets your character, quests and history. Everything already synced stays in your account; changes not synced yet are lost.';
+
+  @override
+  String get deviceCleared => 'Signed out. This device no longer holds your data.';
 
   @override
   String get dataDeleted => 'All data deleted.';

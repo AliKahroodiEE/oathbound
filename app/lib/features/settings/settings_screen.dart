@@ -19,6 +19,7 @@ import '../auth/delete_account_button.dart';
 import '../install/ios_install_hint.dart';
 import '../notifications/push_tile.dart';
 import 'ai_provider_screen.dart';
+import 'clear_device_button.dart';
 import 'theme_picker.dart';
 
 /// Settings (requirements §4.10).
@@ -437,28 +438,7 @@ class SettingsScreen extends ConsumerWidget {
                       },
                     ),
                     const SizedBox(height: AppSpace.sm),
-                    TextButton(
-                      onPressed: () async {
-                        final ok = await showDialog<bool>(
-                          context: context,
-                          builder: (c) => AlertDialog(
-                            title: Text(l10n.deleteAllData),
-                            content: Text(l10n.deleteAllDataBody),
-                            actions: [
-                              TextButton(onPressed: () => Navigator.pop(c, false), child: Text(l10n.actionCancel)),
-                              FilledButton(onPressed: () => Navigator.pop(c, true), child: Text(l10n.actionDelete)),
-                            ],
-                          ),
-                        );
-                        if (ok != true) return;
-                        await ref.read(dataRepositoryProvider).wipe();
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.dataDeleted)));
-                          context.go('/onboarding');
-                        }
-                      },
-                      child: Text(l10n.deleteAllData),
-                    ),
+                    const ClearDeviceButton(),
                   ],
                 ),
               ),

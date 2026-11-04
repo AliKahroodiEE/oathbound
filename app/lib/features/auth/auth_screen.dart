@@ -12,11 +12,11 @@ import '../../design/components/motion.dart';
 import '../../design/components/panel.dart';
 import '../../design/components/states.dart';
 import '../../design/tokens.dart';
-import '../notifications/push_provider.dart';
 import 'auth_errors.dart';
 import 'auth_gateway.dart';
 import 'auth_steps.dart';
 import 'auth_widgets.dart';
+import 'sign_out.dart';
 
 /// Where the sign-in flow is.
 enum AuthStep { email, code, password, forgot, newPassword }
@@ -212,12 +212,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     });
   }
 
-  /// Removes this device's push registration while the session still works
-  /// (bounded, so a dead connection never blocks signing out), then signs out.
-  Future<void> _signOut(AuthGateway gateway) async {
-    await ref.read(pushServiceProvider).beforeSignOut().timeout(const Duration(seconds: 5), onTimeout: () {});
-    await gateway.signOut();
-  }
+  Future<void> _signOut(AuthGateway gateway) => signOutDevice(ref, gateway);
 
   Future<void> _social(SocialProvider provider) => _run((g) async {
     await g.signInWith(provider);

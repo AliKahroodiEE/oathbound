@@ -3011,8 +3011,26 @@ abstract class AppLocalizations {
   /// No description provided for @deleteAllDataBody.
   ///
   /// In en, this message translates to:
-  /// **'This permanently removes your character, quests and history from this device and, if signed in, from our servers.'**
+  /// **'This permanently removes your character, quests and history from this device.'**
   String get deleteAllDataBody;
+
+  /// No description provided for @signOutClearDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out and clear this device'**
+  String get signOutClearDevice;
+
+  /// No description provided for @signOutClearDeviceBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ll be signed out and this device forgets your character, quests and history. Everything already synced stays in your account; changes not synced yet are lost.'**
+  String get signOutClearDeviceBody;
+
+  /// No description provided for @deviceCleared.
+  ///
+  /// In en, this message translates to:
+  /// **'Signed out. This device no longer holds your data.'**
+  String get deviceCleared;
 
   /// No description provided for @dataDeleted.
   ///

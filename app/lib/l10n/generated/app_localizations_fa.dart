@@ -1593,8 +1593,17 @@ class AppLocalizationsFa extends AppLocalizations {
   String get deleteAllData => 'حذف همه‌ی داده‌ها';
 
   @override
-  String get deleteAllDataBody =>
-      'این کار شخصیت، مأموریت‌ها و تاریخچه‌ات را برای همیشه از این دستگاه و اگر وارد شده باشی، از سرورهای ما پاک می‌کند.';
+  String get deleteAllDataBody => 'این کار شخصیت، مأموریت‌ها و تاریخچه‌ات را برای همیشه از این دستگاه پاک می‌کند.';
+
+  @override
+  String get signOutClearDevice => 'خروج و پاک‌کردن این دستگاه';
+
+  @override
+  String get signOutClearDeviceBody =>
+      'از حسابت خارج می‌شوی و این دستگاه شخصیت، مأموریت‌ها و تاریخچه‌ات را فراموش می‌کند. هرچه همگام شده در حسابت می‌ماند؛ تغییرهایی که هنوز همگام نشده‌اند از بین می‌روند.';
+
+  @override
+  String get deviceCleared => 'خارج شدی. دیگر داده‌ای از تو روی این دستگاه نیست.';
 
   @override
   String get dataDeleted => 'همه‌ی داده‌ها حذف شد.';

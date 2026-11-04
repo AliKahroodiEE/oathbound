@@ -546,7 +546,10 @@
   "exportData": "Export my data",
   "exportReady": "Your data has been copied as JSON.",
   "deleteAllData": "Delete all data",
-  "deleteAllDataBody": "This permanently removes your character, quests and history from this device and, if signed in, from our servers.",
+  "deleteAllDataBody": "This permanently removes your character, quests and history from this device.",
+  "signOutClearDevice": "Sign out and clear this device",
+  "signOutClearDeviceBody": "You'll be signed out and this device forgets your character, quests and history. Everything already synced stays in your account; changes not synced yet are lost.",
+  "deviceCleared": "Signed out. This device no longer holds your data.",
   "dataDeleted": "All data deleted.",
   "aboutLicense": "Source-available under the PolyForm Strict License 1.0.0.",
 
