@@ -31,7 +31,6 @@ jobs:
     env:
       SUPABASE_URL: ${{ vars.SUPABASE_URL }}
       SUPABASE_PUBLISHABLE_KEY: ${{ vars.SUPABASE_PUBLISHABLE_KEY }}
-      WYRD_AUTH_GITHUB: ${{ vars.WYRD_AUTH_GITHUB }}
       FIREBASE_API_KEY: ${{ vars.FIREBASE_API_KEY }}
       FIREBASE_APP_ID_WEB: ${{ vars.FIREBASE_APP_ID_WEB }}
       FIREBASE_APP_ID_ANDROID: ${{ vars.FIREBASE_APP_ID_ANDROID }}
@@ -62,6 +61,12 @@ jobs:
           INPUT_TAG: ${{ inputs.tag }}
           SITE_URL_VARIABLE: ${{ vars.WYRD_SITE_URL }}
           CF_PAGES_PROJECT: ${{ vars.CF_PAGES_PROJECT || 'wyrd-app' }}
+          GOOGLE_SIGN_IN: ${{ vars.WYRD_AUTH_GOOGLE }}
+          GOOGLE_CLIENT_ID: ${{ vars.WYRD_GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.WYRD_GOOGLE_CLIENT_SECRET }}
+          GH_SIGN_IN: ${{ vars.WYRD_AUTH_GITHUB }}
+          GH_CLIENT_ID: ${{ vars.WYRD_GITHUB_CLIENT_ID }}
+          GH_CLIENT_SECRET: ${{ secrets.WYRD_GITHUB_CLIENT_SECRET }}
         run: |
           pubspec_version="$(sed -n 's/^version:[[:space:]]*\([^+[:space:]]*\).*/\1/p' app/pubspec.yaml)"
           if [ "$GITHUB_EVENT_NAME" = "push" ]; then
@@ -90,6 +95,11 @@ jobs:
             echo "PRERELEASE=$([[ "$version" == *-* ]] && echo true || echo false)"
             echo "WYRD_SITE_URL=${site_url%/}"
           } >> "$GITHUB_ENV"
+          # Sign-in buttons appear only for providers the backend deploy switches
+          # on: the switch is true and both halves of the OAuth client exist.
+          sign_in() { if [ "$1" = true ] && [ -n "$2" ] && [ -n "$3" ]; then echo true; else echo false; fi; }
+          echo "WYRD_AUTH_GOOGLE=$(sign_in "$GOOGLE_SIGN_IN" "$GOOGLE_CLIENT_ID" "$GOOGLE_CLIENT_SECRET")" >> "$GITHUB_ENV"
+          echo "WYRD_AUTH_GITHUB=$(sign_in "$GH_SIGN_IN" "$GH_CLIENT_ID" "$GH_CLIENT_SECRET")" >> "$GITHUB_ENV"
 
       - uses: actions/setup-java@v6
         with:
@@ -133,6 +143,7 @@ jobs:
           flutter build apk --release --build-name="$APP_VERSION" --build-number="$APP_VERSION_CODE" \
             --dart-define=SUPABASE_URL="$SUPABASE_URL" \
             --dart-define=SUPABASE_PUBLISHABLE_KEY="$SUPABASE_PUBLISHABLE_KEY" \
+            --dart-define=WYRD_AUTH_GOOGLE="$WYRD_AUTH_GOOGLE" \
             --dart-define=WYRD_AUTH_GITHUB="$WYRD_AUTH_GITHUB" \
             --dart-define=WYRD_SITE_URL="$WYRD_SITE_URL" \
             --dart-define=FIREBASE_API_KEY="$FIREBASE_API_KEY" \

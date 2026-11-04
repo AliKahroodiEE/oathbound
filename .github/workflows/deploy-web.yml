@@ -57,7 +57,6 @@ jobs:
     env:
       SUPABASE_URL: ${{ vars.SUPABASE_URL }}
       SUPABASE_PUBLISHABLE_KEY: ${{ vars.SUPABASE_PUBLISHABLE_KEY }}
-      WYRD_AUTH_GITHUB: ${{ vars.WYRD_AUTH_GITHUB }}
       FIREBASE_API_KEY: ${{ vars.FIREBASE_API_KEY }}
       FIREBASE_APP_ID_WEB: ${{ vars.FIREBASE_APP_ID_WEB }}
       FIREBASE_MESSAGING_SENDER_ID: ${{ vars.FIREBASE_MESSAGING_SENDER_ID }}
@@ -69,6 +68,12 @@ jobs:
       - name: Check configuration
         env:
           SITE_URL_VARIABLE: ${{ vars.WYRD_SITE_URL }}
+          GOOGLE_SIGN_IN: ${{ vars.WYRD_AUTH_GOOGLE }}
+          GOOGLE_CLIENT_ID: ${{ vars.WYRD_GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.WYRD_GOOGLE_CLIENT_SECRET }}
+          GH_SIGN_IN: ${{ vars.WYRD_AUTH_GITHUB }}
+          GH_CLIENT_ID: ${{ vars.WYRD_GITHUB_CLIENT_ID }}
+          GH_CLIENT_SECRET: ${{ secrets.WYRD_GITHUB_CLIENT_SECRET }}
         run: |
           if ! [[ "$CF_PAGES_PROJECT" =~ ^[a-z0-9]([a-z0-9-]*[a-z0-9])?$ ]]; then
             echo "::error title=Invalid CF_PAGES_PROJECT::'$CF_PAGES_PROJECT' is not a valid Pages project name (lowercase letters, digits and dashes)."
@@ -86,6 +91,11 @@ jobs:
               echo "::warning title=$name not set::Without it the site runs in local-only guest mode. Set the $name repository variable."
             fi
           done
+          # Sign-in buttons appear only for providers the backend deploy switches
+          # on: the switch is true and both halves of the OAuth client exist.
+          sign_in() { if [ "$1" = true ] && [ -n "$2" ] && [ -n "$3" ]; then echo true; else echo false; fi; }
+          echo "WYRD_AUTH_GOOGLE=$(sign_in "$GOOGLE_SIGN_IN" "$GOOGLE_CLIENT_ID" "$GOOGLE_CLIENT_SECRET")" >> "$GITHUB_ENV"
+          echo "WYRD_AUTH_GITHUB=$(sign_in "$GH_SIGN_IN" "$GH_CLIENT_ID" "$GH_CLIENT_SECRET")" >> "$GITHUB_ENV"
 
       - uses: subosito/flutter-action@v2
         with:
@@ -110,6 +120,7 @@ jobs:
           flutter build web --release --base-href / \
             --dart-define=SUPABASE_URL="$SUPABASE_URL" \
             --dart-define=SUPABASE_PUBLISHABLE_KEY="$SUPABASE_PUBLISHABLE_KEY" \
+            --dart-define=WYRD_AUTH_GOOGLE="$WYRD_AUTH_GOOGLE" \
             --dart-define=WYRD_AUTH_GITHUB="$WYRD_AUTH_GITHUB" \
             --dart-define=WYRD_SITE_URL="$WYRD_SITE_URL" \
             --dart-define=FIREBASE_API_KEY="$FIREBASE_API_KEY" \
