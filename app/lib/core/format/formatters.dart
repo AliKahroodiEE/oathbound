@@ -43,7 +43,9 @@ class AppFormatters {
     return digits(pattern.format(value));
   }
 
-  String signedNumber(num value) => value > 0 ? '+${number(value)}' : number(value);
+  /// Signed number. A left-to-right mark keeps the sign on the number's
+  /// left in right-to-left text ("+۱۲", not "۱۲+").
+  String signedNumber(num value) => value > 0 ? '\u200E+${number(value)}' : number(value);
 
   String percent(double fraction) {
     final f = NumberFormat.percentPattern(
@@ -51,6 +53,10 @@ class AppFormatters {
     );
     return digits(f.format(fraction));
   }
+
+  /// Signed percentage change; the mark keeps "+" left of the digits in RTL.
+  String signedPercent(double fraction) =>
+      fraction > 0 ? '\u200E+${percent(fraction)}' : percent(fraction);
 
   /// "1 h 30 min" / "۱ ساعت و ۳۰ دقیقه".
   String duration(int minutes) {

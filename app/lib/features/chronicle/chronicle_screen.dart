@@ -164,7 +164,7 @@ class _SummaryPanel extends ConsumerWidget {
     final text = Theme.of(context).textTheme;
     String? change(num now, num? before) {
       if (before == null || before == 0) return null;
-      return l10n.comparedToPrevious(f.percent((now - before) / before).replaceFirst(RegExp(r'^(?=\d)'), '+'));
+      return l10n.comparedToPrevious(f.signedPercent((now - before) / before));
     }
 
     final tiles = [
