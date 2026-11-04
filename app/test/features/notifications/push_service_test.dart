@@ -616,6 +616,27 @@ void main() {
       expect(find.text(l10n.pushAllow), findsNothing);
     });
 
+    testWidgets('in the Android app, speaks of the device rather than a browser', (tester) async {
+      messaging
+        ..current = PushPermission.granted
+        ..tokenError = Exception('java.io.IOException: SERVICE_NOT_AVAILABLE');
+      create()
+        ..setUser('u1')
+        ..setPreferences(_both);
+      await pumpRow(tester);
+      expect(find.text(l10n.pushUnsupportedDevice), findsOneWidget);
+      expect(find.text(l10n.pushAllow), findsNothing);
+    });
+
+    testWidgets('in an iPhone browser, points to the Home Screen', (tester) async {
+      messaging.supported = false;
+      create(platform: 'web')
+        ..setUser('u1')
+        ..setPreferences(_both);
+      await pumpRow(tester);
+      expect(find.text(l10n.pushInstallHint), findsOneWidget);
+    }, variant: TargetPlatformVariant.only(TargetPlatform.iOS));
+
     testWidgets('stays hidden when push is not offered', (tester) async {
       create(); // Signed out.
       await pumpRow(tester);

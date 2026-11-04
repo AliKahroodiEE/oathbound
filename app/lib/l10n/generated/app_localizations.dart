@@ -2588,6 +2588,12 @@ abstract class AppLocalizations {
   /// **'This browser can\'t receive notifications.'**
   String get pushUnsupported;
 
+  /// No description provided for @pushUnsupportedDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'This device can\'t receive notifications.'**
+  String get pushUnsupportedDevice;
+
   /// No description provided for @pushInstallHint.
   ///
   /// In en, this message translates to:

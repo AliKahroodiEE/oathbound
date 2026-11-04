@@ -155,6 +155,10 @@ class PushService {
 
   bool get isAvailable => _messaging != null && _registry != null && _platform != null;
 
+  /// This device's `push_tokens.platform`: `web`, `android`, or null where
+  /// push is not offered.
+  String? get platform => _platform;
+
   /// Foreground pushes for the signed-in account that its switches allow.
   Stream<PushMessage> get messages => _messages.stream;
 

@@ -1369,6 +1369,9 @@ class AppLocalizationsFa extends AppLocalizations {
   String get pushUnsupported => 'این مرورگر نمی‌تواند اعلان دریافت کند.';
 
   @override
+  String get pushUnsupportedDevice => 'این دستگاه نمی‌تواند اعلان دریافت کند.';
+
+  @override
   String get pushInstallHint =>
       'روی آیفون، سرنوشت‌ساز را به صفحه‌ی اصلی اضافه کن (Share و بعد Add to Home Screen) و از همان‌جا بازش کن تا اعلان‌ها به دستت برسد.';
 
