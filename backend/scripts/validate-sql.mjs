@@ -28,7 +28,9 @@
  * 5. Exercises the internal Edge Function calls (pg_cron's chronicle dispatch,
  *    the notification triggers) against stand-ins for pg_net and Vault: no-op
  *    without them, then request URL, headers and payload, idempotent Vault
- *    credentials, the legacy-key fallback and a failing pg_net.
+ *    credentials, the legacy-key fallback and a failing pg_net. Old
+ *    dashboard webhooks to notify (a supabase_functions stand-in) are
+ *    dropped, the notification triggers are not.
  *
  * Exit code 0 means every migration applied and every check passed.
  */
@@ -40,6 +42,7 @@ import * as engine from '../supabase/functions/_shared/engine/index.ts';
 import { listSources, returnedMapKeys, scanDataApi } from './data-api-surface.mjs';
 
 const MIGRATIONS = fileURLToPath(new URL('../supabase/migrations/', import.meta.url));
+const DROP_NOTIFY_WEBHOOKS = '20261104001040_drop_notify_webhooks.sql';
 const REPO = fileURLToPath(new URL('../../', import.meta.url));
 const APP_LIB = fileURLToPath(new URL('../../app/lib/', import.meta.url));
 const FUNCTIONS = fileURLToPath(new URL('../supabase/functions/', import.meta.url));
@@ -991,6 +994,30 @@ async function internalCalls(db) {
     where tgname in ('reactions_notify', 'comments_notify', 'feed_events_notify') order by 1`);
   check('notification triggers on reactions, comments and feed_events',
     triggers.map((r) => r.t).join(',') === 'comments,feed_events,reactions', triggers.map((r) => r.t).join(','));
+
+  // A project set up from the old README also has dashboard webhooks to
+  // notify: triggers running supabase_functions.http_request (a stand-in
+  // here). Applied there, …_drop_notify_webhooks.sql drops exactly those.
+  const hallTriggers = async () => (await rows(db, 'postgres', null, `select tgname from pg_trigger
+    where tgrelid in ('public.reactions'::regclass, 'public.comments'::regclass, 'public.feed_events'::regclass)
+      and not tgisinternal order by 1`)).map((r) => r.tgname);
+  const ownTriggers = await hallTriggers();
+  const hook = (table, name, url) => `create trigger "${name}" after insert on public.${table} for each row
+    execute function supabase_functions.http_request('${url}', 'POST', '{"Content-type":"application/json"}', '{}', '5000');`;
+  await db.exec(`
+    create schema supabase_functions;
+    create function supabase_functions.http_request() returns trigger language plpgsql as $$ begin return null; end $$;
+    ${hook('reactions', 'notify-reactions', `${PROJECT_URL}/functions/v1/notify`)}
+    ${hook('comments', 'notify-comments', `${PROJECT_URL}/functions/v1/notify`)}
+    ${hook('feed_events', 'notify-milestones', `${PROJECT_URL}/functions/v1/notify`)}
+    ${hook('reactions', 'audit-reactions', 'https://hooks.example.test/reactions')}`);
+  await db.exec(readFileSync(MIGRATIONS + DROP_NOTIFY_WEBHOOKS, 'utf8'));
+  const afterDrop = await hallTriggers();
+  check('dashboard webhooks to notify are dropped; our triggers and other webhooks stay',
+    afterDrop.join(',') === [...ownTriggers, 'audit-reactions'].sort().join(','),
+    `before: ${ownTriggers.join(',')}; after: ${afterDrop.join(',')}`);
+  await db.exec('drop schema supabase_functions cascade');
+
   const offline = await one(db, 'postgres', null, `select private.call_edge_function('notify', '{}') as id`);
   check('internal calls are a no-op without pg_net and Vault', offline.id === null);
 

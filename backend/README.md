@@ -161,10 +161,12 @@ Without pg_net or the secrets every internal call is a no-op.
 `…_notify_triggers.sql` posts every new reaction, comment and challenge
 milestone to `notify` through pg_net (after commit, with the secret key as
 `apikey`), in the Database Webhook shape `{ type, table, schema, record,
-old_record }`. No dashboard webhooks are needed; do not create them for these
-tables, or members are notified twice. A failing pg_net never fails the
-user's write. Other senders POST `{ user_id, category, template_key, params,
-guild_id? }` directly.
+old_record }`. No dashboard webhooks are needed. Earlier instructions had
+owners create three (INSERT on these tables → `/functions/v1/notify`);
+`…_drop_notify_webhooks.sql` removes them so pushes are not sent twice. Do not
+create new ones: the migration runs only once. A failing pg_net never fails
+the user's write. Other senders POST `{ user_id, category, template_key,
+params, guild_id? }` directly.
 
 ## Flutter configuration
 
@@ -216,7 +218,9 @@ also:
 * applies the migrations a second time with the old platform defaults
   (everything granted to all three roles) and requires identical privileges;
 * exercises pg_cron's dispatch and the notification triggers against
-  stand-ins for pg_net and Vault (URL, headers, payload, failure isolation).
+  stand-ins for pg_net and Vault (URL, headers, payload, failure isolation),
+  and checks that old dashboard webhooks to `notify` are dropped while the
+  triggers stay (a `supabase_functions` stand-in).
 
 It does not exercise real pg_cron, pg_net, Vault, Realtime or Storage.
 
@@ -243,6 +247,7 @@ and committed separately.
 | `20261104001010_notification_prefs_rpc.sql` | `set_notification_prefs`: the app's notification switches and quiet hours |
 | `20261104001020_reaction_signals.sql` | reactions leave the Realtime publication; each change touches its feed event |
 | `20261104001030_reaction_rate_limit.sql` | `react` / `unreact`: at most 60 reaction changes per user per minute |
+| `20261104001040_drop_notify_webhooks.sql` | drops dashboard webhooks that still post these inserts to `notify` (double pushes) |
 
 New migrations: create with `supabase migration new <name>`. Never edit an
 applied one. Every new table needs `enable row level security`, and every
