@@ -42,7 +42,16 @@ class SettingsScreen extends ConsumerWidget {
     final restToday = ref.watch(characterStateProvider).value?.restToday ?? false;
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.settingsTitle)),
+      appBar: AppBar(
+        title: Text(l10n.settingsTitle),
+        leading: context.canPop()
+            ? null
+            : IconButton(
+                tooltip: l10n.actionClose,
+                icon: const Icon(Icons.close),
+                onPressed: () => context.go('/character'),
+              ),
+      ),
       body: Align(
         alignment: AlignmentDirectional.topCenter,
         child: ConstrainedBox(

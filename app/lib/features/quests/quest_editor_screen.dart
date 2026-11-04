@@ -110,7 +110,8 @@ class _QuestEditorScreenState extends ConsumerState<QuestEditorScreen> {
     } else {
       await repo.create(_draft());
     }
-    if (mounted) context.pop();
+    if (!mounted) return;
+    context.canPop() ? context.pop() : context.go('/quests');
   }
 
   Future<void> _delete() async {
@@ -152,6 +153,13 @@ class _QuestEditorScreenState extends ConsumerState<QuestEditorScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(_editing ? l10n.editQuest : l10n.newQuest),
+        leading: context.canPop()
+            ? null
+            : IconButton(
+                tooltip: l10n.actionClose,
+                icon: const Icon(Icons.close),
+                onPressed: () => context.go('/quests'),
+              ),
         actions: [
           if (_editing)
             IconButton(
