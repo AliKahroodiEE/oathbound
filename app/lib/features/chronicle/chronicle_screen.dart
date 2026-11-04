@@ -59,7 +59,16 @@ class _ChronicleScreenState extends ConsumerState<ChronicleScreen> {
     final f = ref.fmt(context);
     final firstWeekday = ref.watch(regionalProvider).firstWeekday;
     final range = _range(f, firstWeekday, _offset);
-    final previous = _range(f, firstWeekday, _offset - 1);
+    var previous = _range(f, firstWeekday, _offset - 1);
+    // An unfinished period is compared with the same elapsed span of the
+    // previous one, never with a whole period (no false "−60 %").
+    final inProgress = _offset == 0;
+    if (inProgress) {
+      final now = DateTime.now();
+      final elapsedDays = DateTime(now.year, now.month, now.day).difference(range.start).inDays + 1;
+      final cut = DateTime(previous.start.year, previous.start.month, previous.start.day + elapsedDays);
+      previous = (start: previous.start, end: cut.isBefore(previous.end) ? cut : previous.end);
+    }
     final stats = ref.watch(periodStatsProvider(range));
     final prevStats = ref.watch(periodStatsProvider(previous)).value;
     final text = Theme.of(context).textTheme;
@@ -117,7 +126,7 @@ class _ChronicleScreenState extends ConsumerState<ChronicleScreen> {
             error: (_, _) => ErrorState(message: l10n.errorGeneric),
             data: (s) {
               final panels = [
-                _SummaryPanel(stats: s, previous: prevStats, period: _period),
+                _SummaryPanel(stats: s, previous: prevStats, period: _period, samePoint: inProgress),
                 _XpChartPanel(stats: s, period: _period),
                 _DistributionPanel(stats: s, previous: prevStats),
                 _RhythmPanel(stats: s, period: _period),
@@ -161,11 +170,12 @@ class _ChronicleScreenState extends ConsumerState<ChronicleScreen> {
 }
 
 class _SummaryPanel extends ConsumerWidget {
-  const _SummaryPanel({required this.stats, required this.previous, required this.period});
+  const _SummaryPanel({required this.stats, required this.previous, required this.period, this.samePoint = false});
 
   final PeriodStats stats;
   final PeriodStats? previous;
   final ChroniclePeriod period;
+  final bool samePoint;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -174,7 +184,8 @@ class _SummaryPanel extends ConsumerWidget {
     final text = Theme.of(context).textTheme;
     String? change(num now, num? before) {
       if (before == null || before == 0) return null;
-      return l10n.comparedToPrevious(f.signedPercent((now - before) / before));
+      final delta = f.signedPercent((now - before) / before);
+      return samePoint ? l10n.comparedToSamePoint(delta) : l10n.comparedToPrevious(delta);
     }
 
     final tiles = [
@@ -184,9 +195,9 @@ class _SummaryPanel extends ConsumerWidget {
       (l10n.statActiveDays, f.number(stats.activeDays.length), null),
     ];
     final periodName = switch (period) {
-      ChroniclePeriod.week => l10n.periodWeek,
-      ChroniclePeriod.month => l10n.periodMonth,
-      ChroniclePeriod.year => l10n.periodYear,
+      ChroniclePeriod.week => l10n.periodWeekNoun,
+      ChroniclePeriod.month => l10n.periodMonthNoun,
+      ChroniclePeriod.year => l10n.periodYearNoun,
     };
     final strongest = stats.strongest;
     return Panel(
@@ -545,15 +556,13 @@ class _RhythmPanel extends ConsumerWidget {
   }
 }
 
-/// A chevron pointing toward the past (back) or the future, mirrored for
-/// right-to-left layouts where time flows from right to left.
+/// A chevron pointing toward the past (back) or the future. Material's
+/// chevrons already mirror in right-to-left layouts (matchTextDirection),
+/// so no manual flip is needed.
 class _DirectionalChevron extends StatelessWidget {
   const _DirectionalChevron({required this.back});
   final bool back;
 
   @override
-  Widget build(BuildContext context) {
-    final rtl = Directionality.of(context) == TextDirection.rtl;
-    return Icon(back != rtl ? Icons.chevron_left : Icons.chevron_right);
-  }
+  Widget build(BuildContext context) => Icon(back ? Icons.chevron_left : Icons.chevron_right);
 }

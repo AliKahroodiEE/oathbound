@@ -854,6 +854,20 @@ class AppLocalizationsFa extends AppLocalizations {
   String get periodYear => 'سال';
 
   @override
+  String get periodWeekNoun => 'هفته';
+
+  @override
+  String get periodMonthNoun => 'ماه';
+
+  @override
+  String get periodYearNoun => 'سال';
+
+  @override
+  String comparedToSamePoint(Object change) {
+    return '$change نسبت به همین زمان در دوره‌ی قبل';
+  }
+
+  @override
   String get previousPeriod => 'دوره‌ی قبل';
 
   @override

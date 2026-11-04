@@ -854,6 +854,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get periodYear => 'Year';
 
   @override
+  String get periodWeekNoun => 'week';
+
+  @override
+  String get periodMonthNoun => 'month';
+
+  @override
+  String get periodYearNoun => 'year';
+
+  @override
+  String comparedToSamePoint(Object change) {
+    return '$change vs the same point last period';
+  }
+
+  @override
   String get previousPeriod => 'Previous period';
 
   @override
