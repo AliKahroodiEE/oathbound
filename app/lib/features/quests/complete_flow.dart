@@ -6,6 +6,7 @@ import 'package:oathbound_engine/oathbound_engine.dart';
 import '../../app/providers.dart';
 import '../../core/format/bidi.dart';
 import '../../data/models.dart';
+import '../../data/sync/sync_coordinator.dart';
 import '../../data/repositories/progression_repository.dart';
 import '../../design/components/motion.dart';
 import '../../design/tokens.dart';
@@ -35,6 +36,7 @@ Future<CompletionOutcome?> completeQuest(BuildContext context, WidgetRef ref, Qu
         quest,
         declaredMinutes: declared,
         trackedMinutes: tracked,
+        provisional: ref.read(provisionalCompletionsProvider),
         weeklyTarget: profile?.weeklyTarget ?? 4,
         firstWeekday: regional.firstWeekday,
       );
