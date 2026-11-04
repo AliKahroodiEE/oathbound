@@ -712,6 +712,17 @@ async function smoke(db, { profileFields }) {
   const comment = await one(db, 'authenticated', B, `select * from public.add_comment($1, 'Well fought!')`, [event.id]);
   check('members can react and comment',
     (await rows(db, 'authenticated', A, 'select * from public.reactions')).length === 1 && comment.body === 'Well fought!');
+  // Reactions are not in the Realtime publication (deletions would reach
+  // every subscriber); each change touches its feed event instead.
+  const touched = await one(db, 'postgres', null,
+    'select reactions_changed_at from public.feed_events where id = $1', [event.id]);
+  await one(db, 'authenticated', B, `select public.unreact($1, 'honour')`, [event.id]);
+  const retouched = await one(db, 'postgres', null,
+    'select reactions_changed_at from public.feed_events where id = $1', [event.id]);
+  check('adding and removing a reaction signals through its feed event',
+    touched?.reactions_changed_at != null && retouched?.reactions_changed_at != null,
+    `after react: ${touched?.reactions_changed_at}; after unreact: ${retouched?.reactions_changed_at}`);
+  await one(db, 'authenticated', B, `select public.react($1, 'honour')`, [event.id]);
   await expectError('non-members cannot comment',
     one(db, 'authenticated', C, `select * from public.add_comment($1, 'hi')`, [event.id]), /not found/);
   await expectError('empty comments are rejected',

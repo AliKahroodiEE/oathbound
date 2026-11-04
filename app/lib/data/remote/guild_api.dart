@@ -245,17 +245,17 @@ class GuildApi {
   Future<void> block(String userId) => _c.rpc<void>('block_user', params: {'user_id': userId});
 
   /// Live "something changed" signal for a guild's hall (ADR-003: realtime
-  /// triggers a refetch, it is never applied directly).
+  /// triggers a refetch, it is never applied directly). Reactions are not
+  /// published themselves (Realtime cannot hide deletions from other guilds):
+  /// each one touches its feed event, which arrives here as an update.
   RealtimeChannel watchGuild(String guildId, void Function() onChange) {
     final channel = _c.channel('guild:$guildId');
-    for (final table in const ['feed_events', 'reactions', 'comments', 'challenges']) {
+    for (final table in const ['feed_events', 'comments', 'challenges']) {
       channel.onPostgresChanges(
         event: PostgresChangeEvent.all,
         schema: 'public',
         table: table,
-        filter: table == 'reactions'
-            ? null
-            : PostgresChangeFilter(type: PostgresChangeFilterType.eq, column: 'guild_id', value: guildId),
+        filter: PostgresChangeFilter(type: PostgresChangeFilterType.eq, column: 'guild_id', value: guildId),
         callback: (_) => onChange(),
       );
     }
