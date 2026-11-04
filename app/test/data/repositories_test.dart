@@ -95,12 +95,12 @@ void main() {
   test('server reconciliation supersedes provisional rows', () async {
     final q = await quests.create(const QuestDraft(title: 'Write report 45m'));
     final outcome = await progression.complete(q, provisional: true);
-    final server = RewardResult(
-      grants: const [Grant(Attribute.discipline, 7, 7)],
+    const server = RewardResult(
+      grants: [Grant(Attribute.discipline, 7, 7)],
       effectiveMinutes: 45,
       trivial: false,
       similarityKey: 'work.report',
-      adjustments: const [],
+      adjustments: [],
       ruleVersion: rulesVersion,
       source: ProposalSource.ai,
     );
