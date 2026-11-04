@@ -1,170 +1,371 @@
 <div align="center">
 
-# Wyrd
+<a href="https://alikahroodiee.github.io/wyrd/">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/banner-dark.png">
+    <source media="(prefers-color-scheme: light)" srcset="docs/assets/banner-light.png">
+    <img src="docs/assets/banner-dark.png" alt="Wyrd — a dark-fantasy RPG for real life. Your character is who you become." width="100%">
+  </picture>
+</a>
 
-**Your character is not someone you play. Your character is who you become.**
+<h3>Turn real effort into a character that grows.</h3>
 
-A dark-fantasy RPG productivity ecosystem in which real-life effort shapes a persistent character,
-its history, and the guilds it belongs to.
+Quests and habits become XP, six attributes, titles and a living chronicle.<br>
+AI proposes, a deterministic rules engine decides, and every reward explains itself.
 
-Android · iOS · Web (desktop browsers) — English & فارسی (full RTL) from day one
+<br>
 
-**[▶ Try the live web demo](https://alikahroodiee.github.io/wyrd/)** — runs in your browser with sample data; nothing leaves your device.
+[![Try the live demo](https://img.shields.io/badge/%E2%96%B6%20%20Try%20the%20live%20demo-C0202D?style=for-the-badge)](https://alikahroodiee.github.io/wyrd/)
 
-[![License: PolyForm Strict 1.0.0](https://img.shields.io/badge/license-PolyForm%20Strict%201.0.0-A71924)](LICENSE.md)
+[![CI](https://github.com/AliKahroodiEE/wyrd/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/AliKahroodiEE/wyrd/actions/workflows/ci.yml)
+[![Web demo](https://github.com/AliKahroodiEE/wyrd/actions/workflows/pages.yml/badge.svg?branch=main)](https://github.com/AliKahroodiEE/wyrd/actions/workflows/pages.yml)
+![Flutter](https://img.shields.io/badge/Flutter-3.47-02569B?logo=flutter&logoColor=white)
+![Dart](https://img.shields.io/badge/Dart-3.13-0175C2?logo=dart&logoColor=white)
+![Platforms](https://img.shields.io/badge/platforms-Android%20%C2%B7%20iOS%20%C2%B7%20Web-FF5A64)
+![Languages](https://img.shields.io/badge/i18n-English%20%C2%B7%20%D9%81%D8%A7%D8%B1%D8%B3%DB%8C-8B6CFF)
+[![License](https://img.shields.io/badge/license-PolyForm%20Strict%201.0.0-E2B45C)](LICENSE.md)
+
+[**Features**](#features) · [**Screenshots**](#screenshots) · [**Quick start**](#quick-start) · [**How it works**](#how-it-works) · [**Docs**](docs/) · [**License**](#license)
 
 </div>
 
-<p align="center">
-  <img src="docs/screenshots/desktop-character-en.png" alt="Wyrd on desktop: character sheet with level, six attributes, today's quests, consistency and recent growth" width="100%">
-</p>
+<br>
+
+> [!TIP]
+> **No install needed.** The [live demo](https://alikahroodiee.github.io/wyrd/) runs entirely in your browser with six weeks of sample
+> history. Nothing leaves your device. It opens in your device's language and light or dark setting.
+
+## Why Wyrd
+
+Most habit apps hand out points for ticking a box. Wyrd asks what you actually did, then grows a
+persistent character from it: study raises Intelligence, training builds Strength, keeping a
+promise you planned forges Discipline. An AI reads the effort; a deterministic engine caps it,
+applies diminishing returns, writes it to an auditable ledger and tells you exactly why you grew.
+
+No shame mechanics, no gambling loops, no streak terror. Attributes never decay while you rest,
+pause mode exists for exams and illness, and guild challenges never punish a group for one
+person's off day. The design is grounded in published research on motivation and habit
+formation ([`docs/research`](docs/research/behavioral-science.md)).
+
+## Features
 
 <table>
   <tr>
-    <td align="center" width="25%"><img src="docs/screenshots/phone-reward-en.png" alt="Reward reveal explaining each attribute gain and the planning bonus" width="100%"><br><sub>Every reward explains itself</sub></td>
-    <td align="center" width="25%"><img src="docs/screenshots/phone-character-fa.png" alt="Character sheet in Persian, right to left, with Persian digits" width="100%"><br><sub>Full Persian, right to left</sub></td>
-    <td align="center" width="25%"><img src="docs/screenshots/phone-quests-en.png" alt="Today's quests with recurring habits and completed seals" width="100%"><br><sub>Quests, habits and contracts</sub></td>
-    <td align="center" width="25%"><img src="docs/screenshots/phone-chronicle-fa.png" alt="Weekly chronicle in Persian with the Jalali calendar" width="100%"><br><sub>Chronicle in the Jalali calendar</sub></td>
+    <td width="33%" valign="top">
+      <h4>⚔️ Quests that fit real life</h4>
+      Daily quests, contracts and long-term objectives, with recurrence, subtasks, timers,
+      reminders and when-and-where intentions.
+    </td>
+    <td width="33%" valign="top">
+      <h4>🧬 Six attributes, honest XP</h4>
+      Strength, Intelligence, Discipline, Creativity, Vitality and Social. Levels, titles and
+      emergent classes follow from what you do, never from what you claim.
+    </td>
+    <td width="33%" valign="top">
+      <h4>⚖️ AI proposes, rules decide</h4>
+      The rules engine exists twice, in Dart and TypeScript, bound by shared conformance vectors, so
+      the phone and the server always agree on every point.
+    </td>
+  </tr>
+  <tr>
+    <td valign="top">
+      <h4>🔑 Bring your own AI</h4>
+      Anthropic, OpenAI, Google Gemini, or any compatible service (OpenRouter, Groq, Ollama…).
+      Your key stays in your device's secure storage. No AI? Built-in rules evaluate everything.
+    </td>
+    <td valign="top">
+      <h4>🛡️ Guilds</h4>
+      Private guilds with a feed, reactions, comments and collective challenges built for
+      encouragement, not comparison.
+    </td>
+    <td valign="top">
+      <h4>📜 A chronicle that writes itself</h4>
+      Week, month and year analytics, rhythm and balance views, a full reward ledger, and AI
+      summaries grounded in your real data.
+    </td>
+  </tr>
+  <tr>
+    <td valign="top">
+      <h4>🌗 Light and dark</h4>
+      <i>Ashen Codex</i> by night, <i>Vellum</i> by day. Follows your device automatically, or
+      pick one in Settings.
+    </td>
+    <td valign="top">
+      <h4>🌍 English and فارسی</h4>
+      Opens in your device's language. Full right-to-left layout, Jalali calendar, Persian
+      digits, and mixed-script text that always reads the right way.
+    </td>
+    <td valign="top">
+      <h4>📶 Local-first</h4>
+      Everything works on the device in guest mode, offline included. Accounts, sync and guilds
+      are opt-in.
+    </td>
   </tr>
 </table>
 
-<p align="center">
-  <img src="docs/screenshots/desktop-chronicle-en.png" alt="Weekly chronicle on desktop: summary, growth by attribute, effort distribution and rhythm" width="100%">
-</p>
+## Screenshots
 
-<sub>Screenshots are rendered from the real app with six weeks of demo data
-(<code>flutter test --dart-define=SCREENSHOTS=true --update-goldens test/screenshots</code> in <code>app/</code>).</sub>
+<p align="center"><sub>These follow your GitHub theme: switch between light and dark to see the other side.</sub></p>
 
----
+<table>
+  <tr>
+    <td align="center" width="25%">
+      <picture>
+        <source media="(prefers-color-scheme: light)" srcset="docs/screenshots/phone-character-light-en.png">
+        <img src="docs/screenshots/phone-character-dark-en.png" alt="Character sheet with an XP ring, level, title, class, condition, consistency and today's quests" width="100%">
+      </picture>
+      <br><sub><b>Character sheet</b><br>Level, condition and today's quests</sub>
+    </td>
+    <td align="center" width="25%">
+      <picture>
+        <source media="(prefers-color-scheme: light)" srcset="docs/screenshots/phone-reward-light-en.png">
+        <img src="docs/screenshots/phone-reward-dark-en.png" alt="Reward sheet: +47 XP, a rank-up banner, and an explanation of each attribute gain" width="100%">
+      </picture>
+      <br><sub><b>Rewards that explain themselves</b><br>Every point has a reason</sub>
+    </td>
+    <td align="center" width="25%">
+      <picture>
+        <source media="(prefers-color-scheme: light)" srcset="docs/screenshots/phone-quests-light-en.png">
+        <img src="docs/screenshots/phone-quests-dark-en.png" alt="Quest list with recurring habits, category badges and completed seals" width="100%">
+      </picture>
+      <br><sub><b>Quests and habits</b><br>Daily, contracts, objectives</sub>
+    </td>
+    <td align="center" width="25%">
+      <picture>
+        <source media="(prefers-color-scheme: light)" srcset="docs/screenshots/phone-chronicle-light-fa.png">
+        <img src="docs/screenshots/phone-chronicle-dark-fa.png" alt="Weekly chronicle in Persian, right to left, with the Jalali calendar" width="100%">
+      </picture>
+      <br><sub><b>Chronicle, in Persian</b><br>Right to left, Jalali calendar</sub>
+    </td>
+  </tr>
+</table>
 
-## What it is
+<picture>
+  <source media="(prefers-color-scheme: light)" srcset="docs/screenshots/desktop-character-light-en.png">
+  <img src="docs/screenshots/desktop-character-dark-en.png" alt="Wyrd in a desktop browser: sidebar, character sheet with attribute radar, today's quests, achievements and recent growth" width="100%">
+</picture>
 
-Wyrd is a task and habit system wrapped in a serious, atmospheric RPG. You don't assign
-yourself points. You do real things — study, train, build, reach out to people — and an AI
-evaluator proposes how that effort should shape your character. A deterministic progression
-engine then validates, caps and records every reward in an auditable ledger, and tells you
-exactly why you grew.
+<details>
+<summary><b>More screenshots</b>: both themes side by side, the desktop chronicle, settings</summary>
+<br>
 
-| Pillar | What it means in the product |
-| --- | --- |
-| **Character** | Six attributes (Strength, Intelligence, Discipline, Creativity, Vitality, Social), levels, titles, emergent classes, a permanent chronicle. Attributes are never lost to inactivity. |
-| **AI progression** | AI interprets each completed task; a deterministic engine caps, applies diminishing returns, and explains the result. AI never writes to your character directly. |
-| **Quests** | Daily Quests → Contracts → Long-Term Objectives, with recurrence, subtasks, reminders and optional time tracking. |
-| **Guilds** | Private and public guilds, an activity feed with reactions and comments, collective challenges that never punish members for one person's inactivity. |
-| **Chronicle** | Weekly, monthly and yearly analytics, historical character snapshots, and AI-written chronicles grounded in your real data. |
-| **Psychology** | Designed from published research on motivation, habit formation and self-compassion — no shame mechanics, no gambling loops, no streak terror. |
+<img src="docs/assets/themes.png" alt="The same character in the dark Ashen Codex theme (English) and the light Vellum theme (Persian)" width="100%">
 
-## Status
+<picture>
+  <source media="(prefers-color-scheme: light)" srcset="docs/screenshots/desktop-chronicle-light-en.png">
+  <img src="docs/screenshots/desktop-chronicle-dark-en.png" alt="Weekly chronicle on desktop: summary, growth by attribute, effort distribution and rhythm" width="100%">
+</picture>
 
-Milestones **M0 Foundation** and **M1 Connected** are implemented; M2–M4 (public guilds,
-premium, store releases) are next.
+<table>
+  <tr>
+    <td align="center" width="33%">
+      <img src="docs/screenshots/phone-character-light-fa.png" alt="Character sheet in Persian, light theme" width="100%">
+      <br><sub>Persian, light</sub>
+    </td>
+    <td align="center" width="33%">
+      <img src="docs/screenshots/phone-character-dark-fa.png" alt="Character sheet in Persian, dark theme" width="100%">
+      <br><sub>Persian, dark</sub>
+    </td>
+    <td align="center" width="33%">
+      <picture>
+        <source media="(prefers-color-scheme: light)" srcset="docs/screenshots/phone-settings-light-en.png">
+        <img src="docs/screenshots/phone-settings-dark-en.png" alt="Settings: language and theme both set to Auto" width="100%">
+      </picture>
+      <br><sub>Language and theme on Auto</sub>
+    </td>
+  </tr>
+</table>
 
-| Area | State |
-| --- | --- |
-| Research, product spec, progression rules, design system, UX, architecture + ADRs | ✅ [`docs/`](docs/) |
-| Progression engine in Dart (103 tests) and TypeScript (46 tests), bound by shared conformance vectors | ✅ |
-| Local-first app: character sheet, quests (daily/contracts/objectives, recurrence, subtasks, timer, reminders), reward reveal with explanations, ledger, week/month/year chronicle, settings, onboarding | ✅ [`app/`](app/) |
-| English + Persian, full RTL, Jalali/Gregorian, native/Latin digits, auto-direction for user text | ✅ |
-| Adaptive layouts: phone (bottom bar), tablet (rail), desktop/web (sidebar, multi-column) | ✅ |
-| Backend: schema, row-level security, sync and progression RPCs, Claude evaluation and chronicle functions, push notifications | ✅ [`backend/`](backend/) |
-| Client accounts, sync, server evaluation, guilds (feed, reactions, comments, challenges) | ✅ |
-| Bring your own AI: Anthropic, OpenAI, Google Gemini, or any Anthropic/OpenAI-compatible service (OpenRouter, Groq, Ollama…) | ✅ |
+</details>
 
-**Verified here:** all engine, app and backend test suites; static analysis; all migrations and
-73 security/behaviour checks against an offline Postgres (PGlite); type-checks of every Edge
-Function; the web build exercised in a browser in English and Persian at phone, tablet and
-desktop widths.
+<sub>Every image is rendered from the real app, with its real fonts and six weeks of demo data. See
+<a href="#regenerating-screenshots">Regenerating screenshots</a>.</sub>
 
-**Not yet verified:** a live Supabase project, real Claude and FCM calls, and native builds for
-Android and iOS (they need the Android SDK and Xcode). On desktop, Wyrd runs as a web app
-in the browser and can be installed from it.
-Persian copy needs review by a native speaker before release.
+## Quick start
 
-## Repository layout
-
-```
-.
-├── app/            Flutter client (Android, iOS, Web)
-├── packages/       Shared pure-Dart packages (the progression engine)
-├── backend/        Supabase schema, row-level security, Edge Functions
-└── docs/           Research, product spec, design system, architecture, ADRs
-```
-
-## Getting started
-
-Prerequisites: Flutter 3.47+ (stable), Dart 3.13+, plus the toolchain for each target platform.
+You need Flutter 3.47+ (stable) and Dart 3.13+.
 
 ```bash
-cd app
+git clone https://github.com/AliKahroodiEE/wyrd.git
+cd wyrd/app
 flutter pub get
-flutter run -d chrome          # or an Android device / iOS simulator
+flutter run -d chrome --dart-define=WYRD_DEMO=true   # six weeks of sample history
 ```
 
-Without backend configuration the app runs fully on the device (guest mode): every feature
-except accounts, sync and guilds works offline. To try it with six weeks of sample activity:
+Drop `WYRD_DEMO` for a fresh start, and run on an Android device or iOS simulator with
+`flutter run -d <device>`. Without backend configuration Wyrd runs fully on the device: every
+feature except accounts, sync and guilds works offline.
+
+<details>
+<summary><b>Demo in Persian, connecting a backend, and other options</b></summary>
+<br>
 
 ```bash
-flutter run -d chrome --dart-define=WYRD_DEMO=true                                  # English
-flutter run -d chrome --dart-define=WYRD_DEMO=true --dart-define=WYRD_DEMO_LOCALE=fa # Persian
-``` To connect a Supabase backend:
+# Seed the demo in Persian regardless of the device language
+flutter run -d chrome --dart-define=WYRD_DEMO=true --dart-define=WYRD_DEMO_LOCALE=fa
 
-```bash
-flutter run --dart-define=SUPABASE_URL=https://<project>.supabase.co --dart-define=SUPABASE_PUBLISHABLE_KEY=<publishable-key>
+# Connect a Supabase backend (accounts, sync, guilds, push)
+flutter run --dart-define=SUPABASE_URL=https://<project>.supabase.co \
+            --dart-define=SUPABASE_PUBLISHABLE_KEY=<publishable-key>
 ```
 
 Backend setup is documented in [`backend/README.md`](backend/README.md).
+
+</details>
+
+## How it works
+
+```mermaid
+flowchart LR
+    Q["You complete a quest"] --> E{"Evaluation"}
+    E -->|"your own AI key,<br/>or the server's"| P["AI proposal<br/>category · difficulty · effort"]
+    E -->|"no AI configured"| H["Built-in heuristics"]
+    P --> R["Deterministic rules engine<br/>caps · diminishing returns · bonuses"]
+    H --> R
+    R --> C["XP, attributes, level,<br/>titles and achievements"]
+    C --> L[("Local ledger<br/>with explanations")]
+    L -. "optional sync" .-> S[("Supabase<br/>re-validated server-side")]
+```
+
+- **The AI never writes to your character.** It returns a structured proposal. The engine bounds
+  it, and on the server a proposal from your own AI must stay within one difficulty step and twice
+  the duration of the server's own estimate.
+- **The engine is pure and versioned.** The same rules run in Dart on the device and TypeScript
+  on the server, kept in lockstep by shared conformance vectors
+  ([ADR-004](docs/architecture/adr/004-dual-engine-conformance.md)).
+- **Local-first.** Every change lands in a local SQLite database first (WebAssembly on the web),
+  then syncs through an outbox with hybrid logical clocks
+  ([ADR-003](docs/architecture/adr/003-local-first-sync.md)).
+
+<details>
+<summary><b>Tech stack</b></summary>
+<br>
+
+| Layer | Built with |
+| --- | --- |
+| App | Flutter · Riverpod 3 · go_router · Drift (SQLite, WebAssembly on the web) · fl_chart |
+| Rules engine | Pure Dart package, with a TypeScript twin bound by shared test vectors |
+| Backend | Supabase: Postgres with row-level security, RPCs, Edge Functions (Deno), pg_cron |
+| AI | Anthropic Messages, OpenAI Chat Completions, Google Gemini, all called directly from the device |
+| Localization | gen-l10n ARB catalogs · English and Persian · Jalali calendar via `shamsi_date` |
+| CI/CD | GitHub Actions: analysis, formatting, all test suites and the web build; demo on GitHub Pages |
+
+</details>
+
+## Project status
+
+| Area | State |
+| --- | --- |
+| Research, product spec, progression rules, design system, UX, architecture and ADRs | ✅ [`docs/`](docs/) |
+| Rules engine in Dart (103 tests) and TypeScript (46 tests), bound by conformance vectors | ✅ [`packages/`](packages/) |
+| Local-first app: character sheet, quests, rewards, ledger, chronicle, settings, onboarding | ✅ [`app/`](app/) |
+| Light and dark themes; language and theme follow the device | ✅ |
+| English and Persian, full RTL, Jalali and Gregorian, native or Latin digits | ✅ |
+| Adaptive layouts: phone (floating bar), tablet (rail), desktop and web (sidebar, columns) | ✅ |
+| Backend: schema, row-level security, sync and progression RPCs, AI functions, push | ✅ [`backend/`](backend/) |
+| Accounts, sync, server evaluation, guilds (feed, reactions, comments, challenges) | ✅ |
+| Bring your own AI: Anthropic, OpenAI, Gemini and compatible services | ✅ |
+
+<details>
+<summary><b>What has been verified, and what has not</b></summary>
+<br>
+
+**Verified:** all engine, app and backend test suites; static analysis; every migration and 73
+security and behaviour checks against an offline Postgres (PGlite); type-checks of every Edge
+Function; the web build exercised in a browser in English and Persian, in light and dark, at
+phone, tablet and desktop widths.
+
+**Not yet verified:** a live Supabase project, real AI and push-notification calls against
+production services, and native Android and iOS builds (they need the Android SDK and Xcode).
+Persian copy needs a review by a native speaker before release.
+
+</details>
+
+### Roadmap
+
+- [x] **Foundation**: rules engine, local-first app, quests, character sheet, English and Persian
+- [x] **Connected**: accounts, sync, server-side evaluation, push notifications
+- [x] **Social**: private guilds with feed, reactions, comments and challenges
+- [x] **Chronicle**: week, month and year analytics, AI-written chronicles
+- [ ] **Motivation engine**: daily briefing, evening reflection, weekly review
+- [ ] **Public**: public guilds and moderation, premium and cosmetics
+- [ ] **Stores**: Google Play and the App Store
 
 ## Hosting
 
 | You want | You host |
 | --- | --- |
-| The app on phones, everything local (guest mode) | Nothing |
-| The web app (desktop and mobile browsers) | Static files only: `flutter build web` → GitHub Pages, Cloudflare Pages, Netlify or Vercel |
-| Accounts, sync across devices, guilds, push | The Supabase backend in [`backend/`](backend/) (Supabase Cloud or self-hosted) — see its README |
+| The app on phones, everything local | Nothing |
+| The web app, in desktop and mobile browsers | Static files only: `flutter build web` to GitHub Pages, Cloudflare Pages, Netlify or Vercel. This repository [deploys its demo](.github/workflows/pages.yml) on every push to `main`. |
+| Accounts, sync across devices, guilds and push | The Supabase backend in [`backend/`](backend/), on Supabase Cloud or self-hosted |
 
 **AI is optional and can cost the operator nothing.** Each user can connect their own Anthropic,
-OpenAI, Google Gemini or compatible account under *Settings → AI → Your own AI*. The key stays
-on the user's device (platform secure storage) and goes only to that provider. Signed-in users'
-AI proposals are sent to the server, which validates them and bounds difficulty and duration by
-its own estimate before the rules engine grants anything. A server-side key
-(`ANTHROPIC_API_KEY`) remains possible but is not required; without any AI, the built-in rules
-evaluate every quest.
+OpenAI, Google Gemini or compatible account under *Settings → AI → Your own AI*. The key stays in
+the device's secure storage and goes only to that provider. A server-side key
+(`ANTHROPIC_API_KEY`) is supported but not required.
 
-## Tests
+## Development
+
+```text
+.
+├── app/            Flutter client (Android, iOS, Web)
+├── packages/       Shared pure-Dart packages (the rules engine)
+├── backend/        Supabase schema, row-level security, Edge Functions
+└── docs/           Research, product spec, design system, architecture, ADRs
+```
 
 ```bash
-cd packages/wyrd_engine && dart test     # rules, caps, curves, consistency, vectors
-cd app && flutter test                        # data layer, l10n gates, RTL lint, smoke tests
+cd packages/wyrd_engine && dart test   # rules, caps, curves, consistency, vectors
+cd app && flutter test                 # data layer, l10n gates, RTL lint, widget tests
 cd app && flutter analyze --fatal-infos
 ```
 
-CI runs all of these plus the web build on every push ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)).
+CI runs all of these plus the web build on every push ([`ci.yml`](.github/workflows/ci.yml)).
 
-## Localization
+### Regenerating screenshots
 
-English and Persian are first-class launch languages. All UI strings live in ARB resource files
-with stable keys; layouts use logical (start/end) directions only. Adding a language is a
-content task, not an engineering project — see [`docs/localization.md`](docs/localization.md).
+All README images come from widget tests that run the real app with demo data, in both themes and
+both languages, and then frame the results:
+
+```bash
+cd app
+flutter test --dart-define=SCREENSHOTS=true --update-goldens test/screenshots/readme_screenshots_test.dart
+flutter test --dart-define=SCREENSHOTS=true --update-goldens test/screenshots/readme_art_test.dart
+```
+
+### Localization
+
+English and Persian are first-class. Every string lives in ARB catalogs with stable keys, layouts
+use start and end instead of left and right, and the app follows the device language until the
+user picks one. Adding a language is a content task; see [`docs/localization.md`](docs/localization.md).
 
 ## License
 
 **Source-available, not open source in the OSI sense.** This code is published so you can read
-it, learn from it, and evaluate it. It is licensed under the
-[PolyForm Strict License 1.0.0](LICENSE.md), which in plain terms means:
+it, learn from it and evaluate it, under the [PolyForm Strict License 1.0.0](LICENSE.md). In plain
+terms:
 
 - ✅ You may read the code and run it for personal, noncommercial study or experimentation.
 - ❌ You may **not** redistribute it, in whole or in part.
 - ❌ You may **not** modify it or build new works based on it.
 - ❌ You may **not** use it for any commercial purpose.
 
-For any other use — commercial licensing, partnerships, or permission to reuse part of the
-code — contact the author through GitHub. The license text in [`LICENSE.md`](LICENSE.md) is
-the binding document; this summary is not legal advice.
+For anything else (commercial licensing, partnerships, or permission to reuse part of the code),
+contact the author through GitHub. [`LICENSE.md`](LICENSE.md) is the binding text; this summary is
+not legal advice.
 
 ## Contributing
 
-Because the license does not permit derivative works, pull requests cannot be accepted without
-a separate written contributor agreement. Bug reports and suggestions are welcome as issues.
-See [`CONTRIBUTING.md`](CONTRIBUTING.md).
+Because the license does not permit derivative works, pull requests cannot be accepted without a
+separate written contributor agreement. Bug reports and ideas are very welcome as
+[issues](https://github.com/AliKahroodiEE/wyrd/issues); see [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
-Copyright © 2026 AliKahroodiEE. All rights not expressly granted are reserved.
+<br>
+
+<div align="center">
+
+**If Wyrd sparks something, a ⭐ helps others find it.**
+
+<sub>Copyright © 2026 AliKahroodiEE. All rights not expressly granted are reserved.</sub>
+
+</div>

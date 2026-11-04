@@ -35,6 +35,50 @@ v2 keeps the stone-and-ember identity but adds energy:
   elements (FAB, level badge, primary button, completed seals); custom painters isolated with
   `RepaintBoundary`; animations are single tweens that respect reduced motion.
 
+## Version 3 (2026-11): light and dark, and motion
+
+**Two themes, one identity.** Dark stays *Ashen Codex* (cold stone, ember light). The new
+light theme, *Vellum*, is warm parchment with iron-gall ink and crimson seals, so the
+dark-fantasy voice survives in daylight. The app follows the device's light/dark setting
+(**Auto**, the default) unless the user picks one in Settings → Appearance.
+
+Theme-dependent colours live in one `Palette` theme extension, read as `context.palette`;
+`AppColors` keeps only the brand ember family (`crimson`, `ember`, `emberGlow`, `arcane`) and
+`onAccent` (ink on ember gradients in either theme). The palette lerps, so theme changes
+animate.
+
+| Token | Ashen Codex (dark) | Vellum (light) | Use |
+| --- | --- | --- | --- |
+| `canvas` | `#09090E` | `#F4EDE1` | App background |
+| `sunken` | `#111320` | `#ECE3D3` | Inputs, rails, wells |
+| `surface` / `surfaceTop`→`surfaceBottom` | `#181C2B` / `#1C2132`→`#151927` | `#FDFAF4` / `#FFFDF9`→`#F9F3E9` | Cards (gradient, lit from above) |
+| `hairline` | `#2C3346` | `#DCCFB8` | Borders, dividers |
+| `ink` · `inkSoft` · `inkMuted` · `inkFaint` | `#F1EBDF` · `#C9CCD6` · `#8E94A3` · `#5A6074` | `#1F1A23` · `#3E3844` · `#6D6571` · `#A0969A` | Text, strongest to faintest |
+| `accent` | `#FF5A64` | `#B81D2A` | Accent text and icons (legible on each surface) |
+| `gold` · `arcane` · `flame` | `#E2B45C` · `#8B6CFF` · `#FF8A4C` | `#8E600F` · `#6447D6` · `#C2561A` | Titles, class, streaks |
+| `selection` | crimson 30 % | crimson 15 % | Selected chips, segments, nav items |
+| `cardShadow` | none | one soft warm shadow | Light cards need depth that hairlines give in dark |
+
+Attribute pigments get deeper light variants (for example Intelligence `#5B95FF` → `#2C63CF`,
+Vitality `#3FCB8E` → `#178457`) so ranks and deltas stay readable on parchment.
+
+**Motion and feedback** (all of it off under reduced motion):
+
+- Panels and quest lists ease in once with a short stagger (`Reveal`); items built later, such as
+  rows scrolled into view, appear at once.
+- Switching tabs fades the destination in; branches keep their state (`FadeIndexedStack`).
+- Cards and primary buttons dip slightly while pressed (`Pressable`).
+- Sealing a deed pops the seal and throws a ring of ember sparks, with a light haptic tick.
+- The reward burst blooms as the total counts up; banners follow in sequence.
+
+**Atmosphere:** the backdrop adds a second, low glow and a still scatter of embers (parchment
+flecks in light), painted once into its own layer. *Reduce visual effects* turns it off. Phones
+get a floating, rounded navigation bar; quest cards carry a ribbon in their attribute colour
+along the start edge.
+
+The budget is unchanged: gradients, opacity and transforms only; no blurs; every animation runs
+once or on demand.
+
 ## 2. Colour tokens
 
 ### Surfaces and ink
