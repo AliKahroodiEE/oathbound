@@ -68,16 +68,25 @@ jobs:
           GH_CLIENT_ID: ${{ vars.WYRD_GITHUB_CLIENT_ID }}
           GH_CLIENT_SECRET: ${{ secrets.WYRD_GITHUB_CLIENT_SECRET }}
         run: |
-          pubspec_version="$(sed -n 's/^version:[[:space:]]*\([^+[:space:]]*\).*/\1/p' app/pubspec.yaml)"
+          pubspec_version() { sed -n 's/^version:[[:space:]]*\([^+[:space:]]*\).*/\1/p' app/pubspec.yaml; }
           if [ "$GITHUB_EVENT_NAME" = "push" ]; then
             tag="$GITHUB_REF_NAME"
           else
-            tag="${INPUT_TAG:-v$pubspec_version}"
+            tag="${INPUT_TAG:-v$(pubspec_version)}"
           fi
           if ! [[ "$tag" =~ ^v([0-9]+)\.([0-9]+)\.([0-9]+)(-[0-9A-Za-z.-]+)?$ ]]; then
             echo "::error title=Unsupported tag::'$tag' is not a version tag like v1.2.3 or v1.3.0-beta.1."
             exit 1
           fi
+          # A release always matches its tag: a manual run of a tag that already
+          # exists builds that tag's commit, not the branch the run started on.
+          # (A new tag is created on this commit when the release is published.)
+          if [ "$GITHUB_EVENT_NAME" != "push" ] && git ls-remote --exit-code --tags origin "refs/tags/$tag" > /dev/null; then
+            git fetch --no-tags --depth=1 origin "+refs/tags/$tag:refs/tags/$tag"
+            git checkout --quiet --detach "refs/tags/$tag"
+            echo "::notice title=Rebuilding $tag::$tag already exists, so this run builds its commit and replaces that release's APK."
+          fi
+          pubspec_version="$(pubspec_version)"
           major="${BASH_REMATCH[1]}" minor="${BASH_REMATCH[2]}" patch="${BASH_REMATCH[3]}"
           if [ "$minor" -gt 999 ] || [ "$patch" -gt 999 ]; then
             echo "::error title=Unsupported tag::Minor and patch numbers above 999 do not fit the versionCode scheme."
