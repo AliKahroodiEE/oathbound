@@ -56,15 +56,21 @@ class SectionHeader extends StatelessWidget {
       header: true,
       child: Row(
         children: [
-          Text(
-            Directionality.of(context) == TextDirection.ltr ? text.toUpperCase() : text,
-            style: style,
+          // Long translations or 200 % text scale ellipsize rather than overflow.
+          Flexible(
+            flex: 3,
+            child: Text(
+              Directionality.of(context) == TextDirection.ltr ? text.toUpperCase() : text,
+              style: style,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
           const SizedBox(width: AppSpace.md),
           const Expanded(child: Divider()),
           if (trailing != null) ...[
             const SizedBox(width: AppSpace.sm),
-            trailing!,
+            Flexible(flex: 3, child: trailing!),
           ],
         ],
       ),

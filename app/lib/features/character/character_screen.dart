@@ -181,13 +181,16 @@ class _Header extends ConsumerWidget {
           const SizedBox(height: AppSpace.lg),
           XpBar(fraction: level.fraction, semanticsLabel: l10n.characterLevel(f.number(level.step))),
           const SizedBox(height: AppSpace.sm),
-          Row(
+          // Wraps onto two lines at large text sizes instead of overflowing.
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            runSpacing: AppSpace.xs,
+            spacing: AppSpace.md,
             children: [
               Text(
                 l10n.xpProgress(f.number(level.xpIntoStep), f.number(level.xpForNextStep)),
                 style: text.labelMedium,
               ),
-              const Spacer(),
               Text(
                 l10n.xpToNextLevel(f.number(level.xpRemaining), f.number(level.step + 1)),
                 style: text.bodySmall,
