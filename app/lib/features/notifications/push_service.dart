@@ -249,12 +249,19 @@ class PushService {
     await _reconcile();
   });
 
-  /// Runs [step] after the steps before it, so events never interleave.
+  /// How long a step may wait on Firebase, the browser or the server before
+  /// the steps queued behind it go ahead.
+  static const _stepTimeout = Duration(seconds: 45);
+
+  /// Runs [step] after the steps before it, so events never interleave. A
+  /// step that is still waiting after [_stepTimeout] (a platform call that
+  /// never answers) is given up, so it cannot hold back the rest of the
+  /// session, such as retiring the token after signing out.
   Future<void> _run(Future<void> Function() step) {
     return _queue = _queue.then((_) async {
       if (_disposed) return;
       try {
-        await step();
+        await step().timeout(_stepTimeout);
       } on Object catch (error) {
         debugPrint('Push update failed: $error');
       }

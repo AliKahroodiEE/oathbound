@@ -18,6 +18,9 @@ class FakeMessaging implements PushMessaging {
   /// Thrown by [token], as where no push service answers (Brave with it
   /// switched off, a phone without Google Play services).
   Object? tokenError;
+
+  /// Makes [token] never answer, like a stuck platform call.
+  bool tokenHangs = false;
   int prompts = 0;
   int deletions = 0;
 
@@ -52,6 +55,7 @@ class FakeMessaging implements PushMessaging {
   @override
   Future<String?> token() async {
     calls++;
+    if (tokenHangs) return Completer<String?>().future;
     final error = tokenError;
     if (error != null) throw error;
     return current == PushPermission.granted ? currentToken : null;
@@ -363,6 +367,33 @@ void main() {
       await settle();
       expect(messaging.deletions, 0);
       expect(registry.unregistered, isEmpty);
+    });
+  });
+
+  group('a platform call that never answers', () {
+    // A widget test for its fake clock.
+    testWidgets('holds up the steps behind it for 45 s, not for good', (tester) async {
+      create()
+        ..setUser('u1')
+        ..setPreferences(_both);
+      await tester.pump();
+      expect(push.status.value, PushStatus.off);
+
+      // Allowed in the browser's settings, but the token never comes.
+      messaging
+        ..current = PushPermission.granted
+        ..tokenHangs = true;
+      unawaited(push.settingsOpened());
+      var retired = false;
+      unawaited(push.beforeSignOut().then((_) => retired = true));
+
+      await tester.pump(const Duration(seconds: 44));
+      expect(retired, isFalse, reason: 'still waiting on the token');
+      expect(messaging.deletions, 0);
+
+      await tester.pump(const Duration(seconds: 2));
+      expect(retired, isTrue, reason: 'signing out still retires the token');
+      expect(messaging.deletions, 1);
     });
   });
 
