@@ -3,9 +3,9 @@
     "short_name": "Wyrd",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0B0B10",
-    "theme_color": "#0B0B10",
-    "description": "Wyrd — your character is who you become.",
+    "background_color": "#09090E",
+    "theme_color": "#09090E",
+    "description": "Wyrd — a dark-fantasy RPG for real life. Your character is who you become.",
     "orientation": "any",
     "prefer_related_applications": false,
     "icons": [

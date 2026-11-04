@@ -7,39 +7,84 @@
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Wyrd — your character is who you become.">
-  <meta name="theme-color" content="#0B0B10">
-  <meta name="color-scheme" content="dark">
+  <meta name="description" content="Wyrd — a dark-fantasy RPG for real life. Your character is who you become.">
+  <meta name="theme-color" content="#09090E" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#F4EDE1" media="(prefers-color-scheme: light)">
+  <meta name="color-scheme" content="dark light">
 
   <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Wyrd">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
   <link rel="icon" type="image/png" href="favicon.png"/>
 
   <title>Wyrd</title>
   <link rel="manifest" href="manifest.json">
+
+  <!-- Start the heavy downloads early: the engine comes from Google's CDN,
+       and the app script can download while the bootstrap script parses. -->
+  <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+  <link rel="preload" href="main.dart.js" as="script">
+
   <style>
-    html, body { margin: 0; height: 100%; background: #0B0B10; }
-    /* Quiet loading state until the first Flutter frame replaces it. */
-    #loading {
-      position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
-      color: #8A8F9C; font: 600 12px/1 serif; letter-spacing: .3em; text-transform: uppercase;
+    :root {
+      --bg: #09090E; --glow: #241A36; --glow2: #1E0F17; --ink: #8E94A3; --track: #222839;
     }
-    #loading::after {
-      content: ""; position: absolute; width: 56px; height: 56px; border-radius: 50%;
-      border: 1.5px solid #A71924; opacity: .4; animation: breathe 1.6s ease-in-out infinite alternate;
+    @media (prefers-color-scheme: light) {
+      :root { --bg: #F4EDE1; --glow: #F6DCD3; --glow2: #EAE0F2; --ink: #6D6571; --track: #E6DCC9; }
     }
-    @keyframes breathe { from { opacity: .15; } to { opacity: .6; } }
-    @media (prefers-reduced-motion: reduce) { #loading::after { animation: none; } }
+    html, body { margin: 0; height: 100%; background: var(--bg); }
+    /* Branded loading state until the first Flutter frame replaces it. */
+    #splash {
+      position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center;
+      justify-content: center; gap: 22px;
+      background:
+        radial-gradient(120% 80% at 20% -10%, var(--glow) 0%, transparent 60%),
+        radial-gradient(90% 70% at 110% 115%, var(--glow2) 0%, transparent 65%),
+        var(--bg);
+      transition: opacity .32s ease;
+    }
+    #splash.done { opacity: 0; pointer-events: none; }
+    .ring {
+      width: 76px; height: 76px; border-radius: 50%;
+      background: conic-gradient(from 0deg, #C0202D, #FF5A64, #FF8A4C, transparent 72%);
+      -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 4px), #000 calc(100% - 3px));
+              mask: radial-gradient(farthest-side, transparent calc(100% - 4px), #000 calc(100% - 3px));
+      filter: drop-shadow(0 0 10px rgba(255, 90, 100, .35));
+      animation: spin 1.3s linear infinite;
+    }
+    .word {
+      font: 600 30px/1 "Cinzel", "Trajan Pro", Georgia, serif; letter-spacing: .32em; padding-left: .32em;
+      background: linear-gradient(135deg, #C0202D, #FF5A64 55%, #FF8A4C);
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    .tag { margin-top: -10px; color: var(--ink); font: 500 12px/1.4 system-ui, sans-serif; letter-spacing: .08em; }
+    .bar { width: 132px; height: 3px; border-radius: 3px; background: var(--track); overflow: hidden; }
+    .bar span {
+      display: block; width: 40%; height: 100%; border-radius: 3px;
+      background: linear-gradient(90deg, #C0202D, #FF8A4C); animation: slide 1.1s ease-in-out infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes slide { from { transform: translateX(-100%); } to { transform: translateX(250%); } }
+    @media (prefers-reduced-motion: reduce) {
+      .ring, .bar span { animation: none; }
+      #splash { transition: none; }
+    }
   </style>
 </head>
 <body>
-  <div id="loading" aria-label="Loading">Wyrd</div>
+  <div id="splash" role="progressbar" aria-label="Loading Wyrd">
+    <div class="ring"></div>
+    <div class="word">WYRD</div>
+    <div class="tag">Your character is who you become</div>
+    <div class="bar"><span></span></div>
+  </div>
   <script>
     window.addEventListener('flutter-first-frame', function () {
-      var el = document.getElementById('loading');
-      if (el) el.remove();
+      var el = document.getElementById('splash');
+      if (!el) return;
+      el.classList.add('done');
+      setTimeout(function () { el.remove(); }, 400);
     });
   </script>
   <script src="flutter_bootstrap.js" async></script>
