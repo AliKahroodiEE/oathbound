@@ -505,6 +505,26 @@ async function smoke(db, { profileFields }) {
     as(db, 'authenticated', A, (tx) => tx.query(`update public.profiles set change_id = 0 where id = $1`, [A])),
     /permission denied/);
 
+  // Notification settings from the app (sync_coordinator.dart calls
+  // set_notification_prefs): known categories merge into the stored ones,
+  // unknown keys and non-booleans are dropped, and quiet hours stay unless
+  // given again. The table itself stays closed to clients.
+  await as(db, 'authenticated', A, (tx) => tx.query(
+    `select public.set_notification_prefs($1::jsonb, '23:30', '07:00')`,
+    [{ guild_comments: false, weekly_summary: false, bogus: true, reminders: 'yes' }]));
+  await as(db, 'authenticated', A, (tx) => tx.query(
+    'select public.set_notification_prefs($1::jsonb)', [{ guild_reactions: false }]));
+  const prefsA = await one(db, 'postgres', null, 'select * from public.notification_prefs where user_id = $1', [A]);
+  const categoriesA = prefsA?.categories ?? {};
+  check('the app mirrors its notification switches and quiet hours',
+    categoriesA.guild_comments === false && categoriesA.weekly_summary === false
+      && categoriesA.guild_reactions === false && !('bogus' in categoriesA) && categoriesA.reminders !== 'yes'
+      && String(prefsA?.quiet_hours_start).startsWith('23:30') && String(prefsA?.quiet_hours_end).startsWith('07:00'),
+    JSON.stringify(prefsA));
+  await expectError('notification settings change only through set_notification_prefs',
+    as(db, 'authenticated', A, (tx) => tx.query('update public.notification_prefs set daily_cap = 50 where user_id = $1', [A])),
+    /permission denied/);
+
   // --- curves ---------------------------------------------------------------
   const curveRows = await rows(db, 'postgres', null, `
     select n, public.xp_to_advance_level(n) as level_cost, public.xp_to_advance_rank(n) as rank_cost
