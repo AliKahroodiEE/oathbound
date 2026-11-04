@@ -51,3 +51,6 @@ node_modules/
 
 # Library packages do not pin dependencies
 packages/*/pubspec.lock
+
+# Local agent tooling
+.claude/
