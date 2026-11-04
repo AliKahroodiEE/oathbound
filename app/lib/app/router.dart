@@ -12,6 +12,7 @@ import '../features/guilds/guilds_screen.dart';
 import '../features/onboarding/onboarding_screen.dart';
 import '../features/quests/quest_editor_screen.dart';
 import '../features/quests/quests_screen.dart';
+import '../features/settings/ai_provider_screen.dart';
 import '../features/settings/settings_screen.dart';
 import 'providers.dart';
 import 'shell.dart';
@@ -58,6 +59,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (_, state) => QuestEditorScreen(questId: state.pathParameters['id']),
       ),
       GoRoute(path: '/auth', parentNavigatorKey: _rootKey, builder: (_, _) => const AuthScreen()),
+      GoRoute(path: '/settings/ai', parentNavigatorKey: _rootKey, builder: (_, _) => const AiProviderScreen()),
       GoRoute(path: '/settings', parentNavigatorKey: _rootKey, builder: (_, _) => const SettingsScreen()),
       StatefulShellRoute.indexedStack(
         builder: (_, _, shell) => AdaptiveShell(shell: shell),
