@@ -14,6 +14,7 @@ import '../../design/components/progress.dart';
 import '../../design/components/states.dart';
 import '../../design/sigils.dart';
 import '../../design/tokens.dart';
+import '../settings/theme_picker.dart';
 import '../../l10n/content.dart';
 import '../quests/quest_tile.dart';
 import '../rewards/reward_view.dart';
@@ -181,6 +182,7 @@ class _Hero extends ConsumerWidget {
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
+                        const ThemeMenuButton(),
                         IconButton(
                           tooltip: l10n.navSettings,
                           visualDensity: VisualDensity.compact,

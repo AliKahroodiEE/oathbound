@@ -2,16 +2,18 @@
 
 <a href="https://alikahroodiee.github.io/wyrd/">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/banner-dark.png">
-    <source media="(prefers-color-scheme: light)" srcset="docs/assets/banner-light.png">
-    <img src="docs/assets/banner-dark.png" alt="Wyrd — a dark-fantasy RPG for real life. Your character is who you become." width="100%">
+    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/banner-dark-en.webp">
+    <source media="(prefers-color-scheme: light)" srcset="docs/assets/banner-light-en.webp">
+    <img src="docs/assets/banner-dark-en.webp" alt="Wyrd — a dark-fantasy RPG for real life. Your character is who you become." width="100%">
   </picture>
 </a>
 
+**English** · [فارسی](README.fa.md)
+
 <h3>Turn real effort into a character that grows.</h3>
 
-Quests and habits become XP, six attributes, titles and a living chronicle.<br>
-AI proposes, a deterministic rules engine decides, and every reward explains itself.
+Quests and habits become XP, six attributes and a living chronicle.<br>
+AI proposes, honest rules decide, and every reward explains itself.
 
 <br>
 
@@ -22,7 +24,7 @@ AI proposes, a deterministic rules engine decides, and every reward explains its
 ![Flutter](https://img.shields.io/badge/Flutter-3.47-02569B?logo=flutter&logoColor=white)
 ![Dart](https://img.shields.io/badge/Dart-3.13-0175C2?logo=dart&logoColor=white)
 ![Platforms](https://img.shields.io/badge/platforms-Android%20%C2%B7%20iOS%20%C2%B7%20Web-FF5A64)
-![Languages](https://img.shields.io/badge/i18n-English%20%C2%B7%20%D9%81%D8%A7%D8%B1%D8%B3%DB%8C-8B6CFF)
+![Languages](https://img.shields.io/badge/languages-English%20%C2%B7%20Persian%20(RTL)-8B6CFF)
 [![License](https://img.shields.io/badge/license-PolyForm%20Strict%201.0.0-E2B45C)](LICENSE.md)
 
 [**Features**](#features) · [**Screenshots**](#screenshots) · [**Quick start**](#quick-start) · [**How it works**](#how-it-works) · [**Docs**](docs/) · [**License**](#license)
@@ -87,8 +89,8 @@ formation ([`docs/research`](docs/research/behavioral-science.md)).
   <tr>
     <td valign="top">
       <h4>🌗 Light and dark</h4>
-      <i>Ashen Codex</i> by night, <i>Vellum</i> by day. Follows your device automatically, or
-      pick one in Settings.
+      <i>Ashen Codex</i> by night, <i>Vellum</i> by day. Follows your device, or switch with one
+      tap from the character sheet.
     </td>
     <td valign="top">
       <h4>🌍 English and فارسی</h4>
@@ -111,29 +113,29 @@ formation ([`docs/research`](docs/research/behavioral-science.md)).
   <tr>
     <td align="center" width="25%">
       <picture>
-        <source media="(prefers-color-scheme: light)" srcset="docs/screenshots/phone-character-light-en.png">
-        <img src="docs/screenshots/phone-character-dark-en.png" alt="Character sheet with an XP ring, level, title, class, condition, consistency and today's quests" width="100%">
+        <source media="(prefers-color-scheme: light)" srcset="docs/screenshots/phone-character-light-en.webp">
+        <img src="docs/screenshots/phone-character-dark-en.webp" alt="Character sheet with an XP ring, level, title, class, condition, consistency and today's quests" width="100%">
       </picture>
       <br><sub><b>Character sheet</b><br>Level, condition and today's quests</sub>
     </td>
     <td align="center" width="25%">
       <picture>
-        <source media="(prefers-color-scheme: light)" srcset="docs/screenshots/phone-reward-light-en.png">
-        <img src="docs/screenshots/phone-reward-dark-en.png" alt="Reward sheet: +47 XP, a rank-up banner, and an explanation of each attribute gain" width="100%">
+        <source media="(prefers-color-scheme: light)" srcset="docs/screenshots/phone-reward-light-en.webp">
+        <img src="docs/screenshots/phone-reward-dark-en.webp" alt="Reward sheet: +47 XP, a rank-up banner, and an explanation of each attribute gain" width="100%">
       </picture>
       <br><sub><b>Rewards that explain themselves</b><br>Every point has a reason</sub>
     </td>
     <td align="center" width="25%">
       <picture>
-        <source media="(prefers-color-scheme: light)" srcset="docs/screenshots/phone-quests-light-en.png">
-        <img src="docs/screenshots/phone-quests-dark-en.png" alt="Quest list with recurring habits, category badges and completed seals" width="100%">
+        <source media="(prefers-color-scheme: light)" srcset="docs/screenshots/phone-quests-light-en.webp">
+        <img src="docs/screenshots/phone-quests-dark-en.webp" alt="Quest list with recurring habits, category badges and completed seals" width="100%">
       </picture>
       <br><sub><b>Quests and habits</b><br>Daily, contracts, objectives</sub>
     </td>
     <td align="center" width="25%">
       <picture>
-        <source media="(prefers-color-scheme: light)" srcset="docs/screenshots/phone-chronicle-light-fa.png">
-        <img src="docs/screenshots/phone-chronicle-dark-fa.png" alt="Weekly chronicle in Persian, right to left, with the Jalali calendar" width="100%">
+        <source media="(prefers-color-scheme: light)" srcset="docs/screenshots/phone-chronicle-light-fa.webp">
+        <img src="docs/screenshots/phone-chronicle-dark-fa.webp" alt="Weekly chronicle in Persian, right to left, with the Jalali calendar" width="100%">
       </picture>
       <br><sub><b>Chronicle, in Persian</b><br>Right to left, Jalali calendar</sub>
     </td>
@@ -141,35 +143,35 @@ formation ([`docs/research`](docs/research/behavioral-science.md)).
 </table>
 
 <picture>
-  <source media="(prefers-color-scheme: light)" srcset="docs/screenshots/desktop-character-light-en.png">
-  <img src="docs/screenshots/desktop-character-dark-en.png" alt="Wyrd in a desktop browser: sidebar, character sheet with attribute radar, today's quests, achievements and recent growth" width="100%">
+  <source media="(prefers-color-scheme: light)" srcset="docs/screenshots/desktop-character-light-en.webp">
+  <img src="docs/screenshots/desktop-character-dark-en.webp" alt="Wyrd in a desktop browser: sidebar with a theme switch, character sheet with attribute radar, today's quests, achievements and recent growth" width="100%">
 </picture>
 
 <details>
 <summary><b>More screenshots</b>: both themes side by side, the desktop chronicle, settings</summary>
 <br>
 
-<img src="docs/assets/themes.png" alt="The same character in the dark Ashen Codex theme (English) and the light Vellum theme (Persian)" width="100%">
+<img src="docs/assets/themes.webp" alt="The same character in the dark Ashen Codex theme (English) and the light Vellum theme (Persian)" width="100%">
 
 <picture>
-  <source media="(prefers-color-scheme: light)" srcset="docs/screenshots/desktop-chronicle-light-en.png">
-  <img src="docs/screenshots/desktop-chronicle-dark-en.png" alt="Weekly chronicle on desktop: summary, growth by attribute, effort distribution and rhythm" width="100%">
+  <source media="(prefers-color-scheme: light)" srcset="docs/screenshots/desktop-chronicle-light-en.webp">
+  <img src="docs/screenshots/desktop-chronicle-dark-en.webp" alt="Weekly chronicle on desktop: summary, growth by attribute, effort distribution and rhythm" width="100%">
 </picture>
 
 <table>
   <tr>
     <td align="center" width="33%">
-      <img src="docs/screenshots/phone-character-light-fa.png" alt="Character sheet in Persian, light theme" width="100%">
+      <img src="docs/screenshots/phone-character-light-fa.webp" alt="Character sheet in Persian, light theme" width="100%">
       <br><sub>Persian, light</sub>
     </td>
     <td align="center" width="33%">
-      <img src="docs/screenshots/phone-character-dark-fa.png" alt="Character sheet in Persian, dark theme" width="100%">
+      <img src="docs/screenshots/phone-character-dark-fa.webp" alt="Character sheet in Persian, dark theme" width="100%">
       <br><sub>Persian, dark</sub>
     </td>
     <td align="center" width="33%">
       <picture>
-        <source media="(prefers-color-scheme: light)" srcset="docs/screenshots/phone-settings-light-en.png">
-        <img src="docs/screenshots/phone-settings-dark-en.png" alt="Settings: language and theme both set to Auto" width="100%">
+        <source media="(prefers-color-scheme: light)" srcset="docs/screenshots/phone-settings-light-en.webp">
+        <img src="docs/screenshots/phone-settings-dark-en.webp" alt="Settings with language and theme both on Auto" width="100%">
       </picture>
       <br><sub>Language and theme on Auto</sub>
     </td>
@@ -189,12 +191,13 @@ You need Flutter 3.47+ (stable) and Dart 3.13+.
 git clone https://github.com/AliKahroodiEE/wyrd.git
 cd wyrd/app
 flutter pub get
-flutter run -d chrome --dart-define=WYRD_DEMO=true   # six weeks of sample history
+# Six weeks of sample history; drop the flag for a fresh start
+flutter run -d chrome --dart-define=WYRD_DEMO=true
 ```
 
-Drop `WYRD_DEMO` for a fresh start, and run on an Android device or iOS simulator with
-`flutter run -d <device>`. Without backend configuration Wyrd runs fully on the device: every
-feature except accounts, sync and guilds works offline.
+Run on an Android device or iOS simulator with `flutter run -d <device>`. Without backend
+configuration Wyrd runs fully on the device: every feature except accounts, sync and guilds works
+offline.
 
 <details>
 <summary><b>Demo in Persian, connecting a backend, and other options</b></summary>
@@ -216,15 +219,15 @@ Backend setup is documented in [`backend/README.md`](backend/README.md).
 ## How it works
 
 ```mermaid
-flowchart LR
-    Q["You complete a quest"] --> E{"Evaluation"}
-    E -->|"your own AI key,<br/>or the server's"| P["AI proposal<br/>category · difficulty · effort"]
+flowchart TD
+    Q["You complete a quest"] --> E{"Evaluate the effort"}
+    E -->|"your AI key or the server's"| P["AI proposal:<br/>category, difficulty, effort"]
     E -->|"no AI configured"| H["Built-in heuristics"]
-    P --> R["Deterministic rules engine<br/>caps · diminishing returns · bonuses"]
+    P --> R["Rules engine:<br/>caps, diminishing returns, bonuses"]
     H --> R
-    R --> C["XP, attributes, level,<br/>titles and achievements"]
-    C --> L[("Local ledger<br/>with explanations")]
-    L -. "optional sync" .-> S[("Supabase<br/>re-validated server-side")]
+    R --> C["XP, attributes, level, titles"]
+    C --> L[("Local ledger,<br/>with explanations")]
+    L -. "optional sync" .-> S[("Supabase:<br/>re-validated on the server")]
 ```
 
 - **The AI never writes to your character.** It returns a structured proposal. The engine bounds
@@ -259,7 +262,7 @@ flowchart LR
 | Research, product spec, progression rules, design system, UX, architecture and ADRs | ✅ [`docs/`](docs/) |
 | Rules engine in Dart (103 tests) and TypeScript (46 tests), bound by conformance vectors | ✅ [`packages/`](packages/) |
 | Local-first app: character sheet, quests, rewards, ledger, chronicle, settings, onboarding | ✅ [`app/`](app/) |
-| Light and dark themes; language and theme follow the device | ✅ |
+| Light and dark themes with a one-tap switch; language and theme follow the device | ✅ |
 | English and Persian, full RTL, Jalali and Gregorian, native or Latin digits | ✅ |
 | Adaptive layouts: phone (floating bar), tablet (rail), desktop and web (sidebar, columns) | ✅ |
 | Backend: schema, row-level security, sync and progression RPCs, AI functions, push | ✅ [`backend/`](backend/) |
@@ -311,12 +314,13 @@ the device's secure storage and goes only to that provider. A server-side key
 ├── app/            Flutter client (Android, iOS, Web)
 ├── packages/       Shared pure-Dart packages (the rules engine)
 ├── backend/        Supabase schema, row-level security, Edge Functions
+├── tool/           Repository scripts (README image conversion)
 └── docs/           Research, product spec, design system, architecture, ADRs
 ```
 
 ```bash
-cd packages/wyrd_engine && dart test   # rules, caps, curves, consistency, vectors
-cd app && flutter test                 # data layer, l10n gates, RTL lint, widget tests
+cd packages/wyrd_engine && dart test   # rules engine
+cd app && flutter test                 # data, l10n, RTL lint, widgets
 cd app && flutter analyze --fatal-infos
 ```
 
@@ -325,12 +329,11 @@ CI runs all of these plus the web build on every push ([`ci.yml`](.github/workfl
 ### Regenerating screenshots
 
 All README images come from widget tests that run the real app with demo data, in both themes and
-both languages, and then frame the results:
+both languages, then frame the results. A small script converts the renders to WebP (it needs
+Python 3 with Pillow):
 
 ```bash
-cd app
-flutter test --dart-define=SCREENSHOTS=true --update-goldens test/screenshots/readme_screenshots_test.dart
-flutter test --dart-define=SCREENSHOTS=true --update-goldens test/screenshots/readme_art_test.dart
+./tool/readme_images.sh
 ```
 
 ### Localization
@@ -338,6 +341,7 @@ flutter test --dart-define=SCREENSHOTS=true --update-goldens test/screenshots/re
 English and Persian are first-class. Every string lives in ARB catalogs with stable keys, layouts
 use start and end instead of left and right, and the app follows the device language until the
 user picks one. Adding a language is a content task; see [`docs/localization.md`](docs/localization.md).
+This README is also available [in Persian](README.fa.md).
 
 ## License
 

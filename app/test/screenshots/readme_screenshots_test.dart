@@ -1,8 +1,12 @@
-// Renders README screenshots with the real fonts and six weeks of demo data.
+// Renders the README screenshots: the real app with its real fonts and six
+// weeks of demo data, in English and Persian, light and dark, phone and
+// desktop. Each shot uses the defaults a new user has, so language and theme
+// are both on Auto and follow the (simulated) device.
 //
-//   flutter test --dart-define=SCREENSHOTS=true --update-goldens test/screenshots
+//   flutter test --dart-define=SCREENSHOTS=true --update-goldens test/screenshots/readme_screenshots_test.dart
 //
-// Skipped in normal test runs. Output: docs/screenshots/*.png at the repo root.
+// Skipped in normal test runs. Output: raw PNGs in app/build/readme/, which
+// tool/readme_images.py turns into the WebP files under docs/.
 import 'package:drift/drift.dart' show DatabaseConnection;
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
@@ -14,31 +18,33 @@ import 'package:wyrd/app/providers.dart';
 import 'package:wyrd/app/router.dart';
 import 'package:wyrd/data/db/database.dart';
 import 'package:wyrd/data/demo/demo_seed.dart';
-import 'package:wyrd/data/repositories/settings_repository.dart';
 import 'package:wyrd/features/quests/complete_flow.dart';
 
 import 'support.dart';
 
-const _enabled = screenshotsEnabled;
-const _out = '../../../docs/screenshots';
+const _out = '../../build/readme';
 
 Future<ProviderContainer> _pumpApp(
   WidgetTester tester,
   Locale locale,
   Size logical,
   double dpr,
-  ThemePreference theme,
+  Brightness brightness,
 ) async {
   final db = (await tester.runAsync(() async {
     final db = AppDatabase(DatabaseConnection(NativeDatabase.memory(), closeStreamsSynchronously: true));
-    await seedDemo(db, locale: locale, pinLanguage: true);
-    await SettingsRepository(db).updateProfile((p) => p.copyWith(theme: theme));
+    await seedDemo(db, locale: locale);
     return db;
   }))!;
   addTearDown(() => tester.runAsync(db.close));
   tester.view.devicePixelRatio = dpr;
   tester.view.physicalSize = logical * dpr;
   addTearDown(tester.view.reset);
+  // The simulated device: its language and its light/dark setting.
+  tester.platformDispatcher.localesTestValue = [locale];
+  tester.platformDispatcher.platformBrightnessTestValue = brightness;
+  addTearDown(tester.platformDispatcher.clearLocalesTestValue);
+  addTearDown(tester.platformDispatcher.clearPlatformBrightnessTestValue);
   await tester.pumpWidget(
     ProviderScope(
       overrides: [databaseProvider.overrideWithValue(db), initialOnboardedProvider.overrideWithValue(true)],
@@ -66,7 +72,7 @@ Future<void> _shot(WidgetTester tester, String name) =>
 
 void main() {
   setUpAll(() async {
-    if (!_enabled) return;
+    if (!screenshotsEnabled) return;
     await initializeDateFormatting();
     await loadAppFonts();
   });
@@ -74,64 +80,64 @@ void main() {
   const phone = Size(390, 844);
   const desktop = Size(1440, 900);
 
-  for (final theme in [ThemePreference.dark, ThemePreference.light]) {
-    final t = theme.name;
+  for (final brightness in Brightness.values) {
+    final t = brightness == Brightness.dark ? 'dark' : 'light';
+    for (final lang in ['en', 'fa']) {
+      final locale = Locale(lang);
+      final suffix = '$t-$lang';
 
-    testWidgets('desktop character sheet ($t, English)', skip: !_enabled, (tester) async {
-      await _pumpApp(tester, const Locale('en'), desktop, 1, theme);
-      await _shot(tester, 'desktop-character-$t-en');
-    });
-
-    testWidgets('desktop chronicle ($t, English)', skip: !_enabled, (tester) async {
-      final c = await _pumpApp(tester, const Locale('en'), desktop, 1, theme);
-      await _go(tester, c, '/chronicle');
-      await _shot(tester, 'desktop-chronicle-$t-en');
-    });
-
-    testWidgets('phone character sheet ($t, English)', skip: !_enabled, (tester) async {
-      await _pumpApp(tester, const Locale('en'), phone, 2, theme);
-      await _shot(tester, 'phone-character-$t-en');
-    });
-
-    testWidgets('phone character sheet ($t, Persian)', skip: !_enabled, (tester) async {
-      await _pumpApp(tester, const Locale('fa'), phone, 2, theme);
-      await _shot(tester, 'phone-character-$t-fa');
-    });
-
-    testWidgets('phone quests ($t, English)', skip: !_enabled, (tester) async {
-      final c = await _pumpApp(tester, const Locale('en'), phone, 2, theme);
-      await _go(tester, c, '/quests');
-      await _shot(tester, 'phone-quests-$t-en');
-    });
-
-    testWidgets('phone reward reveal ($t, English)', skip: !_enabled, (tester) async {
-      final c = await _pumpApp(tester, const Locale('en'), phone, 2, theme);
-      // The seeded daily study habit: planned, with a when-and-where intention.
-      final outcome = await tester.runAsync(() async {
-        final today = await c.read(questRepositoryProvider).today(DateTime.monday);
-        final study = today.firstWhere((v) => v.quest.title == 'Study electronics').quest;
-        return c.read(progressionRepositoryProvider).complete(study, declaredMinutes: 90);
+      testWidgets('desktop character sheet ($suffix)', skip: !screenshotsEnabled, (tester) async {
+        await _pumpApp(tester, locale, desktop, 1, brightness);
+        await _shot(tester, 'desktop-character-$suffix');
       });
-      final context = c.read(routerProvider).routerDelegate.navigatorKey.currentContext!;
-      showModalBottomSheet<void>(
-        context: context,
-        isScrollControlled: true,
-        builder: (_) => RewardSheet(outcome: outcome!, questTitle: 'Study electronics'),
-      );
-      await _settle(tester);
-      await _shot(tester, 'phone-reward-$t-en');
-    });
 
-    testWidgets('phone chronicle ($t, Persian)', skip: !_enabled, (tester) async {
-      final c = await _pumpApp(tester, const Locale('fa'), phone, 2, theme);
-      await _go(tester, c, '/chronicle');
-      await _shot(tester, 'phone-chronicle-$t-fa');
-    });
+      testWidgets('desktop chronicle ($suffix)', skip: !screenshotsEnabled, (tester) async {
+        final c = await _pumpApp(tester, locale, desktop, 1, brightness);
+        await _go(tester, c, '/chronicle');
+        await _shot(tester, 'desktop-chronicle-$suffix');
+      });
 
-    testWidgets('phone settings ($t, English)', skip: !_enabled, (tester) async {
-      final c = await _pumpApp(tester, const Locale('en'), phone, 2, theme);
-      await _go(tester, c, '/settings');
-      await _shot(tester, 'phone-settings-$t-en');
-    });
+      testWidgets('phone character sheet ($suffix)', skip: !screenshotsEnabled, (tester) async {
+        await _pumpApp(tester, locale, phone, 2, brightness);
+        await _shot(tester, 'phone-character-$suffix');
+      });
+
+      testWidgets('phone quests ($suffix)', skip: !screenshotsEnabled, (tester) async {
+        final c = await _pumpApp(tester, locale, phone, 2, brightness);
+        await _go(tester, c, '/quests');
+        await _shot(tester, 'phone-quests-$suffix');
+      });
+
+      testWidgets('phone reward reveal ($suffix)', skip: !screenshotsEnabled, (tester) async {
+        final c = await _pumpApp(tester, locale, phone, 2, brightness);
+        // The seeded daily study habit: planned, with a when-and-where intention.
+        final title = lang == 'fa' ? 'مطالعه‌ی الکترونیک' : 'Study electronics';
+        final outcome = await tester.runAsync(() async {
+          final today = await c.read(questRepositoryProvider).today(DateTime.monday);
+          final study = today.firstWhere((v) => v.quest.title == title).quest;
+          return c.read(progressionRepositoryProvider).complete(study, declaredMinutes: 90);
+        });
+        final context = c.read(routerProvider).routerDelegate.navigatorKey.currentContext!;
+        showModalBottomSheet<void>(
+          context: context,
+          isScrollControlled: true,
+          builder: (_) => RewardSheet(outcome: outcome!, questTitle: title),
+        );
+        await _settle(tester);
+        await _shot(tester, 'phone-reward-$suffix');
+      });
+
+      testWidgets('phone chronicle ($suffix)', skip: !screenshotsEnabled, (tester) async {
+        final c = await _pumpApp(tester, locale, phone, 2, brightness);
+        await _go(tester, c, '/chronicle');
+        await _shot(tester, 'phone-chronicle-$suffix');
+      });
+
+      testWidgets('phone settings ($suffix)', skip: !screenshotsEnabled, (tester) async {
+        final c = await _pumpApp(tester, locale, phone, 2, brightness);
+        await _go(tester, c, '/settings');
+        await _shot(tester, 'phone-settings-$suffix');
+      });
+    }
   }
 }
