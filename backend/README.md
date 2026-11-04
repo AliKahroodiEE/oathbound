@@ -207,14 +207,15 @@ vectors (`dart run tool/generate_vectors.dart` in the Dart package).
 
 `validate-sql.mjs` stubs only what Supabase provides (`auth.users`,
 `auth.uid()` from the `request.jwt.claim.sub` GUC, the anon / authenticated /
-service_role roles and a new project's default privileges, which expose
-nothing) and drives `apply_progression` with the real TypeScript engine. It
-also:
+service_role roles, the empty `supabase_realtime` publication and a new
+project's default privileges, which expose nothing) and drives
+`apply_progression` with the real TypeScript engine. It also:
 
 * checks the grants against every `.from()`, `.rpc()` and Realtime call in
   `app/lib` (role `authenticated`) and `supabase/functions` (role
   `service_role`): a call without its grant, a grant nothing uses, anything
-  for `anon` and any function `PUBLIC` can execute fail the run;
+  for `anon` and any function `PUBLIC` can execute fail the run, and so does
+  a Realtime publication that holds anything but the watched tables;
 * applies the migrations a second time with the old platform defaults
   (everything granted to all three roles) and requires identical privileges;
 * exercises pg_cron's dispatch and the notification triggers against
@@ -245,7 +246,7 @@ and committed separately.
 | `20261104000920_notify_triggers.sql` | pg_net triggers on reactions, comments and milestones → `notify` |
 | `20261104001000_push_token_unregister.sql` | `unregister_push_token`: sign-out removes this device's token from the account |
 | `20261104001010_notification_prefs_rpc.sql` | `set_notification_prefs`: the app's notification switches and quiet hours |
-| `20261104001020_reaction_signals.sql` | reactions leave the Realtime publication; each change touches its feed event |
+| `20261104001020_reaction_signals.sql` | reactions and the personal tables leave the Realtime publication (`feed_events`, `comments`, `challenges` stay); each reaction change touches its feed event |
 | `20261104001030_reaction_rate_limit.sql` | `react` / `unreact`: at most 60 reaction changes per user per minute |
 | `20261104001040_drop_notify_webhooks.sql` | drops dashboard webhooks that still post these inserts to `notify` (double pushes) |
 
@@ -269,6 +270,9 @@ until the grants match the code.
 * Device tokens are credentials for the push service: clients never read
   `push_tokens` and change it only through `register_push_token` and
   `unregister_push_token`; `export_my_data` lists devices without tokens.
+* Realtime publishes only what the guild hall watches: `feed_events`,
+  `comments` and `challenges`. Reactions signal through their feed event,
+  and personal tables are not published at all.
 * RLS still guards the rows: guild data is visible to members, public guild
   metadata to signed-in users. Feed events, reactions and comments from users
   the viewer blocked are filtered out (FR-7); the blocked party cannot see

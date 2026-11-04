@@ -7,19 +7,20 @@
  *
  * 1. Creates a stub of what the Supabase platform provides: `auth.users`,
  *    `auth.uid()` reading the `request.jwt.claim.sub` GUC, the roles anon /
- *    authenticated / service_role (BYPASSRLS) and the default privileges of a
- *    project created after 2026-05-30, which expose nothing in `public` to
- *    the Data API without an explicit GRANT.
+ *    authenticated / service_role (BYPASSRLS), the empty supabase_realtime
+ *    publication and the default privileges of a project created after
+ *    2026-05-30, which expose nothing in `public` to the Data API without an
+ *    explicit GRANT.
  * 2. Applies every file in supabase/migrations/ in order. pg_cron / pg_net
  *    do not exist in PGlite; the cron migration skips scheduling itself.
  * 3. Checks the Data API grants (…_data_api_grants.sql) against the calls in
  *    app/lib and supabase/functions (scripts/data-api-surface.mjs): every
  *    table, column, RPC and Realtime table they use is granted to the role
  *    that uses it (authenticated for the app, service_role for the
- *    functions), nothing else is, anon gets nothing and no function is
- *    executable by PUBLIC. A second database with the old platform defaults
- *    (everything granted to all three roles) must end with the same
- *    privileges.
+ *    functions), nothing else is, anon gets nothing, no function is
+ *    executable by PUBLIC and Realtime publishes exactly the watched tables.
+ *    A second database with the old platform defaults (everything granted
+ *    to all three roles, no publication) must end with the same privileges.
  * 4. Runs smoke checks as the real roles: RLS isolation, sync_push LWW and
  *    idempotency, sync_pull cursors, apply_progression driven by the real
  *    TypeScript engine (idempotency, stale-day protection, privacy
@@ -81,6 +82,13 @@ const NEW_PROJECT_DEFAULTS = /* sql */ `
   alter default privileges in schema public
     grant truncate, references, trigger, maintain on tables to anon, authenticated, service_role;
   alter default privileges in schema public grant update on sequences to anon, authenticated, service_role;
+`;
+
+// Supabase creates this publication empty; Realtime streams the tables in
+// it. The old-project database below has none, so the migrations' paths for
+// a missing publication are applied as well.
+const REALTIME_PUBLICATION = /* sql */ `
+  create publication supabase_realtime;
 `;
 
 // Older projects (and a local stack without auto_expose_new_tables = false).
@@ -368,6 +376,15 @@ async function checkDataApi(db) {
       .map((h) => `${h.privilege} on ${h.table}`);
     check(`${role} holds no table privilege ${who} ${uses}`, extra.length === 0, extra.join(', '));
   }
+
+  // Realtime streams exactly what is watched: a published table nobody can
+  // or does subscribe to only adds WAL decoding work.
+  const { rows: published } = await db.query(`select tablename from pg_publication_tables
+    where pubname = 'supabase_realtime' and schemaname = 'public' order by 1`);
+  const watched = [...new Set([...app.realtime, ...functions.realtime].map((w) => w.table))].sort();
+  check('the Realtime publication holds exactly the tables the app watches',
+    published.map((r) => r.tablename).join(',') === watched.join(','),
+    `published: ${published.map((r) => r.tablename).join(', ') || 'none'}; watched: ${watched.join(', ')}`);
 
   // Service RPCs stay with the server; the user API stays with signed-in users.
   const serverOnly = new Set(functions.rpcs.map((c) => c.name).filter((n) => !app.rpcs.some((c) => c.name === n)));
@@ -1107,7 +1124,7 @@ async function internalCalls(db) {
 }
 
 async function main() {
-  const db = await freshDatabase(NEW_PROJECT_DEFAULTS);
+  const db = await freshDatabase(NEW_PROJECT_DEFAULTS + REALTIME_PUBLICATION);
   console.log('Applying migrations (new project: nothing exposed without a GRANT)');
   await applyMigrations(db);
 
