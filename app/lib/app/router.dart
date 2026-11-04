@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:wyrd_engine/wyrd_engine.dart';
 
+import '../design/components/motion.dart';
 import '../features/auth/auth_screen.dart';
 import '../features/character/character_screen.dart';
 import '../features/chronicle/chronicle_screen.dart';
@@ -61,8 +62,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/auth', parentNavigatorKey: _rootKey, builder: (_, _) => const AuthScreen()),
       GoRoute(path: '/settings/ai', parentNavigatorKey: _rootKey, builder: (_, _) => const AiProviderScreen()),
       GoRoute(path: '/settings', parentNavigatorKey: _rootKey, builder: (_, _) => const SettingsScreen()),
-      StatefulShellRoute.indexedStack(
+      StatefulShellRoute(
         builder: (_, _, shell) => AdaptiveShell(shell: shell),
+        // Branches stay alive; the selected one fades in.
+        navigatorContainerBuilder: (_, shell, children) =>
+            FadeIndexedStack(index: shell.currentIndex, children: children),
         branches: [
           StatefulShellBranch(
             routes: [GoRoute(path: '/character', builder: (_, _) => const CharacterScreen())],

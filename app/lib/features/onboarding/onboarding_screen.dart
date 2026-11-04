@@ -5,7 +5,6 @@ import 'package:wyrd_engine/wyrd_engine.dart';
 
 import '../../app/providers.dart';
 import '../../core/locale/locale_registry.dart';
-import '../../core/locale/regional_settings.dart';
 import '../../data/models.dart';
 import '../../design/components/background.dart';
 import '../../design/components/game.dart';
@@ -53,8 +52,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
   void _next() => setState(() => _step++);
 
-  Future<void> _chooseLanguage(Locale locale) async {
-    await ref.read(settingsRepositoryProvider).saveRegional(RegionalSettings.defaultsFor(locale));
+  /// Null keeps following the device language.
+  Future<void> _chooseLanguage(Locale? locale) async {
+    await ref.read(settingsRepositoryProvider).updateRegionalPrefs((r) => r.copyWith(language: locale?.languageCode));
     _next();
   }
 
@@ -157,11 +157,12 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   Widget _language(BuildContext context) {
     final l10n = context.l10n;
     final text = Theme.of(context).textTheme;
+    final device = LocaleRegistry.of(ref.watch(deviceLocaleProvider));
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const SizedBox(height: AppSpace.xl),
-        const Center(
+        Center(
           child: XpRing(
             fraction: 1,
             size: 148,
@@ -169,9 +170,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             child: DecoratedBox(
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                gradient: RadialGradient(colors: [Color(0xFF2A2140), AppColors.abyss]),
+                gradient: RadialGradient(colors: [context.palette.glow, context.palette.sunken]),
               ),
-              child: Center(child: Icon(Icons.local_fire_department_rounded, size: 54, color: AppColors.ember)),
+              child: const Center(child: Icon(Icons.local_fire_department_rounded, size: 54, color: AppColors.ember)),
             ),
           ),
         ),
@@ -182,7 +183,12 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         const SizedBox(height: AppSpace.xxxl),
         Text(l10n.onbChooseLanguage, style: text.labelSmall),
         const SizedBox(height: AppSpace.md),
-        for (final m in LocaleRegistry.all) ...[
+        // The device language comes first and keeps following the device.
+        GlowButton(label: device.nativeName, icon: Icons.translate_rounded, onPressed: () => _chooseLanguage(null)),
+        const SizedBox(height: AppSpace.xs),
+        Text(l10n.deviceLanguage, style: text.bodySmall, textAlign: TextAlign.center),
+        const SizedBox(height: AppSpace.lg),
+        for (final m in LocaleRegistry.all.where((m) => m.locale != device.locale)) ...[
           OutlinedButton(
             onPressed: () => _chooseLanguage(m.locale),
             child: Text(m.nativeName, style: text.titleMedium),
@@ -227,10 +233,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     height: 56,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: _portrait == e.key ? AppColors.wine : AppColors.abyss,
-                      border: Border.all(color: _portrait == e.key ? AppColors.ember : AppColors.hairline),
+                      color: _portrait == e.key ? context.palette.accentContainer : context.palette.sunken,
+                      border: Border.all(color: _portrait == e.key ? AppColors.ember : context.palette.hairline),
                     ),
-                    child: Icon(e.value, color: AppColors.bone),
+                    child: Icon(e.value, color: context.palette.ink),
                   ),
                 ),
               ),

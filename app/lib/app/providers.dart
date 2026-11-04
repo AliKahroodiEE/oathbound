@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:wyrd_engine/wyrd_engine.dart';
@@ -34,18 +32,40 @@ final characterRepositoryProvider = Provider(
   ),
 );
 
-final deviceLocaleProvider = Provider<Locale>((ref) => PlatformDispatcher.instance.locale);
+/// The device's preferred supported language. Updates live when the user
+/// changes the system language, so the app follows without a restart.
+final deviceLocaleProvider = NotifierProvider<DeviceLocaleNotifier, Locale>(DeviceLocaleNotifier.new);
 
-final regionalSettingsProvider = StreamProvider<RegionalSettings>(
-  (ref) => ref.watch(settingsRepositoryProvider).watchRegional(ref.watch(deviceLocaleProvider)),
+class DeviceLocaleNotifier extends Notifier<Locale> with WidgetsBindingObserver {
+  @override
+  Locale build() {
+    final binding = WidgetsBinding.instance;
+    binding.addObserver(this);
+    ref.onDispose(() => binding.removeObserver(this));
+    return LocaleRegistry.resolveAll(binding.platformDispatcher.locales);
+  }
+
+  @override
+  void didChangeLocales(List<Locale>? locales) =>
+      state = LocaleRegistry.resolveAll(locales ?? WidgetsBinding.instance.platformDispatcher.locales);
+}
+
+/// Saved choices read before the first frame (overridden in `main()`), so
+/// the app never flashes the wrong language or theme while the database
+/// stream starts.
+final initialRegionalPrefsProvider = Provider<RegionalPrefs>((ref) => const RegionalPrefs());
+final initialThemeProvider = Provider<ThemePreference>((ref) => ThemePreference.system);
+
+final regionalPrefsProvider = StreamProvider<RegionalPrefs>(
+  (ref) => ref.watch(settingsRepositoryProvider).watchRegionalPrefs(),
 );
 
-/// Regional settings with a synchronous fallback for first frames.
-final regionalProvider = Provider<RegionalSettings>(
-  (ref) =>
-      ref.watch(regionalSettingsProvider).value ??
-      RegionalSettings.defaultsFor(LocaleRegistry.resolve(ref.watch(deviceLocaleProvider))),
-);
+/// The regional settings the app runs with: the user's choices on top of
+/// the device language.
+final regionalProvider = Provider<RegionalSettings>((ref) {
+  final prefs = ref.watch(regionalPrefsProvider).value ?? ref.watch<RegionalPrefs>(initialRegionalPrefsProvider);
+  return prefs.resolve(ref.watch(deviceLocaleProvider));
+});
 
 final profileProvider = StreamProvider<UserProfile>((ref) => ref.watch(settingsRepositoryProvider).watchProfile());
 

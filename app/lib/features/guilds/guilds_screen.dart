@@ -27,13 +27,13 @@ class GuildsScreen extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Icon(Icons.groups_2_outlined, size: 40, color: AppColors.ashMuted),
+          Icon(Icons.groups_2_outlined, size: 40, color: context.palette.inkMuted),
           const SizedBox(height: AppSpace.md),
           Text(l10n.guildsIntro, style: text.bodyLarge, textAlign: TextAlign.center),
           const SizedBox(height: AppSpace.lg),
           Text(
             message,
-            style: text.bodyMedium?.copyWith(color: AppColors.ashMuted),
+            style: text.bodyMedium?.copyWith(color: context.palette.inkMuted),
             textAlign: TextAlign.center,
           ),
           if (signIn) ...[
@@ -97,7 +97,7 @@ class GuildsScreen extends ConsumerWidget {
                                     onTap: () => context.push('/guilds/${g.id}'),
                                     child: Row(
                                       children: [
-                                        const Icon(Icons.shield_moon_outlined, color: AppColors.ember),
+                                        Icon(Icons.shield_moon_outlined, color: context.palette.accent),
                                         const SizedBox(width: AppSpace.md),
                                         Expanded(
                                           child: Column(
@@ -114,7 +114,7 @@ class GuildsScreen extends ConsumerWidget {
                                             ],
                                           ),
                                         ),
-                                        const Icon(Icons.chevron_right, color: AppColors.ashFaint),
+                                        Icon(Icons.chevron_right, color: context.palette.inkFaint),
                                       ],
                                     ),
                                   ),

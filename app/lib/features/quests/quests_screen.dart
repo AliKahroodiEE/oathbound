@@ -8,6 +8,7 @@ import '../../app/providers.dart';
 import '../../core/format/bidi.dart';
 import '../../data/models.dart';
 import '../../design/components/states.dart';
+import '../../design/components/motion.dart';
 import '../../design/tokens.dart';
 import 'quest_tile.dart';
 
@@ -93,11 +94,17 @@ class _QuestList extends ConsumerWidget {
               alignment: AlignmentDirectional.topCenter,
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 820),
-                child: ListView.separated(
-                  padding: const EdgeInsetsDirectional.fromSTEB(AppSpace.lg, AppSpace.md, AppSpace.lg, 104),
-                  itemCount: list.length,
-                  separatorBuilder: (_, _) => const SizedBox(height: AppSpace.sm),
-                  itemBuilder: (_, i) => QuestTile(view: list[i]),
+                // Items cascade in when the list first appears, not on scroll.
+                child: RevealScope(
+                  child: ListView.separated(
+                    padding: const EdgeInsetsDirectional.fromSTEB(AppSpace.lg, AppSpace.md, AppSpace.lg, 104),
+                    itemCount: list.length,
+                    separatorBuilder: (_, _) => const SizedBox(height: AppSpace.sm),
+                    itemBuilder: (_, i) => Reveal(
+                      index: i,
+                      child: QuestTile(view: list[i]),
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -138,7 +145,7 @@ class _CompletedList extends ConsumerWidget {
                       subtitle: Text('${f.date(r.createdAt)} · ${f.time(r.createdAt)}'),
                       trailing: Text(
                         l10n.rewardTotal(f.number(r.result.totalXp)),
-                        style: text.labelMedium?.copyWith(color: AppColors.ember),
+                        style: text.labelMedium?.copyWith(color: context.palette.accent),
                       ),
                     );
                   },

@@ -174,49 +174,74 @@ class RewardSheet extends ConsumerWidget {
               tween: Tween(begin: 0, end: outcome.result.totalXp.toDouble()),
               duration: motion(context, AppMotion.reveal),
               curve: AppMotion.emphasizedDecelerate,
-              builder: (context, v, _) => Container(
-                padding: const EdgeInsetsDirectional.symmetric(vertical: AppSpace.xl),
-                decoration: const BoxDecoration(
-                  // A static radial burst behind the number: celebratory, cheap.
-                  gradient: RadialGradient(
-                    radius: 0.9,
-                    colors: [Color(0x55FF5A64), Color(0x228B6CFF), Color(0x00000000)],
-                    stops: [0, 0.45, 1],
+              builder: (context, v, _) {
+                final total = outcome.result.totalXp;
+                final t = total <= 0 ? 1.0 : (v / total).clamp(0.0, 1.0);
+                final p = context.palette;
+                return Container(
+                  padding: const EdgeInsetsDirectional.symmetric(vertical: AppSpace.xl),
+                  decoration: BoxDecoration(
+                    // A radial burst that blooms with the count: celebratory, cheap.
+                    gradient: RadialGradient(
+                      radius: 0.5 + 0.4 * t,
+                      colors: [
+                        AppColors.ember.withValues(alpha: p.isDark ? 0.34 : 0.2),
+                        p.arcane.withValues(alpha: p.isDark ? 0.14 : 0.08),
+                        p.arcane.withValues(alpha: 0),
+                      ],
+                      stops: const [0, 0.45, 1],
+                    ),
                   ),
-                ),
-                alignment: Alignment.center,
-                child: ShaderMask(
-                  shaderCallback: (r) =>
-                      AppGradients.emberDiagonal.createShader(r, textDirection: Directionality.of(context)),
-                  child: Text(
-                    l10n.rewardTotal(f.number(v.round())),
-                    style: text.displayLarge?.copyWith(color: Colors.white, fontSize: 46),
+                  alignment: Alignment.center,
+                  child: Transform.scale(
+                    scale: 0.88 + 0.12 * t,
+                    child: ShaderMask(
+                      shaderCallback: (r) =>
+                          AppGradients.emberDiagonal.createShader(r, textDirection: Directionality.of(context)),
+                      child: Text(
+                        l10n.rewardTotal(f.number(v.round())),
+                        style: text.displayLarge?.copyWith(color: Colors.white, fontSize: 46),
+                      ),
+                    ),
                   ),
-                ),
-              ),
+                );
+              },
             ),
             const SizedBox(height: AppSpace.lg),
-            for (final b in banners)
-              Container(
-                margin: const EdgeInsetsDirectional.only(bottom: AppSpace.sm),
-                padding: const EdgeInsetsDirectional.symmetric(horizontal: AppSpace.md, vertical: AppSpace.sm + 2),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [AppColors.gold.withValues(alpha: 0.22), AppColors.arcane.withValues(alpha: 0.12)],
+            for (final (i, b) in banners.indexed)
+              Reveal(
+                index: i + 2,
+                child: Container(
+                  margin: const EdgeInsetsDirectional.only(bottom: AppSpace.sm),
+                  padding: const EdgeInsetsDirectional.symmetric(horizontal: AppSpace.md, vertical: AppSpace.sm + 2),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        context.palette.gold.withValues(alpha: 0.22),
+                        context.palette.arcane.withValues(alpha: 0.12),
+                      ],
+                    ),
+                    borderRadius: AppRadius.softAll,
+                    border: Border.all(color: context.palette.gold.withValues(alpha: 0.4)),
                   ),
-                  borderRadius: AppRadius.softAll,
-                  border: Border.all(color: AppColors.gold.withValues(alpha: 0.4)),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.auto_awesome_rounded, size: 18, color: AppColors.gold),
-                    const SizedBox(width: AppSpace.sm),
-                    Expanded(child: Text(b, style: text.labelLarge)),
-                  ],
+                  child: Row(
+                    children: [
+                      Icon(Icons.auto_awesome_rounded, size: 18, color: context.palette.gold),
+                      const SizedBox(width: AppSpace.sm),
+                      Expanded(child: Text(b, style: text.labelLarge)),
+                    ],
+                  ),
                 ),
               ),
             if (banners.isNotEmpty) const SizedBox(height: AppSpace.md),
-            RewardExplanation(result: outcome.result, proposal: outcome.proposal, provisional: outcome.provisional),
+            Reveal(
+              index: banners.length + 2,
+              child: RewardExplanation(
+                result: outcome.result,
+                proposal: outcome.proposal,
+                provisional: outcome.provisional,
+              ),
+            ),
             const SizedBox(height: AppSpace.xl),
             Row(
               children: [

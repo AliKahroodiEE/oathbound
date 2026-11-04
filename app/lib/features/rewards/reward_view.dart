@@ -53,7 +53,7 @@ class RewardExplanation extends ConsumerWidget {
                     width: 36,
                     height: 36,
                     decoration: BoxDecoration(
-                      color: AppColors.forAttribute(g.attribute).withValues(alpha: 0.16),
+                      color: context.palette.attribute(g.attribute).withValues(alpha: 0.16),
                       shape: BoxShape.circle,
                     ),
                     alignment: Alignment.center,
@@ -67,7 +67,7 @@ class RewardExplanation extends ConsumerWidget {
                         Row(
                           children: [
                             Expanded(child: Text(l10n.attributeName(g.attribute), style: text.titleSmall)),
-                            Pill(f.signedNumber(g.amount), color: AppColors.forAttribute(g.attribute)),
+                            Pill(f.signedNumber(g.amount), color: context.palette.attribute(g.attribute)),
                           ],
                         ),
                         Text(_reason(context, g.attribute), style: text.bodySmall),
@@ -86,9 +86,9 @@ class RewardExplanation extends ConsumerWidget {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Padding(
-                    padding: EdgeInsetsDirectional.only(top: 7, end: AppSpace.sm),
-                    child: SizedBox.square(dimension: 4, child: ColoredBox(color: AppColors.ashMuted)),
+                  Padding(
+                    padding: const EdgeInsetsDirectional.only(top: 7, end: AppSpace.sm),
+                    child: SizedBox.square(dimension: 4, child: ColoredBox(color: context.palette.inkMuted)),
                   ),
                   Expanded(child: Text(l10n.adjustmentText(a, f), style: text.bodySmall)),
                 ],
@@ -101,11 +101,11 @@ class RewardExplanation extends ConsumerWidget {
             l10n.creditedMinutes(f.number(result.effectiveMinutes)),
             result.source == ProposalSource.ai ? l10n.rewardSourceAi : l10n.rewardSourceHeuristic,
           ].join(' · '),
-          style: text.bodySmall?.copyWith(color: AppColors.ashFaint),
+          style: text.bodySmall?.copyWith(color: context.palette.inkFaint),
         ),
         if (provisional) ...[
           const SizedBox(height: AppSpace.xs),
-          Text(l10n.rewardProvisional, style: text.bodySmall?.copyWith(color: AppColors.warning)),
+          Text(l10n.rewardProvisional, style: text.bodySmall?.copyWith(color: context.palette.warning)),
         ],
       ],
     );

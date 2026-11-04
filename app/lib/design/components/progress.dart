@@ -29,7 +29,7 @@ class XpBar extends StatelessWidget {
           height: height,
           child: Stack(
             children: [
-              Positioned.fill(child: ColoredBox(color: (c ?? AppColors.ember).withValues(alpha: 0.12))),
+              Positioned.fill(child: ColoredBox(color: (c ?? context.palette.accent).withValues(alpha: 0.12))),
               TweenAnimationBuilder<double>(
                 tween: Tween(end: f),
                 duration: motion(context, AppMotion.reveal),
@@ -41,7 +41,7 @@ class XpBar extends StatelessWidget {
                   child: DecoratedBox(
                     decoration: BoxDecoration(
                       borderRadius: AppRadius.pillAll,
-                      gradient: c == null ? AppGradients.ember : AppGradients.tint(c),
+                      gradient: c == null ? AppGradients.ember : context.palette.tint(c),
                     ),
                   ),
                 ),
@@ -106,62 +106,65 @@ class AttributeTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
-    final color = AppColors.forAttribute(attribute);
-    return Material(
-      color: color.withValues(alpha: 0.07),
-      shape: RoundedRectangleBorder(
-        borderRadius: AppRadius.softAll,
-        side: BorderSide(color: color.withValues(alpha: 0.22)),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsetsDirectional.fromSTEB(AppSpace.md, AppSpace.md, AppSpace.md, AppSpace.md),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    width: 34,
-                    height: 34,
-                    decoration: BoxDecoration(color: color.withValues(alpha: 0.16), shape: BoxShape.circle),
-                    alignment: Alignment.center,
-                    child: AttributeSigil(attribute, size: 18),
-                  ),
-                  const SizedBox(width: AppSpace.sm + 2),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(name, style: text.titleSmall, maxLines: 1, overflow: TextOverflow.ellipsis),
-                        Text.rich(
-                          TextSpan(
-                            children: [
-                              TextSpan(
-                                text: rankLabel,
-                                style: text.labelMedium?.copyWith(color: color, fontWeight: FontWeight.w700),
-                              ),
-                              if (todayLabel != null)
-                                TextSpan(
-                                  text: '  $todayLabel',
-                                  style: text.labelMedium?.copyWith(color: AppColors.attrVitality),
-                                ),
-                            ],
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
+    final color = context.palette.attribute(attribute);
+    return Pressable(
+      enabled: onTap != null,
+      child: Material(
+        color: color.withValues(alpha: 0.07),
+        shape: RoundedRectangleBorder(
+          borderRadius: AppRadius.softAll,
+          side: BorderSide(color: color.withValues(alpha: 0.22)),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsetsDirectional.fromSTEB(AppSpace.md, AppSpace.md, AppSpace.md, AppSpace.md),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 34,
+                      height: 34,
+                      decoration: BoxDecoration(color: color.withValues(alpha: 0.16), shape: BoxShape.circle),
+                      alignment: Alignment.center,
+                      child: AttributeSigil(attribute, size: 18),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppSpace.sm + 2),
-              XpBar(fraction: fraction, color: color, height: 5),
-            ],
+                    const SizedBox(width: AppSpace.sm + 2),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(name, style: text.titleSmall, maxLines: 1, overflow: TextOverflow.ellipsis),
+                          Text.rich(
+                            TextSpan(
+                              children: [
+                                TextSpan(
+                                  text: rankLabel,
+                                  style: text.labelMedium?.copyWith(color: color, fontWeight: FontWeight.w700),
+                                ),
+                                if (todayLabel != null)
+                                  TextSpan(
+                                    text: '  $todayLabel',
+                                    style: text.labelMedium?.copyWith(color: context.palette.success),
+                                  ),
+                              ],
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppSpace.sm + 2),
+                XpBar(fraction: fraction, color: color, height: 5),
+              ],
+            ),
           ),
         ),
       ),
@@ -215,9 +218,9 @@ class StatTile extends StatelessWidget {
     return Container(
       padding: const EdgeInsetsDirectional.all(AppSpace.md),
       decoration: BoxDecoration(
-        color: AppColors.abyss.withValues(alpha: 0.7),
+        color: context.palette.sunken.withValues(alpha: 0.7),
         borderRadius: AppRadius.softAll,
-        border: Border.all(color: AppColors.hairline),
+        border: Border.all(color: context.palette.hairline),
       ),
       child: Row(
         children: [
@@ -235,7 +238,7 @@ class StatTile extends StatelessWidget {
                 Text(value, style: text.titleMedium, maxLines: 1, overflow: TextOverflow.ellipsis),
                 Text(label, style: text.bodySmall, maxLines: 1, overflow: TextOverflow.ellipsis),
                 if (caption != null)
-                  Text(caption!, style: text.bodySmall?.copyWith(color: AppColors.ashFaint), maxLines: 2),
+                  Text(caption!, style: text.bodySmall?.copyWith(color: context.palette.inkFaint), maxLines: 2),
               ],
             ),
           ),
@@ -268,7 +271,7 @@ class LevelSeal extends StatelessWidget {
         ),
         child: Text(
           '$caption $level',
-          style: text.labelLarge?.copyWith(color: AppColors.bone, fontWeight: FontWeight.w800),
+          style: text.labelLarge?.copyWith(color: AppColors.onAccent, fontWeight: FontWeight.w800),
         ),
       ),
     );

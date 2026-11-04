@@ -23,17 +23,21 @@ Future<void> main() async {
     // Seed in the visitor's language unless the build pins one.
     const pinned = String.fromEnvironment('WYRD_DEMO_LOCALE');
     final locale = pinned.isEmpty
-        ? LocaleRegistry.resolve(PlatformDispatcher.instance.locale)
+        ? LocaleRegistry.resolveAll(PlatformDispatcher.instance.locales)
         : Locale(pinned); // ignore: prefer_const_constructors
-    await seedDemo(db, locale: locale);
+    await seedDemo(db, locale: locale, pinLanguage: pinned.isNotEmpty);
   }
-  final profile = await SettingsRepository(db).profile();
+  final settings = SettingsRepository(db);
+  final profile = await settings.profile();
+  final regionalPrefs = await settings.regionalPrefs();
   runApp(
     ProviderScope(
       overrides: [
         databaseProvider.overrideWithValue(db),
         backendReadyProvider.overrideWithValue(backendReady),
         initialOnboardedProvider.overrideWithValue(profile.onboardingComplete),
+        initialThemeProvider.overrideWithValue(profile.theme),
+        initialRegionalPrefsProvider.overrideWithValue(regionalPrefs),
       ],
       child: const WyrdApp(),
     ),

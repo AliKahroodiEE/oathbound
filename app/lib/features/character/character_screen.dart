@@ -8,6 +8,7 @@ import '../../core/format/bidi.dart';
 import '../../data/models.dart';
 import '../../data/repositories/character_repository.dart';
 import '../../design/components/game.dart';
+import '../../design/components/motion.dart';
 import '../../design/components/panel.dart';
 import '../../design/components/progress.dart';
 import '../../design/components/states.dart';
@@ -51,12 +52,15 @@ class _CharacterLayout extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final widthClass = WidthClass.of(MediaQuery.sizeOf(context).width);
-    final hero = _Hero(state: state);
-    final returning = state.showReturn(dayKey(DateTime.now())) ? const _ReturnCard() : null;
-    final attributes = _AttributesPanel(state: state);
-    const today = _TodayPanel();
-    final growth = _GrowthPanel(state: state);
-    final achievements = _AchievementsPanel(state: state);
+    // Panels ease in once, in reading order.
+    var order = 0;
+    Widget reveal(Widget w) => Reveal(index: order++, child: w);
+    final hero = reveal(_Hero(state: state));
+    final returning = state.showReturn(dayKey(DateTime.now())) ? reveal(const _ReturnCard()) : null;
+    final today = reveal(const _TodayPanel());
+    final attributes = reveal(_AttributesPanel(state: state));
+    final growth = reveal(_GrowthPanel(state: state));
+    final achievements = reveal(_AchievementsPanel(state: state));
     const gap = SizedBox(height: AppSpace.lg, width: AppSpace.lg);
 
     Widget column(List<Widget?> children) => Column(
@@ -131,13 +135,13 @@ class _Hero extends ConsumerWidget {
     final p = state.profile;
     final w = state.weekly;
     final (conditionText, conditionHelp, conditionColor) = switch (state.conditionLabel) {
-      ConditionLabel.rested => (l10n.conditionRested, l10n.conditionRestedHelp, AppColors.attrVitality),
-      ConditionLabel.steady => (l10n.conditionSteady, l10n.conditionSteadyHelp, AppColors.warning),
-      ConditionLabel.strained => (l10n.conditionStrained, l10n.conditionStrainedHelp, AppColors.ember),
+      ConditionLabel.rested => (l10n.conditionRested, l10n.conditionRestedHelp, context.palette.success),
+      ConditionLabel.steady => (l10n.conditionSteady, l10n.conditionSteadyHelp, context.palette.warning),
+      ConditionLabel.strained => (l10n.conditionStrained, l10n.conditionStrainedHelp, context.palette.accent),
     };
 
     return Panel(
-      accent: AppColors.ember,
+      accent: context.palette.accent,
       padding: const EdgeInsetsDirectional.fromSTEB(AppSpace.lg, AppSpace.xl, AppSpace.lg, AppSpace.lg),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -149,12 +153,16 @@ class _Hero extends ConsumerWidget {
                 fraction: level.fraction,
                 size: 108,
                 child: DecoratedBox(
-                  decoration: const BoxDecoration(
+                  decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    gradient: RadialGradient(colors: [Color(0xFF2A2140), AppColors.abyss]),
+                    gradient: RadialGradient(colors: [context.palette.glow, context.palette.sunken]),
                   ),
                   child: Center(
-                    child: Icon(portraitGlyphs[p.portrait] ?? Icons.castle_outlined, color: AppColors.bone, size: 38),
+                    child: Icon(
+                      portraitGlyphs[p.portrait] ?? Icons.castle_outlined,
+                      color: context.palette.ink,
+                      size: 38,
+                    ),
                   ),
                 ),
               ),
@@ -188,9 +196,17 @@ class _Hero extends ConsumerWidget {
                       children: [
                         LevelSeal(level: f.number(level.step), caption: l10n.levelLabel),
                         if (p.equippedTitle != null)
-                          Pill(l10n.titleName(p.equippedTitle!), color: AppColors.gold, icon: Icons.workspace_premium),
+                          Pill(
+                            l10n.titleName(p.equippedTitle!),
+                            color: context.palette.gold,
+                            icon: Icons.workspace_premium,
+                          ),
                         if (state.characterClass != null)
-                          Pill(l10n.className(state.characterClass!), color: AppColors.arcane, icon: Icons.shield_moon),
+                          Pill(
+                            l10n.className(state.characterClass!),
+                            color: context.palette.arcane,
+                            icon: Icons.shield_moon,
+                          ),
                       ],
                     ),
                     if (state.characterClass == null) ...[
@@ -232,14 +248,14 @@ class _Hero extends ConsumerWidget {
                 StatTile(
                   vertical: true,
                   icon: Icons.local_fire_department_rounded,
-                  color: AppColors.emberGlow,
+                  color: context.palette.flame,
                   value: l10n.weeksKept(w.currentStreak, f.number(w.currentStreak)),
                   label: l10n.bestRecord(f.number(w.bestStreak)),
                 ),
                 StatTile(
                   vertical: true,
                   icon: Icons.link_rounded,
-                  color: AppColors.gold,
+                  color: context.palette.gold,
                   value: l10n.chainDays(state.chain.current, f.number(state.chain.current)),
                   label: l10n.bestRecord(f.number(state.chain.best)),
                 ),
@@ -286,7 +302,7 @@ class _Hero extends ConsumerWidget {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       gradient: i < w.activeDaysThisWeek ? AppGradients.emberDiagonal : null,
-                      border: i < w.activeDaysThisWeek ? null : Border.all(color: AppColors.hairline, width: 2),
+                      border: i < w.activeDaysThisWeek ? null : Border.all(color: context.palette.hairline, width: 2),
                     ),
                   ),
                 ),
@@ -309,7 +325,7 @@ class _ReturnCard extends ConsumerWidget {
         .read(settingsRepositoryProvider)
         .updateProfile((p) => p.copyWith(returnAcknowledgedDay: dayKey(DateTime.now())));
     return Panel(
-      accent: AppColors.arcane,
+      accent: context.palette.arcane,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -398,7 +414,7 @@ void showAttributeSheet(BuildContext context, Attribute a) {
         final text = Theme.of(context).textTheme;
         final s = ref.watch(characterStateProvider).value;
         final rank = s?.rank(a) ?? Curves.rank(0);
-        final color = AppColors.forAttribute(a);
+        final color = context.palette.attribute(a);
         return Padding(
           padding: const EdgeInsetsDirectional.fromSTEB(AppSpace.xl, 0, AppSpace.xl, AppSpace.xxl),
           child: Column(
@@ -487,7 +503,7 @@ class _GrowthPanel extends ConsumerWidget {
       trailing: IconButton(
         tooltip: l10n.ledgerTitle,
         visualDensity: VisualDensity.compact,
-        icon: const Icon(Icons.receipt_long_outlined, size: 20, color: AppColors.ember),
+        icon: Icon(Icons.receipt_long_outlined, size: 20, color: context.palette.accent),
         onPressed: () => context.go('/chronicle/ledger'),
       ),
       child: state.recent.isEmpty
@@ -505,7 +521,7 @@ class _GrowthPanel extends ConsumerWidget {
                       title: UserText(
                         r.questTitle,
                         style: text.bodyMedium?.copyWith(
-                          color: AppColors.bone,
+                          color: context.palette.ink,
                           decoration: r.undone ? TextDecoration.lineThrough : null,
                         ),
                         maxLines: 1,
@@ -518,13 +534,13 @@ class _GrowthPanel extends ConsumerWidget {
                           runSpacing: AppSpace.xs,
                           children: [
                             for (final g in r.result.grants)
-                              Pill(f.signedNumber(g.amount), color: AppColors.forAttribute(g.attribute)),
+                              Pill(f.signedNumber(g.amount), color: context.palette.attribute(g.attribute)),
                           ],
                         ),
                       ),
                       trailing: Text(
                         l10n.rewardTotal(f.number(r.result.totalXp)),
-                        style: text.labelLarge?.copyWith(color: AppColors.ember),
+                        style: text.labelLarge?.copyWith(color: context.palette.accent),
                       ),
                       children: [RewardExplanation(result: r.result, proposal: r.proposal, provisional: r.provisional)],
                     ),
@@ -547,7 +563,7 @@ class _AchievementsPanel extends ConsumerWidget {
     return Panel(
       title: l10n.sectionAchievements,
       icon: Icons.military_tech_rounded,
-      accent: AppColors.gold,
+      accent: context.palette.gold,
       child: state.achievements.isEmpty
           ? EmptyState(message: l10n.achievementsEmpty, icon: Icons.military_tech_outlined)
           : Wrap(
@@ -561,9 +577,9 @@ class _AchievementsPanel extends ConsumerWidget {
                     child: Container(
                       padding: const EdgeInsetsDirectional.fromSTEB(6, 6, AppSpace.md, 6),
                       decoration: BoxDecoration(
-                        color: AppColors.gold.withValues(alpha: 0.08),
+                        color: context.palette.gold.withValues(alpha: 0.08),
                         borderRadius: AppRadius.pillAll,
-                        border: Border.all(color: AppColors.gold.withValues(alpha: 0.35)),
+                        border: Border.all(color: context.palette.gold.withValues(alpha: 0.35)),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -571,14 +587,17 @@ class _AchievementsPanel extends ConsumerWidget {
                           Container(
                             width: 24,
                             height: 24,
-                            decoration: const BoxDecoration(
+                            decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              gradient: LinearGradient(colors: [AppColors.gold, AppColors.emberGlow]),
+                              gradient: LinearGradient(colors: [context.palette.gold, AppColors.emberGlow]),
                             ),
-                            child: const Icon(Icons.star_rounded, size: 15, color: AppColors.void_),
+                            child: Icon(Icons.star_rounded, size: 15, color: context.palette.canvas),
                           ),
                           const SizedBox(width: AppSpace.sm),
-                          Text(l10n.achievementName(a.id), style: text.labelMedium?.copyWith(color: AppColors.bone)),
+                          Text(
+                            l10n.achievementName(a.id),
+                            style: text.labelMedium?.copyWith(color: context.palette.ink),
+                          ),
                         ],
                       ),
                     ),

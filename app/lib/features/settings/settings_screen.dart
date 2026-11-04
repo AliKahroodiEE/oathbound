@@ -31,7 +31,7 @@ class SettingsScreen extends ConsumerWidget {
     final text = Theme.of(context).textTheme;
 
     Future<void> setProfile(UserProfile Function(UserProfile) change) => settings.updateProfile(change);
-    Future<void> setRegional(RegionalSettings r) => settings.saveRegional(r);
+    Future<void> setRegional(RegionalPrefs Function(RegionalPrefs) change) => settings.updateRegionalPrefs(change);
 
     const gap = SizedBox(height: AppSpace.lg);
     final weekdays = {
@@ -71,15 +71,18 @@ class SettingsScreen extends ConsumerWidget {
                     SegmentedButton<String>(
                       showSelectedIcon: false,
                       segments: [
+                        ButtonSegment(value: '', label: Text(l10n.languageAuto)),
                         for (final m in LocaleRegistry.all)
                           ButtonSegment(value: m.locale.languageCode, label: Text(m.nativeName)),
                       ],
-                      selected: {regional.locale.languageCode},
-                      onSelectionChanged: (s) {
-                        final next = RegionalSettings.defaultsFor(Locale(s.first));
-                        setRegional(next);
-                      },
+                      selected: {regional.followsDevice ? '' : regional.locale.languageCode},
+                      onSelectionChanged: (s) =>
+                          setRegional((r) => r.copyWith(language: s.first.isEmpty ? null : s.first)),
                     ),
+                    if (regional.followsDevice) ...[
+                      const SizedBox(height: AppSpace.xs),
+                      Text(l10n.languageFollowsDevice(regional.meta.nativeName), style: text.bodySmall),
+                    ],
                     const SizedBox(height: AppSpace.lg),
                     Text(l10n.calendar, style: text.labelMedium),
                     const SizedBox(height: AppSpace.sm),
@@ -90,7 +93,7 @@ class SettingsScreen extends ConsumerWidget {
                         ButtonSegment(value: CalendarSystem.jalali, label: Text(l10n.calendarJalali)),
                       ],
                       selected: {regional.calendar},
-                      onSelectionChanged: (s) => setRegional(regional.copyWith(calendar: s.first)),
+                      onSelectionChanged: (s) => setRegional((r) => r.copyWith(calendar: s.first)),
                     ),
                     if (hasNativeDigits) ...[
                       const SizedBox(height: AppSpace.lg),
@@ -103,7 +106,7 @@ class SettingsScreen extends ConsumerWidget {
                           ButtonSegment(value: DigitStyle.latin, label: Text(l10n.digitsLatin)),
                         ],
                         selected: {regional.digits},
-                        onSelectionChanged: (s) => setRegional(regional.copyWith(digits: s.first)),
+                        onSelectionChanged: (s) => setRegional((r) => r.copyWith(digits: s.first)),
                       ),
                     ],
                     const SizedBox(height: AppSpace.lg),
@@ -116,7 +119,53 @@ class SettingsScreen extends ConsumerWidget {
                         for (final e in weekdays.entries)
                           DropdownMenuItem(value: e.key, child: Text(f.weekdayLong(e.value))),
                       ],
-                      onChanged: (v) => setRegional(regional.copyWith(firstWeekday: v)),
+                      onChanged: (v) => setRegional((r) => r.copyWith(firstWeekday: v)),
+                    ),
+                  ],
+                ),
+              ),
+              gap,
+              Panel(
+                title: l10n.sectionAppearance,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(l10n.themeLabel, style: text.labelMedium),
+                    const SizedBox(height: AppSpace.sm),
+                    SegmentedButton<ThemePreference>(
+                      showSelectedIcon: false,
+                      segments: [
+                        ButtonSegment(
+                          value: ThemePreference.system,
+                          icon: const Icon(Icons.brightness_auto_outlined, size: 18),
+                          label: Text(l10n.themeAuto),
+                        ),
+                        ButtonSegment(
+                          value: ThemePreference.light,
+                          icon: const Icon(Icons.light_mode_outlined, size: 18),
+                          label: Text(l10n.themeLight),
+                        ),
+                        ButtonSegment(
+                          value: ThemePreference.dark,
+                          icon: const Icon(Icons.dark_mode_outlined, size: 18),
+                          label: Text(l10n.themeDark),
+                        ),
+                      ],
+                      selected: {profile.theme},
+                      onSelectionChanged: (s) => setProfile((p) => p.copyWith(theme: s.first)),
+                    ),
+                    const SizedBox(height: AppSpace.sm),
+                    SwitchListTile(
+                      contentPadding: EdgeInsetsDirectional.zero,
+                      title: Text(l10n.reducedMotion),
+                      value: profile.reducedMotion,
+                      onChanged: (v) => setProfile((p) => p.copyWith(reducedMotion: v)),
+                    ),
+                    SwitchListTile(
+                      contentPadding: EdgeInsetsDirectional.zero,
+                      title: Text(l10n.reducedEffects),
+                      value: profile.reducedEffects,
+                      onChanged: (v) => setProfile((p) => p.copyWith(reducedEffects: v)),
                     ),
                   ],
                 ),
@@ -337,26 +386,6 @@ class SettingsScreen extends ConsumerWidget {
                       },
                     ),
                     if (kIsWeb) Text(l10n.notificationsWebNote, style: text.bodySmall),
-                  ],
-                ),
-              ),
-              gap,
-              Panel(
-                title: l10n.sectionAppearance,
-                child: Column(
-                  children: [
-                    SwitchListTile(
-                      contentPadding: EdgeInsetsDirectional.zero,
-                      title: Text(l10n.reducedMotion),
-                      value: profile.reducedMotion,
-                      onChanged: (v) => setProfile((p) => p.copyWith(reducedMotion: v)),
-                    ),
-                    SwitchListTile(
-                      contentPadding: EdgeInsetsDirectional.zero,
-                      title: Text(l10n.reducedEffects),
-                      value: profile.reducedEffects,
-                      onChanged: (v) => setProfile((p) => p.copyWith(reducedEffects: v)),
-                    ),
                   ],
                 ),
               ),

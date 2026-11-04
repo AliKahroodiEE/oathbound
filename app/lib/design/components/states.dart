@@ -26,11 +26,22 @@ class EmptyState extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 32, color: AppColors.ashFaint),
+          Container(
+            width: 64,
+            height: 64,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: RadialGradient(
+                colors: [context.palette.selection, context.palette.selection.withValues(alpha: 0)],
+              ),
+              border: Border.all(color: context.palette.hairline),
+            ),
+            child: Icon(icon, size: 28, color: context.palette.accent),
+          ),
           const SizedBox(height: AppSpace.md),
           Text(
             message,
-            style: text.bodyMedium?.copyWith(color: AppColors.ashMuted),
+            style: text.bodyMedium?.copyWith(color: context.palette.inkMuted),
             textAlign: TextAlign.center,
           ),
           if (actionLabel != null && onAction != null) ...[
@@ -54,9 +65,9 @@ class ErrorState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(
-        color: AppColors.abyss,
-        border: BorderDirectional(start: BorderSide(color: AppColors.ember, width: 2)),
+      decoration: BoxDecoration(
+        color: context.palette.sunken,
+        border: BorderDirectional(start: BorderSide(color: context.palette.accent, width: 2)),
       ),
       padding: const EdgeInsetsDirectional.all(AppSpace.lg),
       child: Row(
@@ -105,7 +116,7 @@ class _SkeletonState extends State<Skeleton> with SingleTickerProviderStateMixin
     child: Container(
       height: widget.height,
       width: widget.width,
-      decoration: const BoxDecoration(color: AppColors.slateHigh, borderRadius: AppRadius.sharpAll),
+      decoration: BoxDecoration(color: context.palette.surfaceHigh, borderRadius: AppRadius.sharpAll),
     ),
   );
 }

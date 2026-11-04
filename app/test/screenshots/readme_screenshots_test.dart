@@ -3,12 +3,9 @@
 //   flutter test --dart-define=SCREENSHOTS=true --update-goldens test/screenshots
 //
 // Skipped in normal test runs. Output: docs/screenshots/*.png at the repo root.
-import 'dart:io';
-
 import 'package:drift/drift.dart' show DatabaseConnection;
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -17,28 +14,25 @@ import 'package:wyrd/app/providers.dart';
 import 'package:wyrd/app/router.dart';
 import 'package:wyrd/data/db/database.dart';
 import 'package:wyrd/data/demo/demo_seed.dart';
+import 'package:wyrd/data/repositories/settings_repository.dart';
 import 'package:wyrd/features/quests/complete_flow.dart';
 
-const _enabled = bool.fromEnvironment('SCREENSHOTS');
+import 'support.dart';
+
+const _enabled = screenshotsEnabled;
 const _out = '../../../docs/screenshots';
 
-Future<void> _loadFonts() async {
-  Future<void> load(String family, Future<ByteData> data) async {
-    await (FontLoader(family)..addFont(data)).load();
-  }
-
-  await load('Inter', rootBundle.load('assets/fonts/Inter-Variable.ttf'));
-  await load('Vazirmatn', rootBundle.load('assets/fonts/Vazirmatn-Variable.ttf'));
-  await load('Cinzel', rootBundle.load('assets/fonts/Cinzel-Variable.ttf'));
-  final root = Platform.environment['FLUTTER_ROOT']!;
-  final icons = File('$root/bin/cache/artifacts/material_fonts/MaterialIcons-Regular.otf').readAsBytesSync();
-  await load('MaterialIcons', Future.value(ByteData.sublistView(icons)));
-}
-
-Future<ProviderContainer> _pumpApp(WidgetTester tester, Locale locale, Size logical, double dpr) async {
+Future<ProviderContainer> _pumpApp(
+  WidgetTester tester,
+  Locale locale,
+  Size logical,
+  double dpr,
+  ThemePreference theme,
+) async {
   final db = (await tester.runAsync(() async {
     final db = AppDatabase(DatabaseConnection(NativeDatabase.memory(), closeStreamsSynchronously: true));
-    await seedDemo(db, locale: locale);
+    await seedDemo(db, locale: locale, pinLanguage: true);
+    await SettingsRepository(db).updateProfile((p) => p.copyWith(theme: theme));
     return db;
   }))!;
   addTearDown(() => tester.runAsync(db.close));
@@ -74,55 +68,70 @@ void main() {
   setUpAll(() async {
     if (!_enabled) return;
     await initializeDateFormatting();
-    await _loadFonts();
+    await loadAppFonts();
   });
 
   const phone = Size(390, 844);
   const desktop = Size(1440, 900);
 
-  testWidgets('desktop character sheet (English)', skip: !_enabled, (tester) async {
-    await _pumpApp(tester, const Locale('en'), desktop, 1);
-    await _shot(tester, 'desktop-character-en');
-  });
+  for (final theme in [ThemePreference.dark, ThemePreference.light]) {
+    final t = theme.name;
 
-  testWidgets('desktop chronicle (English)', skip: !_enabled, (tester) async {
-    final c = await _pumpApp(tester, const Locale('en'), desktop, 1);
-    await _go(tester, c, '/chronicle');
-    await _shot(tester, 'desktop-chronicle-en');
-  });
-
-  testWidgets('phone character sheet (Persian)', skip: !_enabled, (tester) async {
-    await _pumpApp(tester, const Locale('fa'), phone, 2);
-    await _shot(tester, 'phone-character-fa');
-  });
-
-  testWidgets('phone quests (English)', skip: !_enabled, (tester) async {
-    final c = await _pumpApp(tester, const Locale('en'), phone, 2);
-    await _go(tester, c, '/quests');
-    await _shot(tester, 'phone-quests-en');
-  });
-
-  testWidgets('phone reward reveal (English)', skip: !_enabled, (tester) async {
-    final c = await _pumpApp(tester, const Locale('en'), phone, 2);
-    // The seeded daily study habit: planned, with a when-and-where intention.
-    final outcome = await tester.runAsync(() async {
-      final today = await c.read(questRepositoryProvider).today(DateTime.monday);
-      final study = today.firstWhere((v) => v.quest.title == 'Study electronics').quest;
-      return c.read(progressionRepositoryProvider).complete(study, declaredMinutes: 90);
+    testWidgets('desktop character sheet ($t, English)', skip: !_enabled, (tester) async {
+      await _pumpApp(tester, const Locale('en'), desktop, 1, theme);
+      await _shot(tester, 'desktop-character-$t-en');
     });
-    final context = c.read(routerProvider).routerDelegate.navigatorKey.currentContext!;
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      builder: (_) => RewardSheet(outcome: outcome!, questTitle: 'Study electronics'),
-    );
-    await _settle(tester);
-    await _shot(tester, 'phone-reward-en');
-  });
 
-  testWidgets('phone chronicle (Persian)', skip: !_enabled, (tester) async {
-    final c = await _pumpApp(tester, const Locale('fa'), phone, 2);
-    await _go(tester, c, '/chronicle');
-    await _shot(tester, 'phone-chronicle-fa');
-  });
+    testWidgets('desktop chronicle ($t, English)', skip: !_enabled, (tester) async {
+      final c = await _pumpApp(tester, const Locale('en'), desktop, 1, theme);
+      await _go(tester, c, '/chronicle');
+      await _shot(tester, 'desktop-chronicle-$t-en');
+    });
+
+    testWidgets('phone character sheet ($t, English)', skip: !_enabled, (tester) async {
+      await _pumpApp(tester, const Locale('en'), phone, 2, theme);
+      await _shot(tester, 'phone-character-$t-en');
+    });
+
+    testWidgets('phone character sheet ($t, Persian)', skip: !_enabled, (tester) async {
+      await _pumpApp(tester, const Locale('fa'), phone, 2, theme);
+      await _shot(tester, 'phone-character-$t-fa');
+    });
+
+    testWidgets('phone quests ($t, English)', skip: !_enabled, (tester) async {
+      final c = await _pumpApp(tester, const Locale('en'), phone, 2, theme);
+      await _go(tester, c, '/quests');
+      await _shot(tester, 'phone-quests-$t-en');
+    });
+
+    testWidgets('phone reward reveal ($t, English)', skip: !_enabled, (tester) async {
+      final c = await _pumpApp(tester, const Locale('en'), phone, 2, theme);
+      // The seeded daily study habit: planned, with a when-and-where intention.
+      final outcome = await tester.runAsync(() async {
+        final today = await c.read(questRepositoryProvider).today(DateTime.monday);
+        final study = today.firstWhere((v) => v.quest.title == 'Study electronics').quest;
+        return c.read(progressionRepositoryProvider).complete(study, declaredMinutes: 90);
+      });
+      final context = c.read(routerProvider).routerDelegate.navigatorKey.currentContext!;
+      showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        builder: (_) => RewardSheet(outcome: outcome!, questTitle: 'Study electronics'),
+      );
+      await _settle(tester);
+      await _shot(tester, 'phone-reward-$t-en');
+    });
+
+    testWidgets('phone chronicle ($t, Persian)', skip: !_enabled, (tester) async {
+      final c = await _pumpApp(tester, const Locale('fa'), phone, 2, theme);
+      await _go(tester, c, '/chronicle');
+      await _shot(tester, 'phone-chronicle-$t-fa');
+    });
+
+    testWidgets('phone settings ($t, English)', skip: !_enabled, (tester) async {
+      final c = await _pumpApp(tester, const Locale('en'), phone, 2, theme);
+      await _go(tester, c, '/settings');
+      await _shot(tester, 'phone-settings-$t-en');
+    });
+  }
 }

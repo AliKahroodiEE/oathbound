@@ -115,7 +115,9 @@ class _CalendarDialogState extends ConsumerState<_CalendarDialog> {
                               child: Center(
                                 child: Text(
                                   f.digits('$d'),
-                                  style: text.bodyMedium?.copyWith(color: selected ? AppColors.bone : AppColors.ash),
+                                  style: text.bodyMedium?.copyWith(
+                                    color: selected ? AppColors.onAccent : context.palette.inkSoft,
+                                  ),
                                 ),
                               ),
                             ),

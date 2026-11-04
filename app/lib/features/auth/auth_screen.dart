@@ -151,7 +151,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                 const SizedBox(height: AppSpace.md),
                 Text(
                   _message!,
-                  style: text.bodyMedium?.copyWith(color: _error ? AppColors.ember : AppColors.attrVitality),
+                  style: text.bodyMedium?.copyWith(color: _error ? context.palette.accent : context.palette.success),
                 ),
               ],
             ],
