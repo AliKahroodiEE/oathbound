@@ -50,7 +50,9 @@ void main() {
 
   testWidgets('removing the other account\'s changes lets the new account sync', (tester) async {
     final (gateway, container) = await pump(tester);
-    final answer = container.read(handoverProvider.notifier).ask(previousEmail: 'arin@example.com', unsynced: 3);
+    final answer = container
+        .read(handoverProvider.notifier)
+        .ask(Handover(previousEmail: 'arin@example.com', unsynced: 3));
     await settle(tester);
     expect(find.text('Unsaved changes from another account'), findsOneWidget);
     expect(find.textContaining('arin@example.com'), findsOneWidget);
@@ -65,7 +67,7 @@ void main() {
 
   testWidgets('keeping them signs the new account out again', (tester) async {
     final (gateway, container) = await pump(tester);
-    final answer = container.read(handoverProvider.notifier).ask(previousEmail: null, unsynced: 1);
+    final answer = container.read(handoverProvider.notifier).ask(Handover(previousEmail: null, unsynced: 1));
     await settle(tester);
     expect(find.textContaining('Another account has 1 change on this device'), findsOneWidget);
 
@@ -77,7 +79,9 @@ void main() {
 
   testWidgets('Persian: the question reads right to left with the address isolated', (tester) async {
     final (_, container) = await pump(tester, locale: const Locale('fa'));
-    final answer = container.read(handoverProvider.notifier).ask(previousEmail: 'arin@example.com', unsynced: 2);
+    final answer = container
+        .read(handoverProvider.notifier)
+        .ask(Handover(previousEmail: 'arin@example.com', unsynced: 2));
     await settle(tester);
     expect(find.text('تغییرهای ذخیره‌نشده‌ی یک حساب دیگر'), findsOneWidget);
     expect(find.textContaining('\u2068arin@example.com\u2069'), findsOneWidget);
@@ -85,5 +89,20 @@ void main() {
     await settle(tester);
     expect(await answer, isTrue);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('a question whose sign-in ended closes without signing anyone out', (tester) async {
+    final (gateway, container) = await pump(tester);
+    final question = Handover(previousEmail: 'arin@example.com', unsynced: 3);
+    final answer = container.read(handoverProvider.notifier).ask(question);
+    await settle(tester);
+    expect(find.text('Unsaved changes from another account'), findsOneWidget);
+
+    container.read(handoverProvider.notifier).withdraw(question);
+    await settle(tester);
+    expect(find.text('Unsaved changes from another account'), findsNothing);
+    expect(await answer, isFalse);
+    expect(question.withdrawn, isTrue);
+    expect(gateway.calls, isEmpty);
   });
 }

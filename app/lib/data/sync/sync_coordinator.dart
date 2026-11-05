@@ -59,12 +59,22 @@ class Handover {
   final int unsynced;
   final _answer = Completer<bool>();
 
+  /// Set when the sign-in that asked has ended: the question no longer
+  /// applies, and nobody is signed out for it.
+  bool get withdrawn => _withdrawn;
+  bool _withdrawn = false;
+
   Future<bool> get answer => _answer.future;
 
   /// True removes the work and lets the new account sync; false keeps it
   /// (the new account is signed out again).
   void decide({required bool remove}) {
     if (!_answer.isCompleted) _answer.complete(remove);
+  }
+
+  void _withdraw() {
+    _withdrawn = true;
+    decide(remove: false);
   }
 }
 
@@ -75,15 +85,22 @@ class HandoverNotifier extends Notifier<Handover?> {
   @override
   Handover? build() => null;
 
-  /// Asks whether to remove [unsynced] changes of [previousEmail]'s account.
-  Future<bool> ask({required String? previousEmail, required int unsynced}) async {
-    final handover = Handover(previousEmail: previousEmail, unsynced: unsynced);
+  /// Asks [handover]'s question and waits for the answer.
+  Future<bool> ask(Handover handover) async {
+    final open = state;
+    if (open != null && !identical(open, handover)) open._withdraw();
     state = handover;
     try {
       return await handover.answer;
     } finally {
-      if (state == handover) state = null;
+      if (identical(state, handover)) state = null;
     }
+  }
+
+  /// Takes [handover] back: its sign-in ended before the answer came.
+  void withdraw(Handover handover) {
+    handover._withdraw();
+    if (identical(state, handover)) state = null;
   }
 }
 
@@ -115,6 +132,7 @@ final syncCoordinatorProvider = Provider<void>((ref) {
     api: api,
     regional: () => ref.read(regionalProvider),
   );
+  Handover? question;
   var claimed = false;
   var running = false;
   var again = false;
@@ -128,8 +146,13 @@ final syncCoordinatorProvider = Provider<void>((ref) {
         // Data another account left here is wiped before this one syncs,
         // after asking when some of it never reached that account.
         final unsynced = await service.unsyncedChanges();
-        if (unsynced > 0 && !await handover.ask(previousEmail: await service.ownerEmail(), unsynced: unsynced)) {
-          throw const SyncStopped(); // kept: this account is signed out again
+        if (unsynced > 0) {
+          final asked = question = Handover(previousEmail: await service.ownerEmail(), unsynced: unsynced);
+          final remove = await handover.ask(asked);
+          question = null;
+          // Kept (this account is signed out again), or this sign-in ended
+          // while the question was open: either way nothing is removed.
+          if (!remove || service.isStopped) throw const SyncStopped();
         }
         // Its AI key goes first: if anything stops the claim, the next
         // attempt still finds the other owner and clears again.
@@ -174,6 +197,10 @@ final syncCoordinatorProvider = Provider<void>((ref) {
 
   ref.onDispose(() {
     service.stop();
+    // A question this sign-in asked no longer applies; withdrawn after the
+    // dispose, since providers are not changed while one is being disposed.
+    final open = question;
+    if (open != null) scheduleMicrotask(() => handover.withdraw(open));
     debounce?.cancel();
     periodic.cancel();
     unawaited(sub.cancel());
@@ -262,7 +289,12 @@ Future<String?> _timeZone() async {
 /// defaults.
 @visibleForTesting
 Map<String, Object?>? accountFromServer(Map<String, Object?> row) {
-  if (row['account_set_at'] == null) return null;
+  if (row.containsKey('account_set_at')) {
+    if (row['account_set_at'] == null) return null;
+  } else if (row['updated_at'] == row['created_at']) {
+    // A server without account_set_at yet: the older, weaker rule.
+    return null;
+  }
   final name = (row['display_name'] as String? ?? '').trim();
   final motivation = row['motivation'] is Map ? row['motivation']! as Map : const <Object?, Object?>{};
   final tone = motivation['tone'];

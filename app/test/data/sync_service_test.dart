@@ -26,6 +26,10 @@ class FakeApi implements RemoteApi {
 
   /// Ids the server keeps its own, newer version of ('ignored').
   final ignored = <String>{};
+
+  /// Ids the server refuses for now, every time ('retryable').
+  final refusedForNow = <String>{};
+  var evaluateCalls = 0;
   var pushCalls = 0;
   var pullCalls = 0;
 
@@ -42,10 +46,14 @@ class FakeApi implements RemoteApi {
       ];
     }
     final from = retryableFrom ?? changes.length;
-    pushed.addAll(changes.take(from));
+    bool refused(int i) => i >= from || refusedForNow.contains(changes[i]['id']);
+    pushed.addAll([
+      for (var i = 0; i < changes.length; i++)
+        if (!refused(i)) changes[i],
+    ]);
     return [
       for (var i = 0; i < changes.length; i++)
-        i >= from
+        refused(i)
             ? {'id': changes[i]['id'], 'status': 'rejected', 'retryable': true}
             : {'id': changes[i]['id'], 'status': ignored.contains(changes[i]['id']) ? 'ignored' : 'applied'},
     ];
@@ -70,6 +78,7 @@ class FakeApi implements RemoteApi {
     Map<String, Object?>? clientProposal,
     String? clientModel,
   }) async {
+    evaluateCalls++;
     lastClientProposal = clientProposal;
     lastClientModel = clientModel;
     return evaluation;
@@ -373,11 +382,122 @@ void main() {
   });
 
   test('a stopped cycle makes no more network calls', () async {
-    await quests.create(const QuestDraft(title: 'Read'));
+    await sync.syncOnce(); // writes this device's node id: no write is left to trip over
+    final pulls = api.pullCalls;
+    var asked = 0;
     sync.stop();
-    await expectLater(sync.syncOnce(), throwsA(isA<SyncStopped>()));
-    expect(api.pushCalls, 0);
-    expect(api.pullCalls, 0);
+    await expectLater(
+      sync.syncOnce(
+        settings: [
+          SyncedSettings(
+            key: 'sync_test',
+            current: () async {
+              asked++;
+              return {'a': 1};
+            },
+            send: (v) async => api.profiles.add(v),
+          ),
+        ],
+      ),
+      throwsA(isA<SyncStopped>()),
+    );
+    expect(asked, 0, reason: 'settings are not read once stopped');
+    expect(api.pullCalls, pulls, reason: 'no pull after the stop');
+    expect(api.profiles, isEmpty);
+  });
+
+  test('a change the server keeps refusing holds up neither its batch nor the pull', () async {
+    final stuck = await quests.create(const QuestDraft(title: 'Refused for now'));
+    await quests.create(const QuestDraft(title: 'Fine'));
+    api.refusedForNow.add(stuck.id);
+    await sync.syncOnce();
+    final outbox = await db.select(db.outboxEntries).get();
+    expect(outbox.map((o) => o.entityId), [stuck.id], reason: 'the other change went up in the same batch');
+
+    // The server now also has a newer version of the refused quest; others
+    // keep changing. After a few refusals the row no longer holds the cursor.
+    api.pullResponse = {
+      'cursor': 30,
+      'has_more': false,
+      'changes': {
+        'quests': [
+          {
+            'id': stuck.id,
+            'tier': 'daily',
+            'title': 'Server version',
+            'change_id': 20,
+            'created_at': '2026-11-04T05:00:00Z',
+            'updated_at': '2026-11-04T05:00:00Z',
+          },
+          {
+            'id': '018f0000-0000-7000-8000-0000000000bb',
+            'tier': 'daily',
+            'title': 'Made elsewhere',
+            'change_id': 30,
+            'created_at': '2026-11-04T05:00:00Z',
+            'updated_at': '2026-11-04T05:00:00Z',
+          },
+        ],
+      },
+    };
+    for (var i = 0; i < 4; i++) {
+      await sync.syncOnce();
+    }
+    expect(await quests.byId('018f0000-0000-7000-8000-0000000000bb'), isNotNull);
+    final cursor = await (db.select(db.keyValues)..where((k) => k.key.equals('sync_cursor'))).getSingle();
+    expect(cursor.value, '30');
+  });
+
+  test('a pull that stopped early sends no account settings and runs no evaluations', () async {
+    final q = await quests.create(const QuestDraft(title: 'Write report'));
+    await progression.complete(q, provisional: true);
+    await sync.syncOnce(); // the completion goes up; its evaluation waits
+    api.evaluation = {'result': serverResult(7), 'proposal': serverProposal()};
+    final evaluations = api.evaluateCalls;
+
+    await quests.update(q.id, const QuestDraft(title: 'Edited'));
+    api
+      ..failRetryable = true
+      ..pullResponse = {
+        'cursor': 50,
+        'has_more': false,
+        'changes': {
+          'quests': [
+            {
+              'id': q.id,
+              'tier': 'daily',
+              'title': 'Server version',
+              'change_id': 50,
+              'created_at': '2026-11-04T05:00:00Z',
+              'updated_at': '2026-11-04T05:00:00Z',
+            },
+          ],
+        },
+      };
+    var accountSends = 0;
+    final report = await sync.syncOnce(
+      settings: [
+        SyncedSettings(
+          key: 'sync_account_test',
+          table: 'profiles',
+          current: () async => {'weekly_target': 6},
+          send: (_) async => accountSends++,
+          fromServer: (_) => null,
+          apply: (_) async {},
+        ),
+      ],
+    );
+    expect(accountSends, 0, reason: 'other devices\' settings may be in pages not pulled yet');
+    expect(report.evaluated, 0);
+    expect(api.evaluateCalls, evaluations, reason: 'the AI opt-in may not be on the server yet');
+  });
+
+  test('unsynced work counts completions still waiting for their evaluation', () async {
+    final q = await quests.create(const QuestDraft(title: 'Write report'));
+    await progression.complete(q, provisional: true);
+    await sync.syncOnce(); // both went up; the evaluation could not run
+    expect(await db.select(db.outboxEntries).get(), isEmpty);
+    expect(await sync.unsyncedChanges(), 1);
   });
 
   test('the owner and its unsynced changes are known before another account claims the device', () async {
@@ -536,6 +656,19 @@ void main() {
       final sent = api.profiles.firstWhere((f) => f.containsKey('display_name'))['display_name']! as String;
       expect(sent.runes.length, 40);
       expect(sent.endsWith('😀'), isTrue);
+    });
+
+    test('a server without account_set_at falls back to comparing the timestamps', () {
+      final row = {
+        'display_name': 'Arin',
+        'weekly_target': 5,
+        'motivation': <String, Object?>{},
+        'ai_evaluation_enabled': false,
+        'created_at': '2026-11-01T05:00:00+00:00',
+      };
+      expect(accountFromServer({...row, 'updated_at': '2026-11-01T05:00:00+00:00'}), isNull);
+      expect(accountFromServer({...row, 'updated_at': '2026-11-02T05:00:00+00:00'})?['ai_evaluation_enabled'], isFalse);
+      expect(accountFromServer({...row, 'updated_at': '2026-11-02T05:00:00+00:00', 'account_set_at': null}), isNull);
     });
 
     test('a profile untouched since sign-up gets this device\'s choices', () async {

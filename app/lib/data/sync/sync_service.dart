@@ -109,8 +109,11 @@ class SyncService {
   /// That account's email, when it was known at sign-in.
   Future<String?> ownerEmail() async => await _read(_ownerEmailKey) as String?;
 
-  /// Local changes not on the server yet.
-  Future<int> unsyncedChanges() async => (await _db.select(_db.outboxEntries).get()).length;
+  /// Local work the server does not have yet: changes still to send, and
+  /// completions still waiting for their authoritative evaluation (only the
+  /// device that sent a completion asks for it).
+  Future<int> unsyncedChanges() async =>
+      (await _db.select(_db.outboxEntries).get()).length + (await _pendingEvaluations()).length;
 
   /// Ties this device's data and sync state to [userId] before it syncs.
   /// Data made as a guest (no owner yet) joins the account that signs in
@@ -133,17 +136,28 @@ class SyncService {
   /// such as language and time zone) are sent before everything else.
   /// Settings are best-effort: a group that fails is retried next cycle and
   /// never holds up the outbox.
+  ///
+  /// A pull that stopped early (see [_pull]) has not seen every setting yet,
+  /// so the groups taken over from the server wait for a complete one; and
+  /// evaluations wait until those groups, the AI opt-in among them, are on
+  /// the server.
   Future<SyncReport> syncOnce({List<SyncedSettings> settings = const []}) async {
     var settingsFailed = 0;
     for (final s in settings.where((s) => s.table == null)) {
       if (!await _pushSettings(s)) settingsFailed++;
     }
     final push = await _push();
-    final pulled = await _pull(settings);
-    for (final s in settings.where((s) => s.table != null)) {
-      if (!await _pushSettings(s)) settingsFailed++;
+    final (pulled, complete) = await _pull(settings);
+    var settled = complete;
+    if (complete) {
+      for (final s in settings.where((s) => s.table != null)) {
+        if (!await _pushSettings(s)) {
+          settingsFailed++;
+          settled = false;
+        }
+      }
     }
-    final evaluated = await _evaluatePending();
+    final evaluated = settled ? await _evaluatePending() : 0;
     return SyncReport(
       pushed: push.$1,
       rejected: push.$2,
@@ -164,9 +178,13 @@ class SyncService {
     var pushed = 0;
     var rejected = 0;
     final node = await _nodeId();
+    // Entries the server asked to retry stay for the next cycle; the rest of
+    // the outbox still goes up now.
+    final waiting = <int>{};
     while (true) {
       final batch =
           await (_db.select(_db.outboxEntries)
+                ..where((o) => o.id.isNotIn(waiting))
                 ..orderBy([(o) => OrderingTerm.asc(o.id)])
                 ..limit(100))
               .get();
@@ -185,10 +203,11 @@ class SyncService {
       if (changes.isEmpty) continue;
       _checkStopped();
       final results = await _api.push(changes);
-      final retry = await _guarded(() async {
+      // The server applies each change on its own, so every result counts:
+      // only the ones it asked to retry stay in the outbox.
+      await _guarded(() async {
         final completionIds = <String>[];
-        var retry = false;
-        for (var i = 0; i < changes.length && !retry; i++) {
+        for (var i = 0; i < changes.length; i++) {
           final c = changes[i];
           final o = rows[i];
           final r = i < results.length ? results[i] : const <String, Object?>{};
@@ -201,18 +220,14 @@ class SyncService {
             await (_db.update(
               _db.outboxEntries,
             )..where((x) => x.id.equals(o.id))).write(OutboxEntriesCompanion(attempts: Value(o.attempts + 1)));
-            retry = true;
+            waiting.add(o.id);
           } else {
             rejected++;
             await (_db.delete(_db.outboxEntries)..where((x) => x.id.equals(o.id))).go();
           }
         }
-        // Completions applied before a retryable failure still need their
-        // authoritative evaluation.
         await _addPendingEvaluations(completionIds);
-        return retry;
       });
-      if (retry) return (pushed, rejected);
     }
     return (pushed, rejected);
   }
@@ -416,13 +431,16 @@ class SyncService {
   // ----------------------------------------------------------------- pull
 
   /// Applies the server's changes page by page; each page and its cursor
-  /// land in one transaction.
+  /// land in one transaction. Returns how many rows were applied, and
+  /// whether the pull reached the end.
   ///
   /// A row skipped because this device still has a change to send for it
-  /// (a push that stopped early) holds the cursor just before it, and the
+  /// (the server asked to retry it) holds the cursor just before it, and the
   /// pull ends there: the next cycle sends the change first and then gets
-  /// the row again, so the server's winning version is never lost.
-  Future<int> _pull(List<SyncedSettings> settings) async {
+  /// the row again, so the server's winning version is never lost. A change
+  /// the server has refused [_holdAttempts] times no longer holds anything
+  /// up; its row is skipped as before.
+  Future<(int, bool)> _pull(List<SyncedSettings> settings) async {
     var cursor = (await _read(_cursorKey) as num?)?.toInt() ?? 0;
     var applied = 0;
     while (true) {
@@ -459,10 +477,14 @@ class SyncService {
         return n;
       });
       cursor = next;
-      if (held || res['has_more'] != true) break;
+      if (held) return (applied, false);
+      if (res['has_more'] != true) break;
     }
-    return applied;
+    return (applied, true);
   }
+
+  /// Retries after which a waiting change stops holding the pull cursor.
+  static const _holdAttempts = 3;
 
   Future<int> _applyQuests(List<Object?> rows, List<int> skipped) async {
     var n = 0;
@@ -470,8 +492,9 @@ class SyncService {
       final r = Map<String, Object?>.from(raw);
       final id = r['id'] as String?;
       if (id == null) continue;
-      if (await _hasPending('quest', id)) {
-        _skip(r, skipped);
+      final attempts = await _pendingAttempts('quest', id);
+      if (attempts != null) {
+        if (attempts < _holdAttempts) _skip(r, skipped);
         continue;
       }
       DateTime? ts(String k) => r[k] is String ? DateTime.parse(r[k]! as String).toLocal() : null;
@@ -520,8 +543,9 @@ class SyncService {
       final id = r['id'] as String?;
       final questId = r['quest_id'] as String?;
       if (id == null || questId == null) continue;
-      if (await _hasPending('subtask', id)) {
-        _skip(r, skipped);
+      final attempts = await _pendingAttempts('subtask', id);
+      if (attempts != null) {
+        if (attempts < _holdAttempts) _skip(r, skipped);
         continue;
       }
       final quest = await (_db.select(_db.quests)..where((q) => q.id.equals(questId))).getSingleOrNull();
@@ -631,9 +655,14 @@ class SyncService {
     if (changeId is num) skipped.add(changeId.toInt());
   }
 
-  Future<bool> _hasPending(String entity, String id) async => (await (_db.select(
-    _db.outboxEntries,
-  )..where((o) => o.entity.equals(entity) & o.entityId.equals(id))).get()).isNotEmpty;
+  /// How often the server already asked to retry this device's waiting
+  /// change for a row, or null when there is none.
+  Future<int?> _pendingAttempts(String entity, String id) async {
+    final waiting = await (_db.select(
+      _db.outboxEntries,
+    )..where((o) => o.entity.equals(entity) & o.entityId.equals(id))).get();
+    return waiting.isEmpty ? null : waiting.map((o) => o.attempts).reduce(min);
+  }
 
   // ------------------------------------------------------------ key-value
 

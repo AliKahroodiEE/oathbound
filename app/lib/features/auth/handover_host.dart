@@ -21,11 +21,18 @@ class HandoverHost extends ConsumerStatefulWidget {
 
 class _HandoverHostState extends ConsumerState<HandoverHost> {
   Handover? _showing;
+  BuildContext? _dialog;
 
   @override
   void initState() {
     super.initState();
     ref.listenManual<Handover?>(handoverProvider, (_, next) {
+      final showing = _showing;
+      // A withdrawn question (its sign-in ended) closes without an answer.
+      if (showing != null && showing.withdrawn && !identical(next, showing)) {
+        final dialog = _dialog;
+        if (dialog != null && dialog.mounted) Navigator.of(dialog).pop();
+      }
       if (next != null && !identical(next, _showing)) _show(next);
     }, fireImmediately: true);
   }
@@ -45,6 +52,7 @@ class _HandoverHostState extends ConsumerState<HandoverHost> {
       context: navigator,
       barrierDismissible: false,
       builder: (context) {
+        _dialog = context;
         final l10n = context.l10n;
         final changes = handover.unsynced == 1
             ? l10n.handoverOneChange
@@ -63,6 +71,11 @@ class _HandoverHostState extends ConsumerState<HandoverHost> {
         );
       },
     );
+    _dialog = null;
+    if (handover.withdrawn) {
+      if (identical(_showing, handover)) _showing = null;
+      return;
+    }
     if (remove != true && mounted) {
       final gateway = ref.read(authGatewayProvider);
       if (gateway != null) {
@@ -75,7 +88,7 @@ class _HandoverHostState extends ConsumerState<HandoverHost> {
       }
     }
     handover.decide(remove: remove == true);
-    _showing = null;
+    if (identical(_showing, handover)) _showing = null;
   }
 
   @override
