@@ -7,17 +7,68 @@ import 'package:wyrd_engine/wyrd_engine.dart';
 import '../db/database.dart';
 import '../models.dart';
 import '../remote/remote_api.dart';
+import '../repositories/data_repository.dart';
 import '../repositories/progression_repository.dart';
 
 class SyncReport {
-  const SyncReport({this.pushed = 0, this.rejected = 0, this.evaluated = 0, this.pulled = 0});
+  const SyncReport({this.pushed = 0, this.rejected = 0, this.evaluated = 0, this.pulled = 0, this.settingsFailed = 0});
   final int pushed;
   final int rejected;
   final int evaluated;
   final int pulled;
 
+  /// Settings groups that could not be sent this cycle (retried next time).
+  final int settingsFailed;
+
   @override
-  String toString() => 'SyncReport(pushed: $pushed, rejected: $rejected, evaluated: $evaluated, pulled: $pulled)';
+  String toString() =>
+      'SyncReport(pushed: $pushed, rejected: $rejected, evaluated: $evaluated, pulled: $pulled, '
+      'settingsFailed: $settingsFailed)';
+}
+
+/// Ends a cycle whose sync was stopped (sign-out, another account, the
+/// device being cleared): nothing more is written.
+class SyncStopped implements Exception {
+  const SyncStopped();
+
+  @override
+  String toString() => 'SyncStopped';
+}
+
+/// A group of account settings that syncs as a whole, in the form this
+/// device sends ([current], sent with [send]).
+///
+/// With [table], [fromServer] and [apply], changes made on other devices are
+/// taken over too. Pulled rows of [table] are turned into the same form and
+/// merged key by key against what this device last sent or took over: keys
+/// only the server changed are adopted, keys changed here stay and go up. A
+/// device that never synced the group (new, or cleared) takes the server's
+/// values as they are, so a new device does not overwrite an account's
+/// settings with its defaults.
+class SyncedSettings {
+  const SyncedSettings({
+    required this.key,
+    required this.current,
+    required this.send,
+    this.table,
+    this.fromServer,
+    this.apply,
+  });
+
+  /// Where the value last sent or taken over is kept on this device.
+  final String key;
+  final Future<Map<String, Object?>> Function() current;
+  final Future<void> Function(Map<String, Object?> value) send;
+
+  /// The pulled entity that carries these settings, such as `profiles`.
+  final String? table;
+
+  /// The settings in a pulled row, or null when it holds nothing to take
+  /// over (a profile no client has changed since sign-up).
+  final Map<String, Object?>? Function(Map<String, Object?> row)? fromServer;
+
+  /// Makes [value] (in the form of [current]) this device's settings.
+  final Future<void> Function(Map<String, Object?> value)? apply;
 }
 
 /// Outbox push, authoritative evaluation and cursor pull (ADR-003).
@@ -40,16 +91,85 @@ class SyncService {
   static const _cursorKey = 'sync_cursor';
   static const _nodeKey = 'sync_node';
   static const _pendingEvalKey = 'sync_pending_evaluations';
-  static const _profileKey = 'sync_profile';
+  static const _ownerKey = 'sync_owner';
+  static const _ownerEmailKey = 'sync_owner_email';
 
-  /// One full cycle. [profile] holds server profile fields; it is pushed
-  /// only when it differs from the last pushed value.
-  Future<SyncReport> syncOnce({Map<String, Object?>? profile}) async {
-    if (profile != null) await _pushProfile(profile);
+  bool _stopped = false;
+
+  /// Ends this account's sync on this device: a cycle in progress stops at
+  /// its next write and nothing is written afterwards, so a device being
+  /// cleared or handed to another account is never refilled.
+  void stop() => _stopped = true;
+
+  bool get isStopped => _stopped;
+
+  /// The account this device's data belongs to, or null (guest data only).
+  Future<String?> owner() async => await _read(_ownerKey) as String?;
+
+  /// That account's email, when it was known at sign-in.
+  Future<String?> ownerEmail() async => await _read(_ownerEmailKey) as String?;
+
+  /// Local work the server does not have yet: changes still to send, and
+  /// completions still waiting for their authoritative evaluation (only the
+  /// device that sent a completion asks for it).
+  Future<int> unsyncedChanges() async =>
+      (await _db.select(_db.outboxEntries).get()).length + (await _pendingEvaluations()).length;
+
+  /// Ties this device's data and sync state to [userId] before it syncs.
+  /// Data made as a guest (no owner yet) joins the account that signs in
+  /// (A2); data another account left on the device is wiped first, so two
+  /// accounts never mix on a shared device. Returns whether it wiped.
+  Future<bool> claimFor(String userId, {String? email}) => _guarded(() async {
+    final owner = await _read(_ownerKey);
+    final other = owner != null && owner != userId;
+    if (other) await DataRepository(_db).wipe();
+    if (owner != userId) await _write(_ownerKey, userId);
+    if (email != null && email.isNotEmpty) await _write(_ownerEmailKey, email);
+    return other;
+  });
+
+  /// One full cycle. Local changes go up first, so a pull never meets a row
+  /// this device still has to send. Then the pull takes over settings
+  /// changed on other devices, before this device sends those groups, and
+  /// last come the authoritative evaluations (after the AI opt-in is on the
+  /// server). Settings groups that only go up ([SyncedSettings.table] null,
+  /// such as language and time zone) are sent before everything else.
+  /// Settings are best-effort: a group that fails is retried next cycle and
+  /// never holds up the outbox.
+  ///
+  /// A pull that stopped early (see [_pull]) has not seen every setting yet,
+  /// so the groups taken over from the server wait for a complete one; and
+  /// evaluations wait until those groups, the AI opt-in among them, are on
+  /// the server.
+  Future<SyncReport> syncOnce({List<SyncedSettings> settings = const []}) async {
+    var settingsFailed = 0;
+    for (final s in settings.where((s) => s.table == null)) {
+      if (!await _pushSettings(s)) settingsFailed++;
+    }
     final push = await _push();
-    final evaluated = await _evaluatePending();
-    final pulled = await _pull();
-    return SyncReport(pushed: push.$1, rejected: push.$2, evaluated: evaluated, pulled: pulled);
+    final (pulled, complete) = await _pull(settings);
+    var settled = complete;
+    if (complete) {
+      for (final s in settings.where((s) => s.table != null)) {
+        if (!await _pushSettings(s)) {
+          settingsFailed++;
+          settled = false;
+        }
+      }
+    }
+    final evaluated = settled ? await _evaluatePending() : 0;
+    return SyncReport(
+      pushed: push.$1,
+      rejected: push.$2,
+      evaluated: evaluated,
+      pulled: pulled,
+      settingsFailed: settingsFailed,
+    );
+  }
+
+  /// Ends a stopped cycle before its next network call.
+  void _checkStopped() {
+    if (_stopped) throw const SyncStopped();
   }
 
   // ----------------------------------------------------------------- push
@@ -58,9 +178,13 @@ class SyncService {
     var pushed = 0;
     var rejected = 0;
     final node = await _nodeId();
+    // Entries the server asked to retry stay for the next cycle; the rest of
+    // the outbox still goes up now.
+    final waiting = <int>{};
     while (true) {
       final batch =
           await (_db.select(_db.outboxEntries)
+                ..where((o) => o.id.isNotIn(waiting))
                 ..orderBy([(o) => OrderingTerm.asc(o.id)])
                 ..limit(100))
               .get();
@@ -70,35 +194,40 @@ class SyncService {
       for (final o in batch) {
         final change = await _envelope(o, node);
         if (change == null) {
-          await (_db.delete(_db.outboxEntries)..where((x) => x.id.equals(o.id))).go();
+          await _guarded(() => (_db.delete(_db.outboxEntries)..where((x) => x.id.equals(o.id))).go());
           continue;
         }
         changes.add(change);
         rows.add(o);
       }
       if (changes.isEmpty) continue;
+      _checkStopped();
       final results = await _api.push(changes);
-      final completionIds = <String>[];
-      for (var i = 0; i < changes.length; i++) {
-        final c = changes[i];
-        final o = rows[i];
-        final r = i < results.length ? results[i] : const <String, Object?>{};
-        final status = r['status'];
-        if (status == 'applied' || status == 'ignored') {
-          pushed++;
-          await (_db.delete(_db.outboxEntries)..where((x) => x.id.equals(o.id))).go();
-          if (c['entity'] == 'completion' && c['op'] == 'insert') completionIds.add(c['id']! as String);
-        } else if (r['retryable'] == true || status == null) {
-          await (_db.update(
-            _db.outboxEntries,
-          )..where((x) => x.id.equals(o.id))).write(OutboxEntriesCompanion(attempts: Value(o.attempts + 1)));
-          return (pushed, rejected);
-        } else {
-          rejected++;
-          await (_db.delete(_db.outboxEntries)..where((x) => x.id.equals(o.id))).go();
+      // The server applies each change on its own, so every result counts:
+      // only the ones it asked to retry stay in the outbox.
+      await _guarded(() async {
+        final completionIds = <String>[];
+        for (var i = 0; i < changes.length; i++) {
+          final c = changes[i];
+          final o = rows[i];
+          final r = i < results.length ? results[i] : const <String, Object?>{};
+          final status = r['status'];
+          if (status == 'applied' || status == 'ignored') {
+            pushed++;
+            await (_db.delete(_db.outboxEntries)..where((x) => x.id.equals(o.id))).go();
+            if (c['entity'] == 'completion' && c['op'] == 'insert') completionIds.add(c['id']! as String);
+          } else if (r['retryable'] == true || status == null) {
+            await (_db.update(
+              _db.outboxEntries,
+            )..where((x) => x.id.equals(o.id))).write(OutboxEntriesCompanion(attempts: Value(o.attempts + 1)));
+            waiting.add(o.id);
+          } else {
+            rejected++;
+            await (_db.delete(_db.outboxEntries)..where((x) => x.id.equals(o.id))).go();
+          }
         }
-      }
-      await _addPendingEvaluations(completionIds);
+        await _addPendingEvaluations(completionIds);
+      });
     }
     return (pushed, rejected);
   }
@@ -193,20 +322,65 @@ class SyncService {
     return '$iso-${(counter & 0xffff).toRadixString(16).padLeft(4, '0')}-$node';
   }
 
-  // ------------------------------------------------------------- evaluate
+  // ------------------------------------------------------------- settings
 
-  Future<void> _pushProfile(Map<String, Object?> profile) async {
-    final encoded = jsonEncode(profile);
-    if (jsonEncode(await _read(_profileKey)) == encoded) return;
-    await _api.updateProfile(profile);
-    await _write(_profileKey, profile);
+  /// Sends [s] when it differs from what this device last sent or took
+  /// over. Returns false when that failed; it is retried next cycle.
+  Future<bool> _pushSettings(SyncedSettings s) async {
+    try {
+      _checkStopped();
+      final value = await s.current();
+      if (_canon(await _read(s.key)) == _canon(value)) return true;
+      _checkStopped();
+      await s.send(value);
+      await _guarded(() => _write(s.key, value));
+      return true;
+    } on Object {
+      // Whatever failed, a stopped cycle ends here rather than carrying on.
+      _checkStopped();
+      return false;
+    }
   }
+
+  /// Takes over what another device changed in [s] (see [SyncedSettings]).
+  /// Runs inside the pull's transaction.
+  Future<void> _adopt(SyncedSettings s, Map<String, Object?> row) async {
+    final fromServer = s.fromServer;
+    final apply = s.apply;
+    if (fromServer == null || apply == null) return;
+    final server = fromServer(row);
+    if (server == null) return;
+    final base = await _read(s.key);
+    if (base is Map && _canon(base) == _canon(server)) return; // what this device sent or took over
+    final local = await s.current();
+    final merged = {...local};
+    for (final k in server.keys) {
+      final changedThere = base is! Map || _canon(server[k]) != _canon(base[k]);
+      final changedHere = base is Map && _canon(local[k]) != _canon(base[k]);
+      if (changedThere && !changedHere) merged[k] = server[k];
+    }
+    if (_canon(merged) != _canon(local)) await apply(merged);
+    await _write(s.key, server);
+  }
+
+  /// JSON with map keys sorted, so equal settings compare equal whatever
+  /// order their keys arrived in.
+  static String _canon(Object? value) => jsonEncode(_sorted(value));
+
+  static Object? _sorted(Object? value) => switch (value) {
+    final Map<Object?, Object?> map => {for (final k in map.keys.map((k) => '$k').toList()..sort()) k: _sorted(map[k])},
+    final List<Object?> list => [for (final e in list) _sorted(e)],
+    _ => value,
+  };
+
+  // ------------------------------------------------------------- evaluate
 
   Future<int> _evaluatePending() async {
     final pending = await _pendingEvaluations();
     var done = 0;
     final remaining = <String>[];
     for (final id in pending) {
+      _checkStopped();
       try {
         // Proposals made with the user's own AI travel with the request;
         // the server validates and bounds them (it never sees the key).
@@ -223,20 +397,24 @@ class SyncService {
         final result = res?['result'];
         final proposal = res?['proposal'];
         if (result is Map && proposal is Map) {
-          await _progression.reconcile(
-            id,
-            EvaluationProposal.fromJson(Map<String, Object?>.from(proposal)),
-            decodeResult(jsonEncode(result)),
+          await _guarded(
+            () => _progression.reconcile(
+              id,
+              EvaluationProposal.fromJson(Map<String, Object?>.from(proposal)),
+              decodeResult(jsonEncode(result)),
+            ),
           );
           done++;
         } else {
           remaining.add(id);
         }
+      } on SyncStopped {
+        rethrow;
       } on Object {
         remaining.add(id);
       }
     }
-    await _write(_pendingEvalKey, remaining);
+    await _guarded(() => _write(_pendingEvalKey, remaining));
     return done;
   }
 
@@ -252,33 +430,73 @@ class SyncService {
 
   // ----------------------------------------------------------------- pull
 
-  Future<int> _pull() async {
+  /// Applies the server's changes page by page; each page and its cursor
+  /// land in one transaction. Returns how many rows were applied, and
+  /// whether the pull reached the end.
+  ///
+  /// A row skipped because this device still has a change to send for it
+  /// (the server asked to retry it) holds the cursor just before it, and the
+  /// pull ends there: the next cycle sends the change first and then gets
+  /// the row again, so the server's winning version is never lost. A change
+  /// the server has refused [_holdAttempts] times no longer holds anything
+  /// up; its row is skipped as before.
+  Future<(int, bool)> _pull(List<SyncedSettings> settings) async {
     var cursor = (await _read(_cursorKey) as num?)?.toInt() ?? 0;
     var applied = 0;
     while (true) {
+      _checkStopped();
       final res = await _api.pull(cursor);
-      final changes = (res['changes'] as Map?) ?? const {};
-      applied += await _applyQuests((changes['quests'] as List?) ?? const []);
-      applied += await _applySubtasks((changes['subtasks'] as List?) ?? const []);
-      final proposals = <String, Map<String, Object?>>{
-        for (final e in ((changes['evaluations'] as List?) ?? const []).whereType<Map<Object?, Object?>>())
-          if (e['completion_id'] is String && e['proposal'] is Map)
-            e['completion_id']! as String: Map<String, Object?>.from(e['proposal']! as Map),
-      };
-      applied += await _applyCompletions((changes['completions'] as List?) ?? const [], proposals);
-      cursor = (res['cursor'] as num?)?.toInt() ?? cursor;
-      await _write(_cursorKey, cursor);
+      var next = (res['cursor'] as num?)?.toInt() ?? cursor;
+      var held = false;
+      applied += await _guarded(() async {
+        final changes = (res['changes'] as Map?) ?? const {};
+        final skipped = <int>[];
+        var n = await _applyQuests((changes['quests'] as List?) ?? const [], skipped);
+        n += await _applySubtasks((changes['subtasks'] as List?) ?? const [], skipped);
+        final proposals = <String, Map<String, Object?>>{
+          for (final e in ((changes['evaluations'] as List?) ?? const []).whereType<Map<Object?, Object?>>())
+            if (e['completion_id'] is String && e['proposal'] is Map)
+              e['completion_id']! as String: Map<String, Object?>.from(e['proposal']! as Map),
+        };
+        n += await _applyCompletions((changes['completions'] as List?) ?? const [], proposals);
+        for (final s in settings) {
+          final table = s.table;
+          if (table == null) continue;
+          for (final row in ((changes[table] as List?) ?? const []).whereType<Map<Object?, Object?>>()) {
+            await _adopt(s, Map<String, Object?>.from(row));
+          }
+        }
+        if (skipped.isNotEmpty) {
+          final hold = skipped.reduce(min) - 1;
+          if (hold < next) {
+            next = hold < cursor ? cursor : hold;
+            held = true;
+          }
+        }
+        await _write(_cursorKey, next);
+        return n;
+      });
+      cursor = next;
+      if (held) return (applied, false);
       if (res['has_more'] != true) break;
     }
-    return applied;
+    return (applied, true);
   }
 
-  Future<int> _applyQuests(List<Object?> rows) async {
+  /// Retries after which a waiting change stops holding the pull cursor.
+  static const _holdAttempts = 3;
+
+  Future<int> _applyQuests(List<Object?> rows, List<int> skipped) async {
     var n = 0;
     for (final raw in rows.whereType<Map<Object?, Object?>>()) {
       final r = Map<String, Object?>.from(raw);
       final id = r['id'] as String?;
-      if (id == null || await _hasPending('quest', id)) continue;
+      if (id == null) continue;
+      final attempts = await _pendingAttempts('quest', id);
+      if (attempts != null) {
+        if (attempts < _holdAttempts) _skip(r, skipped);
+        continue;
+      }
       DateTime? ts(String k) => r[k] is String ? DateTime.parse(r[k]! as String).toLocal() : null;
       final due = ts('due_at');
       final reminder = ts('reminder_at');
@@ -318,13 +536,18 @@ class SyncService {
     'private': 'private',
   };
 
-  Future<int> _applySubtasks(List<Object?> rows) async {
+  Future<int> _applySubtasks(List<Object?> rows, List<int> skipped) async {
     var n = 0;
     for (final raw in rows.whereType<Map<Object?, Object?>>()) {
       final r = Map<String, Object?>.from(raw);
       final id = r['id'] as String?;
       final questId = r['quest_id'] as String?;
-      if (id == null || questId == null || await _hasPending('subtask', id)) continue;
+      if (id == null || questId == null) continue;
+      final attempts = await _pendingAttempts('subtask', id);
+      if (attempts != null) {
+        if (attempts < _holdAttempts) _skip(r, skipped);
+        continue;
+      }
       final quest = await (_db.select(_db.quests)..where((q) => q.id.equals(questId))).getSingleOrNull();
       if (quest == null) continue;
       await _db
@@ -425,9 +648,21 @@ class SyncService {
     return true;
   }
 
-  Future<bool> _hasPending(String entity, String id) async => (await (_db.select(
-    _db.outboxEntries,
-  )..where((o) => o.entity.equals(entity) & o.entityId.equals(id))).get()).isNotEmpty;
+  /// Notes a row left for later (see [_pull]); rows without a change_id
+  /// cannot hold the cursor.
+  static void _skip(Map<String, Object?> row, List<int> skipped) {
+    final changeId = row['change_id'];
+    if (changeId is num) skipped.add(changeId.toInt());
+  }
+
+  /// How often the server already asked to retry this device's waiting
+  /// change for a row, or null when there is none.
+  Future<int?> _pendingAttempts(String entity, String id) async {
+    final waiting = await (_db.select(
+      _db.outboxEntries,
+    )..where((o) => o.entity.equals(entity) & o.entityId.equals(id))).get();
+    return waiting.isEmpty ? null : waiting.map((o) => o.attempts).reduce(min);
+  }
 
   // ------------------------------------------------------------ key-value
 
@@ -436,8 +671,19 @@ class SyncService {
     if (v is String && v.length == 8) return v;
     final r = Random.secure();
     final node = List.generate(8, (_) => r.nextInt(16).toRadixString(16)).join();
-    await _write(_nodeKey, node);
+    await _guarded(() => _write(_nodeKey, node));
     return node;
+  }
+
+  /// Runs [writes] in one transaction unless sync was stopped. Transactions
+  /// run one at a time, so a device being cleared waits for one already
+  /// running, and every later one sees the stop.
+  Future<T> _guarded<T>(Future<T> Function() writes) {
+    if (_stopped) return Future<T>.error(const SyncStopped());
+    return _db.transaction(() async {
+      if (_stopped) throw const SyncStopped();
+      return writes();
+    });
   }
 
   Future<Object?> _read(String key) async {
