@@ -21,6 +21,12 @@ class FakeMessaging implements PushMessaging {
 
   /// Makes [token] never answer, like a stuck platform call.
   bool tokenHangs = false;
+
+  /// Makes [token] answer only after this long, like a slow platform call.
+  Duration? tokenDelay;
+
+  /// Makes [deleteToken] finish only after this long.
+  Duration? deleteDelay;
   int prompts = 0;
   int deletions = 0;
 
@@ -56,6 +62,7 @@ class FakeMessaging implements PushMessaging {
   Future<String?> token() async {
     calls++;
     if (tokenHangs) return Completer<String?>().future;
+    if (tokenDelay case final delay?) await Future<void>.delayed(delay);
     final error = tokenError;
     if (error != null) throw error;
     return current == PushPermission.granted ? currentToken : null;
@@ -64,6 +71,7 @@ class FakeMessaging implements PushMessaging {
   @override
   Future<void> deleteToken() async {
     calls++;
+    if (deleteDelay case final delay?) await Future<void>.delayed(delay);
     deletions++;
     currentToken = 'token-${deletions + 1}'; // FCM issues a fresh one next time.
   }
@@ -370,8 +378,8 @@ void main() {
     });
   });
 
-  group('a platform call that never answers', () {
-    // A widget test for its fake clock.
+  // Widget tests for their fake clock.
+  group('a platform call that answers late or never', () {
     testWidgets('holds up the steps behind it for 45 s, not for good', (tester) async {
       create()
         ..setUser('u1')
@@ -394,6 +402,54 @@ void main() {
       await tester.pump(const Duration(seconds: 2));
       expect(retired, isTrue, reason: 'signing out still retires the token');
       expect(messaging.deletions, 1);
+    });
+
+    testWidgets('a step given up on changes nothing when its token comes at last', (tester) async {
+      create()
+        ..setUser('u1')
+        ..setPreferences(_both);
+      await tester.pump();
+      expect(push.status.value, PushStatus.off);
+
+      // Allow tapped, but the token takes 46 s; both switches go off meanwhile.
+      messaging.tokenDelay = const Duration(seconds: 46);
+      unawaited(push.enable());
+      await tester.pump();
+      push.setPreferences(_none);
+
+      await tester.pump(const Duration(seconds: 45));
+      expect(push.status.value, PushStatus.hidden, reason: 'the switches-off step ran once the first was given up');
+
+      await tester.pump(const Duration(seconds: 1)); // The token arrives.
+      await tester.pump();
+      expect(push.status.value, PushStatus.hidden, reason: 'as the newer step left it');
+      expect(registry.registered, isEmpty);
+    });
+
+    testWidgets('a token invalidated late does not count for the next account', (tester) async {
+      messaging.current = PushPermission.granted;
+      create()
+        ..setUser('u1')
+        ..setPreferences(_both);
+      await tester.pump();
+      expect(registry.registered, [('token-1', 'android')]);
+
+      // Signing out invalidates the token, which takes 46 s; u2 signs in meanwhile.
+      messaging.deleteDelay = const Duration(seconds: 46);
+      push.setUser(null);
+      await tester.pump();
+      push.setUser('u2');
+      await tester.pump(const Duration(seconds: 45));
+      expect(push.status.value, PushStatus.on);
+      expect(registry.registered, hasLength(2), reason: 'u1, then u2');
+
+      await tester.pump(const Duration(seconds: 1)); // The deletion finishes.
+      expect(registry.registered, hasLength(2), reason: 'the step given up on registers nothing for u2');
+
+      messaging.deleteDelay = null;
+      push.setUser(null);
+      await tester.pump();
+      expect(messaging.deletions, 2, reason: "u2's sign-out invalidates its token too");
     });
   });
 
