@@ -7,6 +7,11 @@ import 'sign_in_link_browser_stub.dart' if (dart.library.js_interop) 'sign_in_li
 /// `?error=access_denied&error_code=…&error_description=…#error=access_denied&…`.
 const _errorKeys = {'error', 'error_code', 'error_description'};
 
+/// The query also loses the sign-in `code` once an error was reported: a
+/// code whose exchange failed (flow_state_not_found, a missing verifier)
+/// would otherwise be tried, and fail, again on every reload.
+const _queryKeys = {..._errorKeys, 'code'};
+
 /// Takes a failed sign-in's error out of the browser's address once the app
 /// has said so. supabase_flutter clears the address only after a sign-in that
 /// worked, so until then every reload of the tab, a restored tab or a bookmark
@@ -20,10 +25,11 @@ void forgetSignInError() {
 }
 
 /// [url] without the `error`, `error_code` and `error_description` parameters
-/// Auth adds to its query and its fragment. Everything else stays as written:
-/// other parameters, and the hash route the web app's location lives in
-/// (`#/settings`), whose own parameters lose the same three. [url] comes back
-/// unchanged when it has none of them.
+/// Auth adds to its query and its fragment, and without the query's sign-in
+/// `code`. Everything else stays as written: other parameters, and the hash
+/// route the web app's location lives in (`#/settings`), whose own
+/// parameters lose the three error keys only. [url] comes back unchanged
+/// when it has none of them.
 @visibleForTesting
 String withoutSignInError(String url) {
   final hashAt = url.indexOf('#');
@@ -31,7 +37,7 @@ String withoutSignInError(String url) {
   final queryAt = beforeHash.indexOf('?');
   final cleaned = StringBuffer(queryAt < 0 ? beforeHash : beforeHash.substring(0, queryAt));
   if (queryAt >= 0) {
-    final query = _withoutErrorKeys(beforeHash.substring(queryAt + 1));
+    final query = _withoutErrorKeys(beforeHash.substring(queryAt + 1), keys: _queryKeys);
     if (query != null) cleaned.write('?$query');
   }
   if (hashAt >= 0) {
@@ -53,13 +59,13 @@ String? _fragmentWithoutErrorKeys(String fragment) {
   return query == null ? route : '$route?$query';
 }
 
-/// [parameters] (`a=1&b=2`) without the error keys: the same text when it
-/// has none of them, null when nothing else is left.
-String? _withoutErrorKeys(String parameters) {
+/// [parameters] (`a=1&b=2`) without [keys]: the same text when it has none
+/// of them, null when nothing else is left.
+String? _withoutErrorKeys(String parameters, {Set<String> keys = _errorKeys}) {
   final all = parameters.split('&');
   final kept = [
     for (final parameter in all)
-      if (!_errorKeys.contains(_name(parameter))) parameter,
+      if (!keys.contains(_name(parameter))) parameter,
   ];
   if (kept.length == all.length) return parameters;
   final rest = kept.where((parameter) => parameter.isNotEmpty);

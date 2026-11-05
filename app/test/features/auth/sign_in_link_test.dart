@@ -76,7 +76,6 @@ void main() {
       for (final url in [
         'https://wyrd-app.pages.dev/',
         'https://wyrd-app.pages.dev/#/character',
-        'https://wyrd-app.pages.dev/?code=7f3c2a#/', // supabase_flutter trades the code itself.
         'https://wyrd-app.pages.dev/?errors=2&error_count=1&my_error=x#/error',
         'https://wyrd-app.pages.dev/#/guilds?invite=ABCD',
         'https://wyrd-app.pages.dev/?',
@@ -90,5 +89,18 @@ void main() {
 
   test('outside the browser there is no address to clean', () {
     expect(forgetSignInError, returnsNormally);
+  });
+
+  // forgetSignInError runs only after a sign-in error was reported, when
+  // supabase_flutter has already tried (and failed) to trade the code.
+  test('a sign-in code whose exchange failed leaves the query too, not a hash route', () {
+    expect(
+      withoutSignInError('https://wyrd-app.pages.dev/?code=0f9e#/character'),
+      'https://wyrd-app.pages.dev/#/character',
+    );
+    expect(
+      withoutSignInError('https://wyrd-app.pages.dev/?code=0f9e&ref=mail#/quests?code=keep'),
+      'https://wyrd-app.pages.dev/?ref=mail#/quests?code=keep',
+    );
   });
 }
