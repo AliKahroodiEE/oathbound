@@ -437,6 +437,22 @@ void main() {
       expect(messaging.deletions, 1);
     });
 
+    testWidgets('a step given up on still applies its late answer when nothing replaced it', (tester) async {
+      create()
+        ..setUser('u1')
+        ..setPreferences(_both);
+      await tester.pump();
+
+      // Allow tapped; the browser takes 50 s to produce the token and nothing
+      // else happens meanwhile.
+      messaging.tokenDelay = const Duration(seconds: 50);
+      unawaited(push.enable());
+      await tester.pump(const Duration(seconds: 51));
+      await tester.pump();
+      expect(registry.registered, isNotEmpty, reason: 'no newer step started, so the late token counts');
+      expect(push.status.value, PushStatus.on);
+    });
+
     testWidgets('a step given up on changes nothing when its token comes at last', (tester) async {
       create()
         ..setUser('u1')
@@ -459,7 +475,7 @@ void main() {
       expect(registry.registered, isEmpty);
     });
 
-    testWidgets('a token invalidated late does not count for the next account', (tester) async {
+    testWidgets('a token invalidated late is replaced for the next account', (tester) async {
       messaging.current = PushPermission.granted;
       create()
         ..setUser('u1')
@@ -477,7 +493,12 @@ void main() {
       expect(registry.registered, hasLength(2), reason: 'u1, then u2');
 
       await tester.pump(const Duration(seconds: 1)); // The deletion finishes.
-      expect(registry.registered, hasLength(2), reason: 'the step given up on registers nothing for u2');
+      await tester.pump();
+      expect(registry.registered.last, (
+        'token-2',
+        'android',
+      ), reason: 'the late deletion invalidated the token u2 had just registered, so u2 registers the new one');
+      expect(push.status.value, PushStatus.on);
 
       messaging.deleteDelay = null;
       push.setUser(null);

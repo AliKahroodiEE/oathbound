@@ -180,10 +180,11 @@ class PushService {
   Future<void> _queue = Future.value();
   bool _disposed = false;
 
-  /// The step that may change things now. Bumped when a step starts and when
-  /// one is given up after [_stepTimeout]: nothing can cancel the platform
-  /// call such a step waits on, so when that call answers at last, the step
-  /// finds it is no longer current and leaves everything to the steps after it.
+  /// The step that may change things now, bumped when a step starts. A step
+  /// given up after [_stepTimeout] stays current until the next one starts:
+  /// nothing can cancel the platform call it waits on, so when that call
+  /// answers at last, the step applies its result only if no newer step has
+  /// begun since, and otherwise leaves everything to the steps after it.
   int _step = 0;
 
   bool get isAvailable => _messaging != null && _registry != null && _platform != null;
@@ -301,21 +302,16 @@ class PushService {
       if (_disposed) return;
       final current = ++_step;
       try {
-        await step(current).timeout(
-          _stepTimeout,
-          onTimeout: () {
-            _step++;
-            debugPrint('Push update given up after ${_stepTimeout.inSeconds} s');
-          },
-        );
+        await step(
+          current,
+        ).timeout(_stepTimeout, onTimeout: () => debugPrint('Push update given up after ${_stepTimeout.inSeconds} s'));
       } on Object catch (error) {
         debugPrint('Push update failed: $error');
       }
     });
   }
 
-  /// Whether [step] may still change things: no step was given up on or
-  /// started after it.
+  /// Whether [step] may still change things: no step started after it.
   bool _isCurrent(int step) => step == _step;
 
   Future<void> _reconcile(int step) async {
@@ -403,7 +399,14 @@ class PushService {
     }
     try {
       await messaging.deleteToken();
-      if (_isCurrent(step)) _retired = true;
+      if (_isCurrent(step)) {
+        _retired = true;
+      } else {
+        // Finished late: a newer step may have registered the very token this
+        // just invalidated (FCM hands out its cached token until the delete
+        // completes), so the current account fetches and registers a new one.
+        unawaited(_sync());
+      }
     } on Object catch (error) {
       debugPrint('Push token could not be invalidated: $error');
     }
