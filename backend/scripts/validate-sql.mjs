@@ -483,6 +483,8 @@ async function checkDataApi(db) {
 const A = '00000000-0000-4000-8000-00000000000a';
 const B = '00000000-0000-4000-8000-00000000000b';
 const C = '00000000-0000-4000-8000-00000000000c';
+/** A user who only ever changes device settings (account_set_at checks). */
+const F = '00000000-0000-4000-8000-00000000000f';
 const OBJECTIVE = '10000000-0000-4000-8000-000000000001';
 const QUEST = '10000000-0000-4000-8000-000000000002';
 const QUEST_FULL = '10000000-0000-4000-8000-000000000003';
@@ -563,6 +565,25 @@ async function smoke(db, { profileFields }) {
   await expectError('clients cannot change server-maintained profile columns',
     as(db, 'authenticated', A, (tx) => tx.query(`update public.profiles set change_id = 0 where id = $1`, [A])),
     /permission denied/);
+
+  // account_set_at (…_profile_account_set_at.sql) moves only when one of the
+  // account's own settings changes, never for the device's language or time
+  // zone, so a new device can tell a chosen account from a fresh one.
+  await db.query(`insert into auth.users (id, email) values ($1, 'f@example.test')`, [F]);
+  const fresh = await one(db, 'postgres', null, 'select account_set_at from public.profiles where id = $1', [F]);
+  await as(db, 'authenticated', F, (tx) => tx.query(
+    `update public.profiles set locale = 'fa', time_zone = 'Asia/Tehran', week_start = 6 where id = $1`, [F]));
+  const afterDevice = await one(db, 'postgres', null, 'select account_set_at from public.profiles where id = $1', [F]);
+  await as(db, 'authenticated', F, (tx) => tx.query(
+    `update public.profiles set ai_evaluation_enabled = false where id = $1`, [F]));
+  const afterAccount = await one(db, 'postgres', null, 'select account_set_at from public.profiles where id = $1', [F]);
+  check('account_set_at marks only changes to the account\'s own settings',
+    fresh?.account_set_at == null && afterDevice?.account_set_at == null && afterAccount?.account_set_at != null,
+    `fresh=${fresh?.account_set_at}; after device fields=${afterDevice?.account_set_at}; after AI opt-out=${afterAccount?.account_set_at}`);
+  await expectError('clients cannot set account_set_at themselves',
+    as(db, 'authenticated', F, (tx) => tx.query('update public.profiles set account_set_at = now() where id = $1', [F])),
+    /permission denied/);
+  await db.query('delete from auth.users where id = $1', [F]); // keeps later counts to A, B and C
 
   // Notification settings from the app (sync_coordinator.dart calls
   // set_notification_prefs): known categories merge into the stored ones,
