@@ -34,7 +34,8 @@
  *    without them, then request URL, headers and payload, idempotent Vault
  *    credentials, the legacy-key fallback and a failing pg_net. Old
  *    dashboard webhooks to notify (a supabase_functions stand-in) are
- *    dropped, the notification triggers are not.
+ *    dropped; the notification triggers and webhooks to other URLs, such as
+ *    notify-moderators, are not.
  *
  * Exit code 0 means every migration applied and every check passed.
  */
@@ -1122,25 +1123,39 @@ async function internalCalls(db) {
 
   // A project set up from the old README also has dashboard webhooks to
   // notify: triggers running supabase_functions.http_request (a stand-in
-  // here). Applied there, …_drop_notify_webhooks.sql drops exactly those.
+  // here) with the URL as first argument. Applied there,
+  // …_drop_notify_webhooks.sql drops exactly those, also on a local stack
+  // or with a query string, and keeps webhooks to other functions such as
+  // notify-moderators, one that names notify only in a later argument and
+  // a call without arguments.
   const hallTriggers = async () => (await rows(db, 'postgres', null, `select tgname from pg_trigger
     where tgrelid in ('public.reactions'::regclass, 'public.comments'::regclass, 'public.feed_events'::regclass)
-      and not tgisinternal order by 1`)).map((r) => r.tgname);
+      and not tgisinternal`)).map((r) => r.tgname).sort();
   const ownTriggers = await hallTriggers();
-  const hook = (table, name, url) => `create trigger "${name}" after insert on public.${table} for each row
-    execute function supabase_functions.http_request('${url}', 'POST', '{"Content-type":"application/json"}', '{}', '5000');`;
+  const notify = `${PROJECT_URL}/functions/v1/notify`;
+  const hook = (table, name, url, params = '{}') => `
+    create trigger "${name}" after insert on public.${table} for each row
+      execute function supabase_functions.http_request(
+        '${url}', 'POST', '{"Content-type":"application/json"}', '${params}', '5000');`;
   await db.exec(`
     create schema supabase_functions;
     create function supabase_functions.http_request() returns trigger language plpgsql as $$ begin return null; end $$;
-    ${hook('reactions', 'notify-reactions', `${PROJECT_URL}/functions/v1/notify`)}
-    ${hook('comments', 'notify-comments', `${PROJECT_URL}/functions/v1/notify`)}
-    ${hook('feed_events', 'notify-milestones', `${PROJECT_URL}/functions/v1/notify`)}
-    ${hook('reactions', 'audit-reactions', 'https://hooks.example.test/reactions')}`);
+    ${hook('reactions', 'notify-reactions', notify)}
+    ${hook('comments', 'notify-comments', notify)}
+    ${hook('feed_events', 'notify-milestones', notify)}
+    ${hook('reactions', 'notify-reactions-local', 'http://host.docker.internal:54321/functions/v1/notify?via=studio')}
+    ${hook('reactions', 'audit-reactions', 'https://hooks.example.test/reactions')}
+    ${hook('comments', 'notify-moderators', `${notify}-moderators`)}
+    ${hook('feed_events', 'audit-milestones', 'https://hooks.example.test/milestones', `{"then":"${notify}"}`)}
+    create trigger "http-request-without-arguments" after insert on public.comments
+      for each row execute function supabase_functions.http_request();`);
+  const beforeDrop = await hallTriggers();
   await db.exec(readFileSync(MIGRATIONS + DROP_NOTIFY_WEBHOOKS, 'utf8'));
   const afterDrop = await hallTriggers();
-  check('dashboard webhooks to notify are dropped; our triggers and other webhooks stay',
-    afterDrop.join(',') === [...ownTriggers, 'audit-reactions'].sort().join(','),
-    `before: ${ownTriggers.join(',')}; after: ${afterDrop.join(',')}`);
+  const survivors = ['audit-milestones', 'audit-reactions', 'http-request-without-arguments', 'notify-moderators'];
+  check('dashboard webhooks to notify are dropped; our triggers and webhooks to other URLs (notify-moderators) stay',
+    afterDrop.join(',') === [...ownTriggers, ...survivors].sort().join(','),
+    `dropped: ${beforeDrop.filter((t) => !afterDrop.includes(t)).join(',')}; kept: ${afterDrop.join(',')}`);
   await db.exec('drop schema supabase_functions cascade');
 
   const offline = await one(db, 'postgres', null, `select private.call_edge_function('notify', '{}') as id`);
