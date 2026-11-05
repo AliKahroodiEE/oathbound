@@ -65,9 +65,11 @@ final currentUserProvider = StreamProvider<User?>((ref) async* {
 
 /// The errors Auth reports on its event stream, as they come: a Google or
 /// GitHub sign-in that came back refused or broken (supabase_flutter reports
-/// what the link brought), but also token refreshes that failed offline.
-/// Earlier errors are replayed to a new listener, so one from the link that
-/// reopened the web app reaches the app once it is up.
+/// what the link brought), but also token refreshes that failed offline and
+/// a stored session that is missing or expired (`isRedirectSignInError` in
+/// features/auth tells them apart). Earlier errors are replayed to a new
+/// listener, so one from the link that reopened the web app reaches the app
+/// once it is up.
 final authErrorsProvider = Provider<Stream<Object>>((ref) {
   final client = ref.watch(supabaseClientProvider);
   if (client == null) return const Stream.empty();

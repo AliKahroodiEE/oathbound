@@ -82,6 +82,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get actionRateLimited => 'Too many changes in a row. Wait a minute, then try again.';
 
   @override
+  String get commentRateLimited => 'You\'ve posted a lot in this guild in the last hour. Try again later.';
+
+  @override
   String get loadingLabel => 'Loading';
 
   @override

@@ -9,6 +9,7 @@ import '../data/repositories/settings_repository.dart';
 import '../design/theme.dart';
 import '../design/tokens.dart';
 import '../features/auth/auth_errors.dart';
+import '../features/auth/sign_in_link.dart';
 import '../features/reminders/reminder_coordinator.dart';
 import '../l10n/generated/app_localizations.dart';
 import 'providers.dart';
@@ -44,11 +45,15 @@ class _WyrdAppState extends ConsumerState<WyrdApp> {
   }
 
   void _showAuthError(Object error) {
+    final messenger = _messenger.currentState;
+    if (messenger == null) return;
     // The messenger sits above the app's localizations; the snack bar's
     // content is built inside a screen, which has them.
-    _messenger.currentState?.showSnackBar(
+    messenger.showSnackBar(
       SnackBar(content: Builder(builder: (context) => Text(authErrorMessage(context.l10n, error)))),
     );
+    // Said once: reloading the web app must not bring it back from the address.
+    forgetSignInError();
   }
 
   @override

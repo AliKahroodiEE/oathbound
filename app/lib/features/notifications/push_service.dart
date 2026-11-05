@@ -19,10 +19,13 @@ enum PushStatus {
   hidden,
 
   /// This browser cannot receive push (on iPhone: until Wyrd is on the Home
-  /// Screen), or this browser or phone gets no push token.
+  /// Screen), or this browser or phone can never get a push token
+  /// ([isPermanentTokenError]).
   unsupported,
 
-  /// The switches want push, but the system permission is not granted yet.
+  /// The switches want push, but this device is not registered yet: the
+  /// system permission is not granted, or no token came this time (offline,
+  /// say). Allow asks, or tries again.
   off,
 
   /// The system permission was declined for good.
@@ -87,6 +90,8 @@ abstract interface class PushMessaging {
   Future<PushPermission> requestPermission();
 
   /// This device's token, or null when there is none to be had right now.
+  /// Throws when the platform could not get one; [isPermanentTokenError]
+  /// tells whether it ever will.
   Future<String?> token();
 
   /// Invalidates the token, so nothing sent to it arrives any more.
@@ -101,6 +106,28 @@ abstract interface class PushMessaging {
   /// Notifications the user tapped, including the one that launched the app.
   Stream<PushMessage> get openedMessages;
 }
+
+/// Whether [error], thrown by [PushMessaging.token], means this device or
+/// browser can never get a token, rather than not right now. Only these are
+/// known to last:
+/// - an Android phone without Google Play services: FCM's
+///   `MISSING_INSTANCEID_SERVICE`, which firebase_messaging reports as
+///   `[firebase_messaging/unknown] java.io.IOException: MISSING_INSTANCEID_SERVICE`;
+/// - a browser without what FCM needs: the Firebase SDK's
+///   `messaging/unsupported-browser`, or `messaging/indexed-db-unsupported`
+///   (a Firefox private window, a Safari iframe), which
+///   firebase_messaging_web reports as `[firebase_messaging/unsupported-browser] …`.
+///
+/// Anything else may pass, so Allow stays to try again, such as
+/// `SERVICE_NOT_AVAILABLE` (an Android phone offline), or a browser that is
+/// offline at its first registration: its push service refuses the
+/// subscription (`AbortError: Registration failed - push service error`) or
+/// FCM cannot be reached (`messaging/token-subscribe-failed`).
+bool isPermanentTokenError(Object error) => _permanentTokenError.hasMatch('$error');
+
+final _permanentTokenError = RegExp(
+  r'\bMISSING_INSTANCEID_SERVICE\b|messaging/(unsupported-browser|indexed-db-unsupported)\b',
+);
 
 /// Server-side token storage that the notify function sends to.
 abstract interface class PushRegistry {
@@ -152,6 +179,12 @@ class PushService {
   bool _retired = false;
   Future<void> _queue = Future.value();
   bool _disposed = false;
+
+  /// The step that may change things now. Bumped when a step starts and when
+  /// one is given up after [_stepTimeout]: nothing can cancel the platform
+  /// call such a step waits on, so when that call answers at last, the step
+  /// finds it is no longer current and leaves everything to the steps after it.
+  int _step = 0;
 
   bool get isAvailable => _messaging != null && _registry != null && _platform != null;
 
@@ -218,7 +251,7 @@ class PushService {
   /// works; the sign-out flow can call it just before signing out. Without
   /// it the token is still invalidated when the sign-out arrives, and the
   /// notify function drops the dead row the next time it sends.
-  Future<void> beforeSignOut() => _run(() => _retire(server: true));
+  Future<void> beforeSignOut() => _run((step) => _retire(step, server: true));
 
   void dispose() {
     _disposed = true;
@@ -248,9 +281,9 @@ class PushService {
     }
   }
 
-  Future<void> _sync({bool signedOut = false}) => _run(() async {
-    if (signedOut) await _retire(server: false);
-    await _reconcile();
+  Future<void> _sync({bool signedOut = false}) => _run((step) async {
+    if (signedOut) await _retire(step, server: false);
+    await _reconcile(step);
   });
 
   /// How long a step may wait on Firebase, the browser or the server before
@@ -260,19 +293,33 @@ class PushService {
   /// Runs [step] after the steps before it, so events never interleave. A
   /// step that is still waiting after [_stepTimeout] (a platform call that
   /// never answers) is given up, so it cannot hold back the rest of the
-  /// session, such as retiring the token after signing out.
-  Future<void> _run(Future<void> Function() step) {
+  /// session, such as retiring the token after signing out. [step] gets its
+  /// number, and checks with [_isCurrent] after every wait that it still is
+  /// the current step before it changes anything.
+  Future<void> _run(Future<void> Function(int step) step) {
     return _queue = _queue.then((_) async {
       if (_disposed) return;
+      final current = ++_step;
       try {
-        await step().timeout(_stepTimeout);
+        await step(current).timeout(
+          _stepTimeout,
+          onTimeout: () {
+            _step++;
+            debugPrint('Push update given up after ${_stepTimeout.inSeconds} s');
+          },
+        );
       } on Object catch (error) {
         debugPrint('Push update failed: $error');
       }
     });
   }
 
-  Future<void> _reconcile() async {
+  /// Whether [step] may still change things: no step was given up on or
+  /// started after it.
+  bool _isCurrent(int step) => step == _step;
+
+  Future<void> _reconcile(int step) async {
+    if (!_isCurrent(step)) return;
     final messaging = _messaging;
     final registry = _registry;
     final platform = _platform;
@@ -283,9 +330,12 @@ class PushService {
       return;
     }
     if (preferences == null) return; // The profile is still loading.
-    final supported = _supported ??= await messaging.isSupported();
+    final supported = _supported ?? await messaging.isSupported();
+    if (!_isCurrent(step)) return;
+    _supported = supported;
     if (!preferences.any) {
-      if (_registered != null) await _retire(server: true);
+      if (_registered != null) await _retire(step, server: true);
+      if (!_isCurrent(step)) return;
       _show(PushStatus.hidden);
       return;
     }
@@ -294,6 +344,7 @@ class PushService {
       return;
     }
     final permission = await messaging.permission();
+    if (!_isCurrent(step)) return;
     if (permission != PushPermission.granted) {
       _show(permission == PushPermission.blocked ? PushStatus.blocked : PushStatus.off);
       return;
@@ -302,12 +353,19 @@ class PushService {
     try {
       token = await messaging.token();
     } on Object catch (error) {
-      // No push service behind this browser (Brave with it switched off) or
-      // phone (no Google Play services): Allow could not get any further.
-      debugPrint('Push token unavailable: $error');
-      _show(PushStatus.unsupported);
+      if (!_isCurrent(step)) return;
+      if (isPermanentTokenError(error)) {
+        // Allow could not get any further here.
+        debugPrint('Push token unavailable on this device: $error');
+        _show(PushStatus.unsupported);
+      } else {
+        // Offline, say: Allow tries again.
+        debugPrint('Push token unavailable for now: $error');
+        _show(PushStatus.off);
+      }
       return;
     }
+    if (!_isCurrent(step)) return;
     if (token == null) {
       _show(PushStatus.off);
       return;
@@ -316,6 +374,7 @@ class PushService {
     final registered = _registered;
     if (registered == null || registered.userId != userId || registered.token != token) {
       await registry.register(token, platform);
+      if (!_isCurrent(step)) return;
       _registered = (userId: userId, token: token);
     }
     _show(PushStatus.on);
@@ -323,9 +382,9 @@ class PushService {
 
   /// Stops pushes to this device for the account last registered on it.
   /// [server] also deletes the server row, which needs a live session.
-  Future<void> _retire({required bool server}) async {
+  Future<void> _retire(int step, {required bool server}) async {
     final messaging = _messaging;
-    if (messaging == null || _retired) return;
+    if (messaging == null || _retired || !_isCurrent(step)) return;
     final registered = _registered;
     _registered = null;
     if (server && registered != null) {
@@ -334,13 +393,17 @@ class PushService {
       } on Object catch (error) {
         debugPrint('Push token could not be removed from the server: $error');
       }
+      if (!_isCurrent(step)) return;
     }
     // A token from an earlier session may still be on the server, so retire
     // it whenever this device could have one.
-    if (registered == null && await messaging.permission() != PushPermission.granted) return;
+    if (registered == null) {
+      final permission = await messaging.permission();
+      if (!_isCurrent(step) || permission != PushPermission.granted) return;
+    }
     try {
       await messaging.deleteToken();
-      _retired = true;
+      if (_isCurrent(step)) _retired = true;
     } on Object catch (error) {
       debugPrint('Push token could not be invalidated: $error');
     }

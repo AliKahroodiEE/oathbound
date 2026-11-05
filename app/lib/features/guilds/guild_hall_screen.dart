@@ -206,7 +206,8 @@ class _GuildHallScreenState extends ConsumerState<GuildHallScreen> {
                 await _api?.toggleReaction(_feed[i].id, kind, on: on);
               } on Object catch (e) {
                 if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(guildErrorMessage(l10n, e))));
+                  final message = guildErrorMessage(l10n, e, GuildAction.react);
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
                 }
               }
               await _load();
@@ -562,7 +563,8 @@ class _CommentsSheetState extends ConsumerState<_CommentsSheet> {
       await _load();
     } on Object catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(guildErrorMessage(context.l10n, e))));
+        final message = guildErrorMessage(context.l10n, e, GuildAction.comment);
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
       }
     } finally {
       if (mounted) setState(() => _sending = false);
@@ -625,8 +627,25 @@ class _CommentsSheetState extends ConsumerState<_CommentsSheet> {
   }
 }
 
-/// A refused guild action in words: the server's rate limits (hint
-/// rate_limited on reactions and comments) ask for a minute's patience;
-/// anything else gets the general message.
-String guildErrorMessage(AppLocalizations l10n, Object error) =>
-    error is PostgrestException && error.hint == 'rate_limited' ? l10n.actionRateLimited : l10n.errorGeneric;
+/// The guild actions the server rate-limits, each with a limit of its own.
+enum GuildAction {
+  /// react and unreact: 60 changes per member per minute, across all guilds
+  /// (…_reaction_rate_limit.sql).
+  react,
+
+  /// add_comment: 30 comments per member in one guild within the last hour,
+  /// a rolling hour (…_rpc_social.sql).
+  comment,
+}
+
+/// A refused guild [action] in words. When a rate limit refused it (hint
+/// rate_limited), reactions ask for a minute's patience and comments, whose
+/// limit counts the last hour, to come back later. Anything else gets the
+/// general message.
+String guildErrorMessage(AppLocalizations l10n, Object error, GuildAction action) {
+  if (error is! PostgrestException || error.hint != 'rate_limited') return l10n.errorGeneric;
+  return switch (action) {
+    GuildAction.react => l10n.actionRateLimited,
+    GuildAction.comment => l10n.commentRateLimited,
+  };
+}
