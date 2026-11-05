@@ -81,10 +81,21 @@ jobs:
           # A release always matches its tag: a manual run of a tag that already
           # exists builds that tag's commit, not the branch the run started on.
           # (A new tag is created on this commit when the release is published.)
-          if [ "$GITHUB_EVENT_NAME" != "push" ] && git ls-remote --exit-code --tags origin "refs/tags/$tag" > /dev/null; then
-            git fetch --no-tags --depth=1 origin "+refs/tags/$tag:refs/tags/$tag"
-            git checkout --quiet --detach "refs/tags/$tag"
-            echo "::notice title=Rebuilding $tag::$tag already exists, so this run builds its commit and replaces that release's APK."
+          if [ "$GITHUB_EVENT_NAME" != "push" ]; then
+            found=0
+            git ls-remote --exit-code --tags origin "refs/tags/$tag" > /dev/null || found=$?
+            case "$found" in
+              0)
+                git fetch --no-tags --depth=1 origin "+refs/tags/$tag:refs/tags/$tag"
+                git checkout --quiet --detach "refs/tags/$tag"
+                echo "::notice title=Rebuilding $tag::$tag already exists, so this run builds its commit and replaces that release's APK."
+                ;;
+              2) ;; # no such tag yet: it is created on this commit
+              *)
+                echo "::error title=Could not check $tag::git ls-remote failed (exit $found), so it is unknown whether $tag exists. Run the workflow again."
+                exit 1
+                ;;
+            esac
           fi
           pubspec_version="$(pubspec_version)"
           major="${BASH_REMATCH[1]}" minor="${BASH_REMATCH[2]}" patch="${BASH_REMATCH[3]}"
