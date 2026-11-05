@@ -172,9 +172,14 @@ warn_unless() { # warn_unless VALUE REGEX "message"
 setup_android_key() {
   local keystore="" alias_name="" store_pass="" key_pass="" repeat="" owner_name="" fingerprints=""
   local keytool="" candidate=""
-  # macOS has a /usr/bin/keytool stub that fails without a JDK; Android
-  # Studio's own JDK is not on PATH. Take the first one that runs.
+  # macOS has a /usr/bin/keytool stub that fails without a JDK, Homebrew's
+  # openjdk is not linked onto PATH, and Android Studio's own JDK is not on
+  # PATH either. Take the first one that runs.
   for candidate in "$(command -v keytool 2>/dev/null || true)" \
+    "${JAVA_HOME:+$JAVA_HOME/bin/keytool}" \
+    "$(/usr/libexec/java_home 2>/dev/null || true)/bin/keytool" \
+    "/opt/homebrew/opt/openjdk/bin/keytool" \
+    "/usr/local/opt/openjdk/bin/keytool" \
     "/Applications/Android Studio.app/Contents/jbr/Contents/Home/bin/keytool"; do
     if [ -n "$candidate" ] && [ -x "$candidate" ] && "$candidate" -help >/dev/null 2>&1; then
       keytool="$candidate"
@@ -277,6 +282,13 @@ if group "Supabase" "Backend project, its API keys and the CLI token the backend
   ref="$(ask "Project ref (from https://supabase.com/dashboard/project/<ref>)" "$known_ref")"
   warn_unless "$ref" '^[a-z0-9]{20}$' "a project ref is usually 20 lowercase letters"
   set_secret SUPABASE_PROJECT_ID "$ref"
+  # A different project: its keys and database password are new too, so
+  # nothing stored for the old project is offered as a default.
+  new_project=false
+  if [ -n "$ref" ] && [ -n "$known_ref" ] && [ "$ref" != "$known_ref" ]; then
+    new_project=true
+    note "  A new project: enter its own publishable key, secret key and database password."
+  fi
   if [ -n "$ref" ]; then
     # The URL follows the ref typed now, even if another project's is stored.
     url="$(ask "Project URL" "https://$ref.supabase.co")"
@@ -288,7 +300,11 @@ if group "Supabase" "Backend project, its API keys and the CLI token the backend
     url="$(variable_prompt SUPABASE_URL "Project URL")"
   fi
   set_variable SUPABASE_URL "${url%/}"
-  key="$(variable_prompt SUPABASE_PUBLISHABLE_KEY "Publishable key (sb_publishable_...)")"
+  if [ "$new_project" = true ]; then
+    key="$(ask "Publishable key of $ref (sb_publishable_...)")"
+  else
+    key="$(variable_prompt SUPABASE_PUBLISHABLE_KEY "Publishable key (sb_publishable_...)")"
+  fi
   case "$key" in
     sb_secret_*)
       # Variables are public: never store a secret key as one.
@@ -299,13 +315,25 @@ if group "Supabase" "Backend project, its API keys and the CLI token the backend
       set_variable SUPABASE_PUBLISHABLE_KEY "$key"
       ;;
   esac
-  secret_key="$(secret_prompt SUPABASE_SECRET_KEY "Secret key (sb_secret_...; the backend deploy keeps it in the database Vault)")"
+  if [ "$new_project" = true ]; then
+    secret_key="$(ask_secret "Secret key of $ref (sb_secret_...; the backend deploy keeps it in the database Vault)")"
+  else
+    secret_key="$(secret_prompt SUPABASE_SECRET_KEY "Secret key (sb_secret_...; the backend deploy keeps it in the database Vault)")"
+  fi
   warn_unless "$secret_key" '^sb_secret_' "secret keys start with sb_secret_"
   set_secret SUPABASE_SECRET_KEY "$secret_key"
   token="$(secret_prompt SUPABASE_ACCESS_TOKEN "Personal access token (sbp_..., https://supabase.com/dashboard/account/tokens)")"
   warn_unless "$token" '^sbp_' "personal access tokens start with sbp_"
   set_secret SUPABASE_ACCESS_TOKEN "$token"
-  set_secret SUPABASE_DB_PASSWORD "$(secret_prompt SUPABASE_DB_PASSWORD "Database password")"
+  if [ "$new_project" = true ]; then
+    db_password="$(ask_secret "Database password of $ref")"
+  else
+    db_password="$(secret_prompt SUPABASE_DB_PASSWORD "Database password")"
+  fi
+  set_secret SUPABASE_DB_PASSWORD "$db_password"
+  if [ "$new_project" = true ] && { [ -z "$key" ] || [ -z "$secret_key" ] || [ -z "$db_password" ]; }; then
+    note "  ! some values left empty still belong to the old project: deploys and the apps fail until you set them"
+  fi
 fi
 
 # --- 2. Cloudflare --------------------------------------------------------------
@@ -449,9 +477,38 @@ fi
 
 # --- 7. Backups -----------------------------------------------------------------
 
+# succeeds when VALUE is one or more age public keys (comma or space separated).
+age_recipients() {
+  local one=""
+  [ -n "$1" ] || return 1
+  # shellcheck disable=SC2086 # split the list
+  for one in ${1//,/ }; do
+    [[ "$one" =~ ^age1[02-9ac-hj-np-z]{58}$ ]] || return 1
+  done
+}
+
+stored_recipient="$(current_variable BACKUP_AGE_RECIPIENT)"
+backup_names="BACKUP_AGE_RECIPIENT"
+if [ -n "$stored_recipient" ] && ! age_recipients "$stored_recipient"; then
+  # An earlier version stored whatever was typed. Never offer the value back.
+  backup_names=""
+  case "$stored_recipient" in
+    *SECRET-KEY*)
+      say "${bold}! BACKUP_AGE_RECIPIENT holds an age private key.${reset} Variables are not secret: treat the key pair as exposed."
+      if confirm "Delete that variable now?" Y; then
+        gh variable delete BACKUP_AGE_RECIPIENT --repo "$repo" >/dev/null
+        say "  ✓ variable BACKUP_AGE_RECIPIENT deleted; create a new key pair below"
+      fi
+      ;;
+    *) note "BACKUP_AGE_RECIPIENT is not an age public key; set it again below." ;;
+  esac
+  stored_recipient=""
+fi
+
+# shellcheck disable=SC2086 # backup_names is one name or none
 if group "Encrypted backups" "Database dumps are encrypted to an age public key; only you keep the private key (step 7)." \
-  BACKUP_AGE_RECIPIENT; then
-  recipient="$(current_variable BACKUP_AGE_RECIPIENT)"
+  $backup_names; then
+  recipient="$stored_recipient"
   if [ -n "$recipient" ]; then
     recipient="$(ask "age public key" "$recipient")"
   else
@@ -477,12 +534,7 @@ if group "Encrypted backups" "Database dumps are encrypted to an age public key;
   fi
   # Variables are not secret: only public keys (age1...) may be stored, never
   # the private key (AGE-SECRET-KEY-...) from the same file.
-  valid_recipients=true
-  # shellcheck disable=SC2086 # split a comma- or space-separated list
-  for one_recipient in ${recipient//,/ }; do
-    [[ "$one_recipient" =~ ^age1[02-9ac-hj-np-z]{58}$ ]] || valid_recipients=false
-  done
-  if [ -n "$recipient" ] && [ "$valid_recipients" = false ]; then
+  if [ -n "$recipient" ] && ! age_recipients "$recipient"; then
     case "$recipient" in
       *AGE-SECRET-KEY-*) say "  ! that is the private key: keep it offline and never put it in GitHub; BACKUP_AGE_RECIPIENT not changed" ;;
       *) say "  ! not an age public key (age1 followed by 58 characters); BACKUP_AGE_RECIPIENT not changed" ;;
