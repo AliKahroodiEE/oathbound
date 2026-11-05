@@ -163,7 +163,10 @@ milestone to `notify` through pg_net (after commit, with the secret key as
 `apikey`), in the Database Webhook shape `{ type, table, schema, record,
 old_record }`. No dashboard webhooks are needed. Earlier instructions had
 owners create three (INSERT on these tables → `/functions/v1/notify`);
-`…_drop_notify_webhooks.sql` removes them so pushes are not sent twice. Do not
+`…_drop_notify_webhooks.sql` removes them so pushes are not sent twice: only
+webhooks whose URL (the first `http_request` argument) is
+`/functions/v1/notify`, optionally followed by `/`, `?` or `#`; webhooks to
+other functions such as `notify-moderators`, and to other URLs, stay. Do not
 create new ones: the migration runs only once. A failing pg_net never fails
 the user's write. Other senders POST `{ user_id, category, template_key,
 params, guild_id? }` directly.
@@ -224,7 +227,12 @@ project's default privileges, which expose nothing) and drives
 * exercises pg_cron's dispatch and the notification triggers against
   stand-ins for pg_net and Vault (URL, headers, payload, failure isolation),
   and checks that old dashboard webhooks to `notify` are dropped while the
-  triggers stay (a `supabase_functions` stand-in).
+  triggers stay and webhooks to other URLs (`notify-moderators`, `notify`
+  named only in a later argument) and triggers without arguments survive (a
+  `supabase_functions` stand-in);
+* checks that reaction changes and deleted or hidden comments touch their
+  feed event (`hall_changed_at`), and that `account_set_at` moves only when
+  the account's own settings change.
 
 It does not exercise real pg_cron, pg_net, Vault, Realtime or Storage.
 
@@ -249,9 +257,10 @@ and committed separately.
 | `20261104000920_notify_triggers.sql` | pg_net triggers on reactions, comments and milestones → `notify` |
 | `20261104001000_push_token_unregister.sql` | `unregister_push_token`: sign-out removes this device's token from the account |
 | `20261104001010_notification_prefs_rpc.sql` | `set_notification_prefs`: the app's notification switches and quiet hours |
-| `20261104001020_reaction_signals.sql` | reactions and the personal tables leave the Realtime publication (`feed_events`, `comments`, `challenges` stay); each reaction change touches its feed event |
+| `20261104001020_reaction_signals.sql` | reactions and the personal tables leave the Realtime publication (`feed_events`, `comments`, `challenges` stay); each reaction change and each comment deletion or moderation hide touches its feed event (`feed_events.hall_changed_at`) |
 | `20261104001030_reaction_rate_limit.sql` | `react` / `unreact`: at most 60 reaction changes per user per minute |
-| `20261104001040_drop_notify_webhooks.sql` | drops dashboard webhooks that still post these inserts to `notify` (double pushes) |
+| `20261104001040_drop_notify_webhooks.sql` | drops dashboard webhooks whose URL is the `notify` function (they would double every push); others stay |
+| `20261104001050_profile_account_set_at.sql` | `profiles.account_set_at`: when the name, weekly target, motivation or AI opt-in were last chosen, so a new device knows whether to take them over |
 
 New migrations: create with `supabase migration new <name>`. Never edit an
 applied one. Every new table needs `enable row level security`, and every
@@ -274,8 +283,10 @@ until the grants match the code.
   `push_tokens` and change it only through `register_push_token` and
   `unregister_push_token`; `export_my_data` lists devices without tokens.
 * Realtime publishes only what the guild hall watches: `feed_events`,
-  `comments` and `challenges`. Reactions signal through their feed event,
-  and personal tables are not published at all.
+  `comments` and `challenges`. Reactions, and comments that are deleted or
+  hidden, signal through their feed event; personal tables are not published
+  at all. A feed event hidden by moderation sends no signal and stays in open
+  halls until their next refetch.
 * RLS still guards the rows: guild data is visible to members, public guild
   metadata to signed-in users. Feed events, reactions and comments from users
   the viewer blocked are filtered out (FR-7); the blocked party cannot see
