@@ -1167,13 +1167,18 @@ async function internalCalls(db) {
     ${hook('reactions', 'notify-reactions-local', 'http://host.docker.internal:54321/functions/v1/notify?via=studio')}
     ${hook('reactions', 'audit-reactions', 'https://hooks.example.test/reactions')}
     ${hook('comments', 'notify-moderators', `${notify}-moderators`)}
+    ${hook('comments', 'relay-to-notify', `https://relay.example.test/forward?to=${notify}`)}
+    ${hook('reactions', 'mirror-notify', 'https://hooks.example.test/mirror/functions/v1/notify')}
     ${hook('feed_events', 'audit-milestones', 'https://hooks.example.test/milestones', `{"then":"${notify}"}`)}
     create trigger "http-request-without-arguments" after insert on public.comments
       for each row execute function supabase_functions.http_request();`);
   const beforeDrop = await hallTriggers();
   await db.exec(readFileSync(MIGRATIONS + DROP_NOTIFY_WEBHOOKS, 'utf8'));
   const afterDrop = await hallTriggers();
-  const survivors = ['audit-milestones', 'audit-reactions', 'http-request-without-arguments', 'notify-moderators'];
+  const survivors = [
+    'audit-milestones', 'audit-reactions', 'http-request-without-arguments', 'mirror-notify', 'notify-moderators',
+    'relay-to-notify',
+  ];
   check('dashboard webhooks to notify are dropped; our triggers and webhooks to other URLs (notify-moderators) stay',
     afterDrop.join(',') === [...ownTriggers, ...survivors].sort().join(','),
     `dropped: ${beforeDrop.filter((t) => !afterDrop.includes(t)).join(',')}; kept: ${afterDrop.join(',')}`);

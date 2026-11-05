@@ -164,8 +164,9 @@ milestone to `notify` through pg_net (after commit, with the secret key as
 old_record }`. No dashboard webhooks are needed. Earlier instructions had
 owners create three (INSERT on these tables → `/functions/v1/notify`);
 `…_drop_notify_webhooks.sql` removes them so pushes are not sent twice: only
-webhooks whose URL (the first `http_request` argument) is
-`/functions/v1/notify`, optionally followed by `/`, `?` or `#`; webhooks to
+webhooks whose URL (the first `http_request` argument) has the path
+`/functions/v1/notify` right after its host, optionally followed by `/`, `?`
+or `#`; webhooks to
 other functions such as `notify-moderators`, and to other URLs, stay. Do not
 create new ones: the migration runs only once. A failing pg_net never fails
 the user's write. Other senders POST `{ user_id, category, template_key,

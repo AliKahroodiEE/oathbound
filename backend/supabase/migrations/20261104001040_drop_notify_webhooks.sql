@@ -7,8 +7,9 @@
 -- Database Webhook is a trigger that runs supabase_functions.http_request
 -- with the URL as its first argument; next to our own triggers it would send
 -- every push twice. This drops every such trigger on those three tables
--- whose URL ends in /functions/v1/notify (or continues with a query,
--- fragment or further path). Our triggers (private.notify_on_insert),
+-- whose URL's path, right after the host, is /functions/v1/notify (or
+-- continues with a query, fragment or further path); a relay that only
+-- carries such a URL somewhere later stays. Our triggers (private.notify_on_insert),
 -- webhooks to any other URL, /functions/v1/notify-moderators included, and
 -- webhooks that mention notify only in a later argument stay. Where the
 -- supabase_functions schema does not exist (no webhook was ever created,
@@ -36,7 +37,7 @@ begin
       -- The URL is what comes before the first one. Without arguments there
       -- is no URL.
       and t.tgnargs > 0
-      and split_part(encode(t.tgargs, 'escape'), E'\\000', 1) ~ '/functions/v1/notify([/?#]|$)'
+      and split_part(encode(t.tgargs, 'escape'), E'\\000', 1) ~ '^[a-z][a-z0-9+.-]*://[^/?#]*/functions/v1/notify([/?#]|$)'
   loop
     execute format('drop trigger %I on public.%I', v_hook.tgname, v_hook.relname);
     raise notice 'dropped dashboard webhook % on public.%: the notify triggers replace it',
