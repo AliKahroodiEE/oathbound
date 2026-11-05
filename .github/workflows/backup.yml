@@ -45,12 +45,22 @@ jobs:
     env:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
       SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
-      BACKUP_AGE_RECIPIENT: ${{ vars.BACKUP_AGE_RECIPIENT }}
     steps:
+      # Runners print each step's environment in its log, and variables are
+      # not masked. So BACKUP_AGE_RECIPIENT is only in the environment of the
+      # steps after this gate, which stops a private key stored there by
+      # mistake before any log can show it.
+      - name: Refuse a private key in BACKUP_AGE_RECIPIENT
+        if: contains(vars.BACKUP_AGE_RECIPIENT, 'SECRET-KEY')
+        run: |
+          echo "::error title=Private key in BACKUP_AGE_RECIPIENT::The variable holds an age private key. Delete it now (gh variable delete BACKUP_AGE_RECIPIENT), create a new key pair and store only its public key (age1...). Backups encrypted to the old pair should be treated as readable by others."
+          exit 1
+
       - name: Check configuration
         id: check
         env:
           SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          BACKUP_AGE_RECIPIENT: ${{ vars.BACKUP_AGE_RECIPIENT }}
         run: |
           missing=()
           for name in SUPABASE_ACCESS_TOKEN SUPABASE_PROJECT_ID SUPABASE_DB_PASSWORD BACKUP_AGE_RECIPIENT; do
@@ -93,6 +103,7 @@ jobs:
         if: steps.check.outputs.enabled == 'true'
         env:
           SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          BACKUP_AGE_RECIPIENT: ${{ vars.BACKUP_AGE_RECIPIENT }}
         run: |
           api="https://api.supabase.com/v1/projects/$SUPABASE_PROJECT_ID"
           auth=(-H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN")
