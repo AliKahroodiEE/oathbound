@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:firebase_core/firebase_core.dart' show FirebaseException;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -109,6 +110,24 @@ class FakePromptLog implements PushPromptLog {
 
 const _both = PushPreferences(guild: true, weekly: true);
 const _none = PushPreferences(guild: false, weekly: false);
+
+// What firebase_messaging throws from getToken. On Android the plugin passes
+// on the message of FCM's IOException; on the web it maps the Firebase SDK's
+// errors and lets the browser's own through.
+final _noPlayServices = FirebaseException(
+  plugin: 'firebase_messaging',
+  message: 'java.io.IOException: MISSING_INSTANCEID_SERVICE',
+);
+final _offlinePhone = FirebaseException(
+  plugin: 'firebase_messaging',
+  message: 'java.io.IOException: SERVICE_NOT_AVAILABLE',
+);
+final _unsupportedBrowser = FirebaseException(
+  plugin: 'firebase_messaging',
+  code: 'unsupported-browser',
+  message: "Messaging: This browser doesn't support the API's required to use the Firebase SDK. ",
+);
+final _pushServiceError = Exception('AbortError: Registration failed - push service error');
 
 void main() {
   late FakeMessaging messaging;
@@ -227,21 +246,35 @@ void main() {
       expect(registry.registered, isEmpty);
     });
 
-    test('a device that gets no token shows as unsupported', () async {
+    test('a token that does not come this time leaves Allow to try again', () async {
       messaging
         ..current = PushPermission.granted
-        ..tokenError = Exception('AbortError: Registration failed - push service error');
+        ..tokenError = _pushServiceError;
       create(platform: 'web')
         ..setUser('u1')
         ..setPreferences(_both);
       await settle();
-      expect(push.status.value, PushStatus.unsupported);
+      expect(push.status.value, PushStatus.off);
       expect(registry.registered, isEmpty);
 
       messaging.tokenError = null; // A later visit tries again.
       await push.settingsOpened();
       expect(push.status.value, PushStatus.on);
       expect(registry.registered, [('token-1', 'web')]);
+    });
+
+    test('a device that can never get a token shows as unsupported', () async {
+      for (final (platform, error) in [('android', _noPlayServices), ('web', _unsupportedBrowser)]) {
+        messaging = FakeMessaging()
+          ..current = PushPermission.granted
+          ..tokenError = error;
+        create(platform: platform)
+          ..setUser('u1')
+          ..setPreferences(_both);
+        await settle();
+        expect(push.status.value, PushStatus.unsupported, reason: platform);
+      }
+      expect(registry.registered, isEmpty);
     });
 
     test('builds without Firebase stay inert', () async {
@@ -598,6 +631,38 @@ void main() {
     });
   });
 
+  test('only token errors known to last count as permanent', () {
+    for (final permanent in <Object>[
+      _noPlayServices,
+      _unsupportedBrowser,
+      FirebaseException(
+        plugin: 'firebase_messaging',
+        code: 'indexed-db-unsupported',
+        message: "Messaging: This browser doesn't support indexedDb.open() (ex. Safari iFrame, Firefox Private Browsing, etc)",
+      ),
+      // As the Firebase SDK words it, should one get through unmapped.
+      Exception(
+        "FirebaseError: Messaging: This browser doesn't support the API's required to use the Firebase SDK. "
+        '(messaging/unsupported-browser).',
+      ),
+    ]) {
+      expect(isPermanentTokenError(permanent), isTrue, reason: '$permanent');
+    }
+    for (final passing in <Object>[
+      _offlinePhone,
+      _pushServiceError,
+      FirebaseException(
+        plugin: 'firebase_messaging',
+        code: 'token-subscribe-failed',
+        message: 'Messaging: A problem occurred while subscribing the user to FCM: TypeError: Failed to fetch',
+      ),
+      FirebaseException(plugin: 'firebase_messaging', message: 'java.io.IOException: TIMEOUT'),
+      StateError('no answer'),
+    ]) {
+      expect(isPermanentTokenError(passing), isFalse, reason: '$passing');
+    }
+  });
+
   test('push routes lead to the guild hall or the chronicle', () {
     const guild = '6f1c2b9e-8a4d-4c1e-9b7a-2d5e8f0a1b3c';
     expect(pushRoute({'category': 'guild_comments', 'guild_id': guild}), '/guilds/$guild');
@@ -609,15 +674,15 @@ void main() {
   group('settings row', () {
     final l10n = lookupAppLocalizations(const Locale('en'));
 
-    Future<void> pumpRow(WidgetTester tester) async {
+    Future<void> pumpRow(WidgetTester tester, {bool fromHomeScreen = false}) async {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [pushServiceProvider.overrideWithValue(push)],
-          child: const MaterialApp(
-            locale: Locale('en'),
+          child: MaterialApp(
+            locale: const Locale('en'),
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
-            home: Scaffold(body: PushDeviceTile()),
+            home: Scaffold(body: PushDeviceTile(runsFromHomeScreen: fromHomeScreen)),
           ),
         ),
       );
@@ -637,8 +702,8 @@ void main() {
       expect(find.text(l10n.pushDeviceOn), findsOneWidget);
     });
 
-    testWidgets('stops offering Allow once allowed but no token comes', (tester) async {
-      messaging.tokenError = Exception('AbortError: Registration failed - push service error');
+    testWidgets('stops offering Allow once allowed in a browser that can never get a token', (tester) async {
+      messaging.tokenError = _unsupportedBrowser;
       create(platform: 'web')
         ..setUser('u1')
         ..setPreferences(_both);
@@ -650,6 +715,25 @@ void main() {
       expect(messaging.prompts, 1);
       expect(find.text(l10n.pushAllow), findsNothing);
       expect(find.text(l10n.pushUnsupported), findsOneWidget);
+    });
+
+    testWidgets('keeps offering Allow while the token may still come', (tester) async {
+      messaging.tokenError = _pushServiceError; // Offline at the first registration, say.
+      create(platform: 'web')
+        ..setUser('u1')
+        ..setPreferences(_both);
+      await pumpRow(tester);
+
+      await tester.tap(find.text(l10n.pushAllow));
+      await tester.pump();
+      expect(messaging.prompts, 1);
+      expect(find.text(l10n.pushDeviceOff), findsOneWidget);
+
+      messaging.tokenError = null; // Back online: Allow tries again.
+      await tester.tap(find.text(l10n.pushAllow));
+      await tester.pump();
+      expect(find.text(l10n.pushDeviceOn), findsOneWidget);
+      expect(registry.registered, [('token-1', 'web')]);
     });
 
     testWidgets('points to the settings once blocked, without an Allow button', (tester) async {
@@ -672,16 +756,34 @@ void main() {
       expect(find.text(l10n.pushAllow), findsNothing);
     });
 
-    testWidgets('in the Android app, speaks of the device rather than a browser', (tester) async {
+    testWidgets('in the Android app without Google Play services, speaks of the device', (tester) async {
       messaging
         ..current = PushPermission.granted
-        ..tokenError = Exception('java.io.IOException: SERVICE_NOT_AVAILABLE');
+        ..tokenError = _noPlayServices;
       create()
         ..setUser('u1')
         ..setPreferences(_both);
       await pumpRow(tester);
       expect(find.text(l10n.pushUnsupportedDevice), findsOneWidget);
       expect(find.text(l10n.pushAllow), findsNothing);
+    });
+
+    testWidgets('in the Android app offline, keeps Allow to try again', (tester) async {
+      messaging
+        ..current = PushPermission.granted
+        ..tokenError = _offlinePhone;
+      create()
+        ..setUser('u1')
+        ..setPreferences(_both);
+      await pumpRow(tester);
+      expect(find.text(l10n.pushDeviceOff), findsOneWidget);
+      expect(find.text(l10n.pushUnsupportedDevice), findsNothing);
+
+      messaging.tokenError = null; // Back online.
+      await tester.tap(find.text(l10n.pushAllow));
+      await tester.pump();
+      expect(find.text(l10n.pushDeviceOn), findsOneWidget);
+      expect(registry.registered, [('token-1', 'android')]);
     });
 
     testWidgets('in an iPhone browser, points to the Home Screen', (tester) async {
@@ -691,6 +793,17 @@ void main() {
         ..setPreferences(_both);
       await pumpRow(tester);
       expect(find.text(l10n.pushInstallHint), findsOneWidget);
+    }, variant: TargetPlatformVariant.only(TargetPlatform.iOS));
+
+    testWidgets('opened from the iPhone Home Screen, does not point there again', (tester) async {
+      messaging.supported = false; // An iOS version without web push, say.
+      create(platform: 'web')
+        ..setUser('u1')
+        ..setPreferences(_both);
+      await pumpRow(tester, fromHomeScreen: true);
+      expect(find.text(l10n.pushInstallHint), findsNothing);
+      expect(find.text(l10n.pushUnsupportedDevice), findsOneWidget);
+      expect(find.text(l10n.pushAllow), findsNothing);
     }, variant: TargetPlatformVariant.only(TargetPlatform.iOS));
 
     testWidgets('stays hidden when push is not offered', (tester) async {

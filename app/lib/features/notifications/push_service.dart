@@ -19,10 +19,13 @@ enum PushStatus {
   hidden,
 
   /// This browser cannot receive push (on iPhone: until Wyrd is on the Home
-  /// Screen), or this browser or phone gets no push token.
+  /// Screen), or this browser or phone can never get a push token
+  /// ([isPermanentTokenError]).
   unsupported,
 
-  /// The switches want push, but the system permission is not granted yet.
+  /// The switches want push, but this device is not registered yet: the
+  /// system permission is not granted, or no token came this time (offline,
+  /// say). Allow asks, or tries again.
   off,
 
   /// The system permission was declined for good.
@@ -87,6 +90,8 @@ abstract interface class PushMessaging {
   Future<PushPermission> requestPermission();
 
   /// This device's token, or null when there is none to be had right now.
+  /// Throws when the platform could not get one; [isPermanentTokenError]
+  /// tells whether it ever will.
   Future<String?> token();
 
   /// Invalidates the token, so nothing sent to it arrives any more.
@@ -101,6 +106,28 @@ abstract interface class PushMessaging {
   /// Notifications the user tapped, including the one that launched the app.
   Stream<PushMessage> get openedMessages;
 }
+
+/// Whether [error], thrown by [PushMessaging.token], means this device or
+/// browser can never get a token, rather than not right now. Only these are
+/// known to last:
+/// - an Android phone without Google Play services: FCM's
+///   `MISSING_INSTANCEID_SERVICE`, which firebase_messaging reports as
+///   `[firebase_messaging/unknown] java.io.IOException: MISSING_INSTANCEID_SERVICE`;
+/// - a browser without what FCM needs: the Firebase SDK's
+///   `messaging/unsupported-browser`, or `messaging/indexed-db-unsupported`
+///   (a Firefox private window, a Safari iframe), which
+///   firebase_messaging_web reports as `[firebase_messaging/unsupported-browser] …`.
+///
+/// Anything else may pass, so Allow stays to try again, such as
+/// `SERVICE_NOT_AVAILABLE` (an Android phone offline), or a browser that is
+/// offline at its first registration: its push service refuses the
+/// subscription (`AbortError: Registration failed - push service error`) or
+/// FCM cannot be reached (`messaging/token-subscribe-failed`).
+bool isPermanentTokenError(Object error) => _permanentTokenError.hasMatch('$error');
+
+final _permanentTokenError = RegExp(
+  r'\bMISSING_INSTANCEID_SERVICE\b|messaging/(unsupported-browser|indexed-db-unsupported)\b',
+);
 
 /// Server-side token storage that the notify function sends to.
 abstract interface class PushRegistry {
@@ -327,10 +354,15 @@ class PushService {
       token = await messaging.token();
     } on Object catch (error) {
       if (!_isCurrent(step)) return;
-      // No push service behind this browser (Brave with it switched off) or
-      // phone (no Google Play services): Allow could not get any further.
-      debugPrint('Push token unavailable: $error');
-      _show(PushStatus.unsupported);
+      if (isPermanentTokenError(error)) {
+        // Allow could not get any further here.
+        debugPrint('Push token unavailable on this device: $error');
+        _show(PushStatus.unsupported);
+      } else {
+        // Offline, say: Allow tries again.
+        debugPrint('Push token unavailable for now: $error');
+        _show(PushStatus.off);
+      }
       return;
     }
     if (!_isCurrent(step)) return;
