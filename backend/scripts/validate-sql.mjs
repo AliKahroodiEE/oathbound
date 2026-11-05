@@ -27,7 +27,8 @@
  *    idempotency, sync_pull cursors, apply_progression driven by the real
  *    TypeScript engine (idempotency, stale-day protection, privacy
  *    projection, challenges), undo, social RPCs, device tokens,
- *    export/deletion, cron jobs.
+ *    export/deletion, cron jobs, and the guild hall's Realtime signals:
+ *    reaction changes and deleted or hidden comments touch their feed event.
  * 5. Exercises the internal Edge Function calls (pg_cron's chronicle dispatch,
  *    the notification triggers) against stand-ins for pg_net and Vault: no-op
  *    without them, then request URL, headers and payload, idempotent Vault
@@ -534,6 +535,19 @@ async function evaluateAndApply(db, completionId, { staleDayChangeId } = {}) {
   return { applied, result, proposal };
 }
 
+/**
+ * When a feed event last signalled a change in its guild hall
+ * (…_reaction_signals.sql), or null; `quiet` clears it before a change.
+ */
+async function hallChangedAt(db, eventId) {
+  const row = await one(db, 'postgres', null,
+    'select hall_changed_at from public.feed_events where id = $1', [eventId]);
+  return row?.hall_changed_at == null ? null : new Date(row.hall_changed_at).toISOString();
+}
+
+const quiet = (db, eventId) =>
+  db.query('update public.feed_events set hall_changed_at = null where id = $1', [eventId]);
+
 async function smoke(db, { profileFields }) {
   // --- accounts --------------------------------------------------------------
   await db.query(`insert into auth.users (id, email, raw_user_meta_data) values
@@ -794,14 +808,12 @@ async function smoke(db, { profileFields }) {
     (await rows(db, 'authenticated', A, 'select * from public.reactions')).length === 1 && comment.body === 'Well fought!');
   // Reactions are not in the Realtime publication (deletions would reach
   // every subscriber); each change touches its feed event instead.
-  const touched = await one(db, 'postgres', null,
-    'select reactions_changed_at from public.feed_events where id = $1', [event.id]);
+  const touched = await hallChangedAt(db, event.id);
+  await quiet(db, event.id);
   await one(db, 'authenticated', B, `select public.unreact($1, 'honour')`, [event.id]);
-  const retouched = await one(db, 'postgres', null,
-    'select reactions_changed_at from public.feed_events where id = $1', [event.id]);
-  check('adding and removing a reaction signals through its feed event',
-    touched?.reactions_changed_at != null && retouched?.reactions_changed_at != null,
-    `after react: ${touched?.reactions_changed_at}; after unreact: ${retouched?.reactions_changed_at}`);
+  const retouched = await hallChangedAt(db, event.id);
+  check('adding and removing a reaction signals through its feed event', touched !== null && retouched !== null,
+    `after react: ${touched}; after unreact: ${retouched}`);
   await one(db, 'authenticated', B, `select public.react($1, 'honour')`, [event.id]);
 
   // Reaction changes are rate-limited per user (…_reaction_rate_limit.sql):
@@ -822,15 +834,14 @@ async function smoke(db, { profileFields }) {
   await db.query('delete from private.reaction_rate');
   let burstError = null;
   for (let i = 0; i < 60 && burstError === null; i++) burstError = await toggle(B, i % 2 === 0);
-  await db.query(`update public.feed_events set reactions_changed_at = '2000-01-01T00:00:00Z' where id = $1`, [event.id]);
+  await quiet(db, event.id);
   const refused = await toggle(B, true);
-  const signalAfter = await one(db, 'postgres', null,
-    `select reactions_changed_at = '2000-01-01T00:00:00Z' as untouched from public.feed_events where id = $1`, [event.id]);
+  const signalAfter = await hallChangedAt(db, event.id);
   check('60 reaction changes a minute pass; the 61st is refused (54000, rate_limited)',
     burstError === null && refused?.code === '54000' && refused?.hint === 'rate_limited',
     `burst: ${burstError?.message ?? 'all accepted'}; 61st: ${refused?.message ?? 'accepted'}`);
   check('a refused reaction change leaves no reaction and touches no feed event',
-    (await flamesOfB()) === 0 && signalAfter.untouched === true, `untouched=${signalAfter.untouched}`);
+    (await flamesOfB()) === 0 && signalAfter === null, `hall_changed_at=${signalAfter}`);
   const noChange = [await toggle(B, false), await toggle(B, true, 'honour')];
   check('reaction calls that change nothing are neither counted nor refused', noChange.every((e) => e === null),
     noChange.map((e) => e?.message ?? 'ok').join('; '));
@@ -992,6 +1003,65 @@ async function smoke(db, { profileFields }) {
     select c.relname from pg_class c join pg_namespace n on n.oid = c.relnamespace
     where n.nspname = 'public' and c.relkind = 'r' and not c.relrowsecurity`);
   check('RLS enabled on every public table', unprotected.length === 0, unprotected.map((r) => r.relname).join(', '));
+}
+
+// ---------------------------------------------------------------------------
+// Comments leaving the hall (…_reaction_signals.sql)
+// ---------------------------------------------------------------------------
+
+// Realtime delivers an UPDATE only to subscribers who may still SELECT the
+// new row, and nobody may SELECT a deleted or hidden comment, so deleting or
+// hiding one touches its feed event instead, which the members still see.
+// In a public guild a comment reported by three members is hidden.
+const MASTER = '00000000-0000-4000-8000-000000000101';
+const POSTER = '00000000-0000-4000-8000-000000000102';
+const READER_1 = '00000000-0000-4000-8000-000000000103';
+const READER_2 = '00000000-0000-4000-8000-000000000104';
+
+async function commentSignals(db) {
+  await db.query(`insert into auth.users (id, email) values ($1, 'master@example.test'),
+    ($2, 'poster@example.test'), ($3, 'reader1@example.test'), ($4, 'reader2@example.test')`,
+  [MASTER, POSTER, READER_1, READER_2]);
+  const guild = await one(db, 'authenticated', MASTER,
+    `select * from public.create_guild('The Open Road', '', 'public')`);
+  const code = (await one(db, 'authenticated', MASTER, 'select * from public.create_invite($1)', [guild.id])).code;
+  for (const member of [POSTER, READER_1, READER_2]) {
+    await one(db, 'authenticated', member, 'select * from public.join_guild_by_code($1)', [code]);
+  }
+  // The comments go under READER_1's arrival in the hall.
+  const event = await one(db, 'authenticated', POSTER,
+    `select id from public.feed_events where guild_id = $1 and actor_id = $2 and kind = 'member_joined'`,
+    [guild.id, READER_1]);
+  const comment = (body) =>
+    one(db, 'authenticated', POSTER, 'select * from public.add_comment($1, $2)', [event.id, body]);
+  const seen = async (commentId) =>
+    (await rows(db, 'authenticated', READER_2, 'select id from public.comments where id = $1', [commentId])).length > 0;
+
+  const greeting = await comment('Welcome!');
+  const greetingSeen = await seen(greeting.id);
+  await quiet(db, event.id);
+  await one(db, 'authenticated', POSTER, 'select public.delete_comment($1)', [greeting.id]);
+  const afterDelete = await hallChangedAt(db, event.id);
+  check('deleting a comment touches its feed event, which members still see',
+    greetingSeen && !(await seen(greeting.id)) && afterDelete !== null,
+    `seen before: ${greetingSeen}; hall_changed_at: ${afterDelete}`);
+
+  const spam = await comment('Cheap gold here');
+  const spamSeen = await seen(spam.id);
+  await quiet(db, event.id);
+  for (const reporter of [MASTER, READER_1, READER_2]) {
+    await one(db, 'authenticated', reporter, `select public.report_content('comment', $1, 'spam')`, [spam.id]);
+  }
+  const afterHide = await hallChangedAt(db, event.id);
+  check('hiding a comment (report_content, third report) touches its feed event',
+    spamSeen && !(await seen(spam.id)) && afterHide !== null,
+    `seen before: ${spamSeen}; hall_changed_at: ${afterHide}`);
+
+  // Another report sets hidden_at to itself again: no change, no signal.
+  await quiet(db, event.id);
+  await one(db, 'authenticated', READER_1, `select public.report_content('comment', $1, 'spam')`, [spam.id]);
+  const afterRepeat = await hallChangedAt(db, event.id);
+  check('reporting a hidden comment again touches nothing', afterRepeat === null, `hall_changed_at: ${afterRepeat}`);
 }
 
 // ---------------------------------------------------------------------------
@@ -1188,6 +1258,11 @@ async function main() {
     await smoke(db, { profileFields: surface.fields });
   } catch (error) {
     check('smoke checks completed', false, String(error?.message ?? error));
+  }
+  try {
+    await commentSignals(db);
+  } catch (error) {
+    check('comment signal checks completed', false, String(error?.message ?? error));
   }
 
   console.log('Internal calls (pg_cron and notification triggers through pg_net)');
