@@ -28,6 +28,7 @@
   "offlineBanner": "Working offline — changes will sync when you reconnect.",
   "errorGeneric": "Something went wrong on our side. Your data is safe.",
   "actionRateLimited": "Too many changes in a row. Wait a minute, then try again.",
+  "commentRateLimited": "You've posted a lot in this guild in the last hour. Try again later.",
   "loadingLabel": "Loading",
 
   "attributeStrength": "Strength",

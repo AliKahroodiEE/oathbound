@@ -82,6 +82,9 @@ class AppLocalizationsFa extends AppLocalizations {
   String get actionRateLimited => 'تغییرها پشت سر هم زیاد بود. یک دقیقه صبر کن و دوباره امتحان کن.';
 
   @override
+  String get commentRateLimited => 'در یک ساعت گذشته در این انجمن زیاد نظر گذاشتی. کمی بعد دوباره امتحان کن.';
+
+  @override
   String get loadingLabel => 'در حال بارگذاری';
 
   @override

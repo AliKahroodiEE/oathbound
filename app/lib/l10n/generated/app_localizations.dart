@@ -236,6 +236,12 @@ abstract class AppLocalizations {
   /// **'Too many changes in a row. Wait a minute, then try again.'**
   String get actionRateLimited;
 
+  /// No description provided for @commentRateLimited.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ve posted a lot in this guild in the last hour. Try again later.'**
+  String get commentRateLimited;
+
   /// No description provided for @loadingLabel.
   ///
   /// In en, this message translates to:
