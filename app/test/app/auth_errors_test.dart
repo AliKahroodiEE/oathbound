@@ -6,7 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
-import 'package:supabase_flutter/supabase_flutter.dart' show AuthException, AuthRetryableFetchException;
+import 'package:supabase_flutter/supabase_flutter.dart'
+    show AuthApiException, AuthException, AuthRetryableFetchException, AuthSessionMissingException;
 import 'package:wyrd/app/app.dart';
 import 'package:wyrd/app/providers.dart';
 import 'package:wyrd/app/router.dart';
@@ -105,12 +106,50 @@ void main() {
     await closeApp(tester, db);
   });
 
+  testWidgets('a sign-in that failed on the server is explained in general words', (tester) async {
+    final db = await pumpApp(tester);
+    // As gotrue reads `?error=…&error_code=…&error_description=…`.
+    const failures = [
+      AuthException(
+        'Unexpected failure, please check server logs for more information',
+        statusCode: 'unexpected_failure',
+        code: 'server_error',
+      ),
+      AuthException('Service temporarily unavailable', code: 'temporarily_unavailable'),
+    ];
+    for (final failure in failures) {
+      errors.add(failure);
+      await arrive(tester);
+      expect(
+        find.widgetWithText(SnackBar, 'Something went wrong on our side. Your data is safe.'),
+        findsOneWidget,
+        reason: failure.code,
+      );
+      // Gone after 4 s, before the next one.
+      for (var i = 0; i < 6; i++) {
+        await tester.pump(const Duration(seconds: 1));
+      }
+      expect(find.byType(SnackBar), findsNothing);
+    }
+    await closeApp(tester, db);
+  });
+
   testWidgets('a lost connection or a failed token refresh stays quiet', (tester) async {
     final db = await pumpApp(tester);
     errors
       ..add(AuthRetryableFetchException(message: 'ClientException: Failed host lookup'))
       ..add(AuthRetryableFetchException(statusCode: '503'))
-      ..add(const AuthException('Initial session is missing data.', code: 'session_missing'));
+      ..add(const AuthException('Initial session is missing data.', code: 'session_missing'))
+      ..add(const AuthException('Session expired.', code: 'session_expired'))
+      ..add(
+        const AuthApiException(
+          'Invalid Refresh Token: Refresh Token Not Found',
+          statusCode: '400',
+          code: 'refresh_token_not_found',
+        ),
+      )
+      ..add(AuthSessionMissingException())
+      ..add(const FormatException('Unexpected end of input'));
     await arrive(tester);
     expect(find.byType(SnackBar), findsNothing);
 

@@ -30,32 +30,48 @@ abstract final class AuthCodes {
   /// The provider's page was left without signing in.
   static const accessDenied = 'access_denied';
 
-  /// What a Google or GitHub sign-in can come back with when it was refused
-  /// or broke on the way: in the link itself, or when its code is traded
-  /// for a session.
-  static const redirect = {
-    accessDenied,
-    'flow_state_not_found',
-    'flow_state_expired',
-    'bad_code_verifier',
-    'bad_oauth_state',
-    'bad_oauth_callback',
-    'provider_disabled',
-    'oauth_provider_not_supported',
+  /// What gotrue reports about the session it keeps itself, rather than
+  /// about a sign-in: a stored session that is missing or has expired, and a
+  /// refresh token the server refused.
+  static const ownSession = {
+    'session_missing',
+    'session_expired',
+    'refresh_token_not_found',
+    'refresh_token_already_used',
   };
 }
 
 /// Whether [error] is Auth reporting [code].
 bool isAuthCode(Object error, String code) => error is AuthException && error.code == code;
 
-/// Whether [error] is a Google or GitHub sign-in that came back refused or
-/// broken. supabase_flutter reports these on Auth's event stream, where
-/// token refreshes that failed (offline, say) land too; those are not news.
-bool isRedirectSignInError(Object error) {
-  if (error is AuthPKCEGrantCodeExchangeError) return true;
-  if (error is! AuthException || error is AuthRetryableFetchException) return false;
-  return AuthCodes.redirect.contains(error.code) || AuthCodes.redirect.contains(_code(error));
-}
+/// Whether [error], from Auth's event stream, is a Google or GitHub sign-in
+/// that came back refused or broken, which the app reports.
+///
+/// supabase_flutter puts every AuthException from a sign-in link there: the
+/// error the link carries (`?error=server_error&error_code=…`, or the
+/// provider's own), or the one that trading its code for a session ran into.
+/// gotrue 2.27.3 puts its own errors about the session it keeps there too,
+/// and those are not news:
+/// - [AuthRetryableFetchException]: offline or a 5xx answer, from a token
+///   refresh (`_doRefresh`) or from signing out a stored session that expired
+///   (`recoverSession`); Auth tries again later. A code trade that fails this
+///   way stays quiet as well.
+/// - `session_missing` and `session_expired`: a stored session that cannot be
+///   read (`setInitialSession`, `recoverSession`) or that expired with no way
+///   to refresh it (`recoverSession`).
+/// - The server refusing a refresh token (`refresh_token_not_found`,
+///   `refresh_token_already_used`), or no session to refresh
+///   ([AuthSessionMissingException]): gotrue 2.27.3 signs out instead of
+///   reporting these (before 2.23.0, `recoverSession` reported a refused
+///   refresh token here).
+///
+/// Errors that are not AuthExceptions (stored session data that is not JSON,
+/// say) are not news either.
+bool isRedirectSignInError(Object error) =>
+    error is AuthException &&
+    error is! AuthRetryableFetchException &&
+    error is! AuthSessionMissingException &&
+    !AuthCodes.ownSession.contains(error.code);
 
 /// The most specific code Auth gave for [error]. A sign-in link that comes
 /// back with an error carries two, and gotrue files the link's `error`
@@ -63,7 +79,7 @@ bool isRedirectSignInError(Object error) {
 /// own `error_code` (`bad_oauth_state`), if any, as [AuthException.statusCode].
 String? _code(AuthException error) {
   final status = error.statusCode;
-  return status != null && int.tryParse(status) == null ? status : error.code;
+  return status != null && status.isNotEmpty && int.tryParse(status) == null ? status : error.code;
 }
 
 /// A message for [error] in the reader's language.

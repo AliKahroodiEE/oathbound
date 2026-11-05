@@ -1,5 +1,9 @@
+import 'dart:async';
+import 'dart:convert';
+
 import 'package:flutter_test/flutter_test.dart';
-import 'package:http/http.dart' show ClientException;
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:wyrd/data/remote/backend.dart';
 import 'package:wyrd/features/auth/auth_errors.dart';
@@ -74,7 +78,7 @@ void main() {
     expect(message(const AuthException('x', code: 'email_address_not_authorized')), l10n.authErrProvider);
     expect(message(const AuthException('x', code: 'provider_disabled')), l10n.authErrProvider);
     expect(message(AuthRetryableFetchException()), l10n.authErrNetwork);
-    expect(message(ClientException('Failed host lookup')), l10n.authErrNetwork);
+    expect(message(http.ClientException('Failed host lookup')), l10n.authErrNetwork);
     expect(message(const AuthException('x', code: 'something_new')), l10n.errorGeneric);
     expect(message(StateError('boom')), l10n.errorGeneric);
   });
@@ -119,6 +123,37 @@ void main() {
       }
     });
 
+    test('is reported whatever the server or the provider sent, in general words when unknown', () async {
+      final serverError = await cameBackWith(
+        '?error=server_error&error_code=unexpected_failure'
+        '&error_description=Unexpected+failure%2C+please+check+server+logs+for+more+information'
+        '#error=server_error&error_code=unexpected_failure'
+        '&error_description=Unexpected+failure%2C+please+check+server+logs+for+more+information',
+      );
+      final unavailable = await cameBackWith(
+        '?error=temporarily_unavailable&error_description=Service+temporarily+unavailable',
+      );
+      final invalidRequest = await cameBackWith('?error=invalid_request&error_description=Unverified+email');
+      final unauthorized = await cameBackWith('?error=unauthorized_client&error_description=Unauthorized');
+      // GitHub's own error, passed on by Auth.
+      final providers = await cameBackWith(
+        '?error=redirect_uri_mismatch&error_description=The+redirect_uri+is+not+associated+with+this+application.',
+      );
+      for (final error in [serverError, unavailable, invalidRequest, unauthorized, providers]) {
+        expect(isRedirectSignInError(error), isTrue, reason: '$error');
+        expect(authErrorMessage(l10n, error), l10n.errorGeneric, reason: '$error');
+      }
+
+      // A code that could no longer be traded for a session.
+      const noVerifier = AuthException('Code verifier could not be found in local storage.');
+      expect(isRedirectSignInError(noVerifier), isTrue);
+      expect(authErrorMessage(l10n, noVerifier), l10n.errorGeneric);
+
+      // An empty error_code says nothing more than the error itself.
+      final cancelled = await cameBackWith('?error=access_denied&error_code=&error_description=Cancelled');
+      expect(authErrorMessage(l10n, cancelled), l10n.authErrCancelled);
+    });
+
     test('is told apart from the other errors on Auth\'s event stream', () {
       expect(
         isRedirectSignInError(const AuthException('x', statusCode: 'bad_oauth_callback', code: 'invalid_request')),
@@ -145,11 +180,82 @@ void main() {
         isRedirectSignInError(const AuthException('Initial session is missing data.', code: 'session_missing')),
         isFalse,
       );
-      expect(
-        isRedirectSignInError(const AuthApiException('x', statusCode: '400', code: 'refresh_token_not_found')),
-        isFalse,
-      );
+      expect(isRedirectSignInError(const AuthException('Session expired.', code: 'session_expired')), isFalse);
+      for (final code in ['refresh_token_not_found', 'refresh_token_already_used', 'session_expired']) {
+        expect(
+          isRedirectSignInError(AuthApiException('x', statusCode: '400', code: code)),
+          isFalse,
+          reason: code,
+        );
+      }
+      expect(isRedirectSignInError(AuthSessionMissingException()), isFalse);
       expect(isRedirectSignInError(const FormatException('Unexpected end of input')), isFalse);
+    });
+  });
+
+  group('what gotrue reports about the session it keeps', () {
+    /// An Auth client whose every request gets [answer].
+    GoTrueClient answering(Future<http.Response> Function(http.Request request) answer) {
+      final auth = GoTrueClient(
+        url: 'http://127.0.0.1:9/auth/v1',
+        autoRefreshToken: false,
+        httpClient: MockClient(answer),
+      );
+      addTearDown(auth.dispose);
+      return auth;
+    }
+
+    /// Collects the events and errors on [auth]'s event stream.
+    (List<AuthChangeEvent>, List<Object>) watch(GoTrueClient auth) {
+      final events = <AuthChangeEvent>[];
+      final errors = <Object>[];
+      final subscription = auth.onAuthStateChange.listen((s) => events.add(s.event), onError: errors.add);
+      addTearDown(subscription.cancel);
+      return (events, errors);
+    }
+
+    // A widget test for its fake clock: Auth retries a refresh it could not
+    // send for 10 s before it gives up and reports it.
+    testWidgets('a token refresh that cannot reach the server is reported, and stays quiet', (tester) async {
+      final auth = answering((_) async => throw http.ClientException('Failed host lookup'));
+      final (_, errors) = watch(auth);
+
+      unawaited(auth.setSession('stored-refresh-token').then<void>((_) {}, onError: (Object _) {}));
+      await tester.pump(const Duration(seconds: 30));
+      expect(errors, [isA<AuthRetryableFetchException>()]);
+      expect(isRedirectSignInError(errors.single), isFalse);
+    });
+
+    test('a refresh token the server refused signs out instead, and would stay quiet too', () async {
+      final auth = answering(
+        (request) async => http.Response(
+          jsonEncode({'code': 'refresh_token_not_found', 'msg': 'Invalid Refresh Token: Refresh Token Not Found'}),
+          400,
+          headers: {'x-supabase-api-version': '2024-01-01'},
+          request: request,
+        ),
+      );
+      final (events, errors) = watch(auth);
+
+      final refused = await auth
+          .setSession('stored-refresh-token')
+          .then<Object?>((_) => null, onError: (Object e) => e);
+      await pumpEventQueue();
+      expect(events, [AuthChangeEvent.signedOut]);
+      expect(errors, isEmpty);
+      expect(refused, isA<AuthApiException>().having((e) => e.code, 'code', 'refresh_token_not_found'));
+      // gotrue before 2.23.0 reported it on the stream as well.
+      expect(isRedirectSignInError(refused!), isFalse);
+    });
+
+    test('a stored session that cannot be read is reported, and stays quiet', () async {
+      final auth = answering((request) async => http.Response('', 204, request: request));
+      final (_, errors) = watch(auth);
+
+      await expectLater(auth.recoverSession('{}'), throwsA(isA<AuthException>()));
+      await pumpEventQueue();
+      expect(errors, [isA<AuthException>().having((e) => e.code, 'code', 'session_missing')]);
+      expect(isRedirectSignInError(errors.single), isFalse);
     });
   });
 }
