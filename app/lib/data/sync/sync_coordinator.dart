@@ -14,26 +14,76 @@ import 'sync_service.dart';
 
 /// Lets account flows stop sync before they clear the device.
 class SyncControl {
+  SyncControl({this.settle = const Duration(seconds: 5)});
+
+  /// How long stopping waits for a cycle in progress. A stopped cycle
+  /// cannot write anyway (its writes are guarded), so this only lets one
+  /// that is about to finish do so; a request stuck on a dead connection
+  /// never holds up clearing the device.
+  final Duration settle;
+
   SyncService? _service;
   Future<void> _cycle = Future.value();
 
   /// Makes [service] the running sync and stops the one before it. Returns
-  /// that one's cycle in progress, which must end before [service] writes.
+  /// that one's cycle in progress, for [service] to wait on (bounded).
   Future<void> _attach(SyncService service) {
     _service?.stop();
     _service = service;
-    return _cycle;
+    return _settled(_cycle);
   }
 
-  void _track(Future<void> cycle) => _cycle = cycle.then((_) {}, onError: (Object _) {});
+  /// Remembers [cycle] as the one in progress.
+  @visibleForTesting
+  void track(Future<void> cycle) => _cycle = cycle.then((_) {}, onError: (Object _) {});
 
-  /// Stops syncing and completes once a cycle in progress has ended, so
-  /// nothing is written to this device afterwards. The next sign-in starts
-  /// sync again.
+  Future<void> _settled(Future<void> cycle) => cycle.timeout(settle, onTimeout: () {});
+
+  /// Stops syncing and completes once a cycle in progress has ended (or
+  /// after [settle]), so nothing is written to this device afterwards. The
+  /// next sign-in starts sync again.
   Future<void> stop() async {
     _service?.stop();
     _service = null;
-    await _cycle;
+    await _settled(_cycle);
+  }
+}
+
+/// A sign-in that would remove another account's unsynced work from this
+/// device, waiting for the user's answer (see [HandoverHost]).
+class Handover {
+  Handover({required this.previousEmail, required this.unsynced});
+
+  /// The account the work belongs to, when known.
+  final String? previousEmail;
+  final int unsynced;
+  final _answer = Completer<bool>();
+
+  Future<bool> get answer => _answer.future;
+
+  /// True removes the work and lets the new account sync; false keeps it
+  /// (the new account is signed out again).
+  void decide({required bool remove}) {
+    if (!_answer.isCompleted) _answer.complete(remove);
+  }
+}
+
+/// The open [Handover], if any.
+final handoverProvider = NotifierProvider<HandoverNotifier, Handover?>(HandoverNotifier.new);
+
+class HandoverNotifier extends Notifier<Handover?> {
+  @override
+  Handover? build() => null;
+
+  /// Asks whether to remove [unsynced] changes of [previousEmail]'s account.
+  Future<bool> ask({required String? previousEmail, required int unsynced}) async {
+    final handover = Handover(previousEmail: previousEmail, unsynced: unsynced);
+    state = handover;
+    try {
+      return await handover.answer;
+    } finally {
+      if (state == handover) state = null;
+    }
   }
 }
 
@@ -58,6 +108,7 @@ final syncCoordinatorProvider = Provider<void>((ref) {
     clientModel: () async => (await ai.config())?.model,
   );
   final control = ref.read(syncControlProvider);
+  final handover = ref.read(handoverProvider.notifier);
   final previous = control._attach(service);
   final settings = syncedSettings(
     settings: ref.read(settingsRepositoryProvider),
@@ -72,8 +123,19 @@ final syncCoordinatorProvider = Provider<void>((ref) {
   Future<SyncReport> cycle() async {
     if (!claimed) {
       await previous; // the account before must have stopped writing
-      // Data another account left here is wiped before this one syncs.
-      if (await service.claimFor(user.id)) await ai.clear();
+      final owner = await service.owner();
+      if (owner != null && owner != user.id) {
+        // Data another account left here is wiped before this one syncs,
+        // after asking when some of it never reached that account.
+        final unsynced = await service.unsyncedChanges();
+        if (unsynced > 0 && !await handover.ask(previousEmail: await service.ownerEmail(), unsynced: unsynced)) {
+          throw const SyncStopped(); // kept: this account is signed out again
+        }
+        // Its AI key goes first: if anything stops the claim, the next
+        // attempt still finds the other owner and clears again.
+        await ai.clear();
+      }
+      await service.claimFor(user.id, email: user.email);
       claimed = true;
     }
     return service.syncOnce(settings: settings);
@@ -86,7 +148,7 @@ final syncCoordinatorProvider = Provider<void>((ref) {
     }
     running = true;
     final current = cycle();
-    control._track(current);
+    control.track(current);
     try {
       final report = await current;
       if (kDebugMode) debugPrint('sync: $report');
@@ -169,7 +231,7 @@ Map<String, Object?> _serverProfile(UserProfile p, RegionalSettings r, String? z
   return {
     // display_name is NOT NULL on the server: a device without a character
     // name yet leaves the stored one alone.
-    if (name.isNotEmpty) 'display_name': name.length > 40 ? name.substring(0, 40) : name,
+    if (name.isNotEmpty) 'display_name': _clip(name),
     'weekly_target': p.weeklyTarget,
     'motivation': {'tone': p.tone, 'drivers': p.drivers},
     'ai_evaluation_enabled': p.aiEnabled,
@@ -195,11 +257,12 @@ Future<String?> _timeZone() async {
 }
 
 /// The account settings in a pulled `profiles` row; null while no client
-/// has changed the profile since sign-up, so a new account gets the choices
-/// made on this device instead of the server's defaults.
+/// has chosen them (account_set_at, …_profile_account_set_at.sql), so a new
+/// account gets the choices made on this device instead of the server's
+/// defaults.
 @visibleForTesting
 Map<String, Object?>? accountFromServer(Map<String, Object?> row) {
-  if (row['updated_at'] == row['created_at']) return null;
+  if (row['account_set_at'] == null) return null;
   final name = (row['display_name'] as String? ?? '').trim();
   final motivation = row['motivation'] is Map ? row['motivation']! as Map : const <Object?, Object?>{};
   final tone = motivation['tone'];
@@ -227,9 +290,7 @@ UserProfile applyAccount(UserProfile p, Map<String, Object?> value) {
   final tone = motivation is Map ? motivation['tone'] : null;
   final drivers = motivation is Map ? motivation['drivers'] : null;
   return p.copyWith(
-    characterName: name is String && name.trim().isNotEmpty
-        ? (name.trim().length > 40 ? name.trim().substring(0, 40) : name.trim())
-        : null,
+    characterName: name is String && name.trim().isNotEmpty ? _clip(name.trim()) : null,
     weeklyTarget: target is num ? target.toInt().clamp(1, 7) : null,
     tone: motivation is Map ? (tone is String ? tone : null) : p.tone,
     drivers: drivers is List
@@ -299,6 +360,10 @@ UserProfile applyNotificationSettings(UserProfile p, Map<String, Object?> value)
     quietEndMinutes: minutes(value['quiet_hours_end']),
   );
 }
+
+/// At most 40 characters, cut between code points: a cut through an emoji's
+/// surrogate pair is invalid JSON, which the server refuses on every sync.
+String _clip(String name) => name.runes.length > 40 ? String.fromCharCodes(name.runes.take(40)) : name;
 
 String _hhmm(int minutes) =>
     '${(minutes ~/ 60 % 24).toString().padLeft(2, '0')}:${(minutes % 60).toString().padLeft(2, '0')}';

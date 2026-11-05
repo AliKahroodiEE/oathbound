@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:ui' show Locale;
 
-import 'package:drift/drift.dart' show DatabaseConnection;
+import 'package:drift/drift.dart' show DatabaseConnection, Value;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:wyrd/core/locale/regional_settings.dart';
@@ -24,12 +24,18 @@ class FakeApi implements RemoteApi {
   /// Changes from this position in a batch on come back retryable.
   int? retryableFrom;
 
+  /// Ids the server keeps its own, newer version of ('ignored').
+  final ignored = <String>{};
+  var pushCalls = 0;
+  var pullCalls = 0;
+
   /// Holds a pull until it completes.
   Future<void>? pullGate;
   final profiles = <Map<String, Object?>>[];
 
   @override
   Future<List<Map<String, Object?>>> push(List<Map<String, Object?>> changes) async {
+    pushCalls++;
     if (failRetryable) {
       return [
         for (final c in changes) {'id': c['id'], 'status': 'rejected', 'retryable': true},
@@ -39,15 +45,16 @@ class FakeApi implements RemoteApi {
     pushed.addAll(changes.take(from));
     return [
       for (var i = 0; i < changes.length; i++)
-        i < from
-            ? {'id': changes[i]['id'], 'status': 'applied'}
-            : {'id': changes[i]['id'], 'status': 'rejected', 'retryable': true},
+        i >= from
+            ? {'id': changes[i]['id'], 'status': 'rejected', 'retryable': true}
+            : {'id': changes[i]['id'], 'status': ignored.contains(changes[i]['id']) ? 'ignored' : 'applied'},
     ];
   }
 
   /// Like the server: only what changed after [cursor].
   @override
   Future<Map<String, Object?>> pull(int cursor) async {
+    pullCalls++;
     if (pullGate != null) await pullGate;
     final next = (pullResponse['cursor']! as num).toInt();
     if (cursor >= next) return {'cursor': cursor, 'has_more': false, 'changes': <String, Object?>{}};
@@ -307,6 +314,89 @@ void main() {
     await expectLater(sync.syncOnce(), throwsA(isA<SyncStopped>()));
   });
 
+  group('offline edits against newer ones elsewhere', () {
+    const id = '018f0000-0000-7000-8000-0000000000aa';
+    Map<String, Object?> serverRow(String title, int changeId) => {
+      'id': id,
+      'tier': 'daily',
+      'title': title,
+      'change_id': changeId,
+      'created_at': '2026-11-04T05:00:00Z',
+      'updated_at': '2026-11-04T10:00:00Z',
+    };
+
+    Future<void> editHere() async {
+      await quests.create(const QuestDraft(title: 'X'));
+      final local = await db.select(db.quests).getSingle();
+      await (db.update(db.quests)..where((q) => q.id.equals(local.id))).write(const QuestsCompanion(id: Value(id)));
+      await (db.update(db.outboxEntries)).write(const OutboxEntriesCompanion(entityId: Value(id)));
+    }
+
+    test('the server\'s newer version wins: changes go up before the pull', () async {
+      await editHere();
+      api
+        ..ignored.add(id) // the web renamed it later
+        ..pullResponse = {
+          'cursor': 10,
+          'has_more': false,
+          'changes': {
+            'quests': [serverRow('Y', 10)],
+          },
+        };
+      await sync.syncOnce();
+      expect((await quests.byId(id))!.title, 'Y');
+      expect(await db.select(db.outboxEntries).get(), isEmpty);
+    });
+
+    test('a row still waiting to go up holds the cursor until it has', () async {
+      await editHere();
+      api
+        ..failRetryable = true
+        ..pullResponse = {
+          'cursor': 10,
+          'has_more': false,
+          'changes': {
+            'quests': [serverRow('Y', 10)],
+          },
+        };
+      await sync.syncOnce();
+      expect((await quests.byId(id))!.title, 'X', reason: 'still waiting to go up');
+      final cursor = await (db.select(db.keyValues)..where((k) => k.key.equals('sync_cursor'))).getSingle();
+      expect(cursor.value, '9', reason: 'not past the row it skipped');
+
+      api
+        ..failRetryable = false
+        ..ignored.add(id);
+      await sync.syncOnce();
+      expect((await quests.byId(id))!.title, 'Y', reason: 'fetched again once the edit went up');
+    });
+  });
+
+  test('a stopped cycle makes no more network calls', () async {
+    await quests.create(const QuestDraft(title: 'Read'));
+    sync.stop();
+    await expectLater(sync.syncOnce(), throwsA(isA<SyncStopped>()));
+    expect(api.pushCalls, 0);
+    expect(api.pullCalls, 0);
+  });
+
+  test('the owner and its unsynced changes are known before another account claims the device', () async {
+    expect(await sync.owner(), isNull);
+    await sync.claimFor('user-a', email: 'a@example.com');
+    await quests.create(const QuestDraft(title: 'Not synced yet'));
+    expect(await sync.owner(), 'user-a');
+    expect(await sync.ownerEmail(), 'a@example.com');
+    expect(await sync.unsyncedChanges(), 1);
+  });
+
+  test('stopping waits for a cycle in progress only so long', () async {
+    final control = SyncControl(settle: const Duration(milliseconds: 50));
+    control.track(Completer<void>().future); // a request that never answers
+    final watch = Stopwatch()..start();
+    await control.stop();
+    expect(watch.elapsed, lessThan(const Duration(seconds: 2)));
+  });
+
   group('account settings', () {
     late SettingsRepository settings;
     late List<SyncedSettings> groups;
@@ -390,6 +480,64 @@ void main() {
       expect(sent['weekly_summary'], isFalse);
     });
 
+    test('a failed first account upload never makes the device take over the server\'s defaults', () async {
+      await settings.updateProfile((p) => p.copyWith(characterName: 'Arin', aiEnabled: false, weeklyTarget: 6));
+      var accountSends = 0;
+      final failing = [
+        for (final g in groups)
+          g.key == 'sync_profile_account'
+              ? SyncedSettings(
+                  key: g.key,
+                  table: g.table,
+                  current: g.current,
+                  fromServer: g.fromServer,
+                  apply: g.apply,
+                  send: (v) async {
+                    accountSends++;
+                    if (accountSends == 1) throw StateError('connection reset');
+                    api.profiles.add(v);
+                  },
+                )
+              : g,
+      ];
+      // The device fields went up, so updated_at moved; no account setting
+      // was ever chosen on the server (account_set_at is null).
+      api.pullResponse = {
+        'cursor': 4,
+        'has_more': false,
+        'changes': {
+          'profiles': [
+            {
+              'id': 'u',
+              'display_name': '',
+              'weekly_target': 4,
+              'motivation': <String, Object?>{},
+              'ai_evaluation_enabled': true,
+              'created_at': '2026-11-04T05:00:00+00:00',
+              'updated_at': '2026-11-04T05:00:09+00:00',
+              'account_set_at': null,
+            },
+          ],
+        },
+      };
+      final first = await sync.syncOnce(settings: failing);
+      expect(first.settingsFailed, 1);
+      api.pullResponse = {...api.pullResponse, 'cursor': 5};
+      await sync.syncOnce(settings: failing);
+      final p = await settings.profile();
+      expect(p.aiEnabled, isFalse, reason: 'the AI opt-out stays');
+      expect(p.weeklyTarget, 6);
+      expect(api.profiles.last['ai_evaluation_enabled'], isFalse);
+    });
+
+    test('a name is cut between characters, never inside an emoji', () async {
+      await settings.updateProfile((p) => p.copyWith(characterName: '${'a' * 39}😀b'));
+      await sync.syncOnce(settings: groups);
+      final sent = api.profiles.firstWhere((f) => f.containsKey('display_name'))['display_name']! as String;
+      expect(sent.runes.length, 40);
+      expect(sent.endsWith('😀'), isTrue);
+    });
+
     test('a profile untouched since sign-up gets this device\'s choices', () async {
       await settings.updateProfile((p) => p.copyWith(characterName: 'Arin', weeklyTarget: 5));
       api.pullResponse = {
@@ -432,6 +580,7 @@ void main() {
               'locale': 'fa',
               'created_at': '2026-11-01T05:00:00+00:00',
               'updated_at': '2026-11-03T05:00:00+00:00',
+              'account_set_at': '2026-11-02T05:00:00+00:00',
             },
           ],
         },

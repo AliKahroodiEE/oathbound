@@ -1615,6 +1615,33 @@ class AppLocalizationsFa extends AppLocalizations {
   String get deviceCleared => 'خارج شدی. دیگر داده‌ای از تو روی این دستگاه نیست.';
 
   @override
+  String get handoverTitle => 'تغییرهای ذخیره‌نشده‌ی یک حساب دیگر';
+
+  @override
+  String handoverBody(String email, String changes) {
+    return '$email روی این دستگاه $changes دارد که هنوز در آن حساب ذخیره نشده است. اگر ادامه دهی، از این دستگاه پاک می‌شوند. برای نگه‌داشتنشان، الان خارج شو، با $email وارد شو و بگذار همگام شوند.';
+  }
+
+  @override
+  String handoverBodyNoEmail(String changes) {
+    return 'حساب دیگری روی این دستگاه $changes دارد که هنوز در آن ذخیره نشده است. اگر ادامه دهی، از این دستگاه پاک می‌شوند. برای نگه‌داشتنشان، الان خارج شو، با همان حساب وارد شو و بگذار همگام شوند.';
+  }
+
+  @override
+  String get handoverOneChange => 'یک تغییر';
+
+  @override
+  String handoverChanges(String count) {
+    return '$count تغییر';
+  }
+
+  @override
+  String get handoverKeep => 'نگه‌شان دار و خارج شو';
+
+  @override
+  String get handoverRemove => 'پاکشان کن و ادامه بده';
+
+  @override
   String get dataDeleted => 'همه‌ی داده‌ها حذف شد.';
 
   @override

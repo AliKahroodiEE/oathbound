@@ -1627,6 +1627,33 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deviceCleared => 'Signed out. This device no longer holds your data.';
 
   @override
+  String get handoverTitle => 'Unsaved changes from another account';
+
+  @override
+  String handoverBody(String email, String changes) {
+    return '$email has $changes on this device not yet saved to that account. If you continue, they are removed from this device. To keep them, sign out now, sign in with $email and let them sync.';
+  }
+
+  @override
+  String handoverBodyNoEmail(String changes) {
+    return 'Another account has $changes on this device not yet saved to it. If you continue, they are removed from this device. To keep them, sign out now, sign in with that account and let them sync.';
+  }
+
+  @override
+  String get handoverOneChange => '1 change';
+
+  @override
+  String handoverChanges(String count) {
+    return '$count changes';
+  }
+
+  @override
+  String get handoverKeep => 'Keep them and sign out';
+
+  @override
+  String get handoverRemove => 'Remove them and continue';
+
+  @override
   String get dataDeleted => 'All data deleted.';
 
   @override

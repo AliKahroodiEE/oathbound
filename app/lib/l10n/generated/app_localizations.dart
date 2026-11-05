@@ -3050,6 +3050,48 @@ abstract class AppLocalizations {
   /// **'Signed out. This device no longer holds your data.'**
   String get deviceCleared;
 
+  /// No description provided for @handoverTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Unsaved changes from another account'**
+  String get handoverTitle;
+
+  /// No description provided for @handoverBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{email} has {changes} on this device not yet saved to that account. If you continue, they are removed from this device. To keep them, sign out now, sign in with {email} and let them sync.'**
+  String handoverBody(String email, String changes);
+
+  /// No description provided for @handoverBodyNoEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Another account has {changes} on this device not yet saved to it. If you continue, they are removed from this device. To keep them, sign out now, sign in with that account and let them sync.'**
+  String handoverBodyNoEmail(String changes);
+
+  /// No description provided for @handoverOneChange.
+  ///
+  /// In en, this message translates to:
+  /// **'1 change'**
+  String get handoverOneChange;
+
+  /// No description provided for @handoverChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} changes'**
+  String handoverChanges(String count);
+
+  /// No description provided for @handoverKeep.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep them and sign out'**
+  String get handoverKeep;
+
+  /// No description provided for @handoverRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove them and continue'**
+  String get handoverRemove;
+
   /// No description provided for @dataDeleted.
   ///
   /// In en, this message translates to:
